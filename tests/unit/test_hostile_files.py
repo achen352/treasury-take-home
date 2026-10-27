@@ -6,6 +6,8 @@ import struct
 import zipfile
 from pathlib import Path
 
+import pypdfium2 as pdfium
+import pypdfium2.raw as pdfium_c
 import pytest
 from PIL import Image, UnidentifiedImageError
 
@@ -26,6 +28,11 @@ EXPECTED = {
     "png-named.jpg": "accept",
     "exif-instructions.jpg": "sanitize",
     "exif-rotated.jpg": "sanitize",
+    "pdf-hidden-text.pdf": "sanitize",
+    "pdf-javascript.pdf": "sanitize",
+    "pdf-encrypted.pdf": "reject",
+    "pdf-too-many-pages.pdf": "reject",
+    "pdf-odd-page.pdf": "reject",
 }
 
 
@@ -127,3 +134,52 @@ def test_exif_carries_injection_text(folder: Path) -> None:
 def test_exif_rotation_flag_is_set(folder: Path) -> None:
     with Image.open(folder / "exif-rotated.jpg") as image:
         assert image.getexif()[0x0112] == 6  # Orientation: rotate 90 degrees to display
+
+
+# ---- PDFs: each one is checked with PDFium itself, independently of the upload code ----
+
+
+def _open_pdf(folder: Path, name: str) -> pdfium.PdfDocument:
+    return pdfium.PdfDocument((folder / name).read_bytes())
+
+
+def test_pdf_with_no_pages_is_still_a_pdf(folder: Path) -> None:
+    with pytest.raises(pdfium.PdfiumError):
+        _open_pdf(folder, "pdf-named.jpg")
+
+
+def test_hidden_text_pdf_draws_invisible_and_white_text_over_a_visible_label(
+    folder: Path,
+) -> None:
+    data = (folder / "pdf-hidden-text.pdf").read_bytes()
+
+    assert b"3 Tr" in data  # text render mode 3: invisible, as in a scanned PDF's text layer
+    assert b"1 1 1 rg" in data  # white fill, drawn on a white page
+    assert b"(OLD TOM DISTILLERY)" in data
+    assert len(_open_pdf(folder, "pdf-hidden-text.pdf")) == 1
+
+
+def test_javascript_pdf_runs_a_script_when_opened(folder: Path) -> None:
+    data = (folder / "pdf-javascript.pdf").read_bytes()
+
+    assert b"/OpenAction" in data
+    assert b"/S /JavaScript" in data
+    assert len(_open_pdf(folder, "pdf-javascript.pdf")) == 1
+
+
+def test_encrypted_pdf_needs_a_password(folder: Path) -> None:
+    assert b"/Encrypt" in (folder / "pdf-encrypted.pdf").read_bytes()
+    with pytest.raises(pdfium.PdfiumError) as failure:
+        _open_pdf(folder, "pdf-encrypted.pdf")
+    assert failure.value.err_code == pdfium_c.FPDF_ERR_PASSWORD
+
+
+def test_too_many_pages_pdf_has_one_page_more_than_a_label_allows(folder: Path) -> None:
+    assert len(_open_pdf(folder, "pdf-too-many-pages.pdf")) == 7
+
+
+def test_odd_page_pdf_has_a_page_far_too_thin_to_be_a_label(folder: Path) -> None:
+    width, height = _open_pdf(folder, "pdf-odd-page.pdf")[0].get_size()
+
+    assert min(width, height) < 36  # under half an inch
+    assert max(width, height) > 3_000
