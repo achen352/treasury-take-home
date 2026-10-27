@@ -11,8 +11,15 @@ from CLAUDE.md".
   workflow are green.
 - Fixtures: 39 synthetic labels, 19 real COLA labels and 12 hostile files.
 - Live URL: <https://treasury-take-home-1uz2.onrender.com> (only `/healthz`).
-- **Next: M3, the label readers.** The decisions below were agreed on 2026-10-27, after measuring
-  Kimi's latency. Next step: the user approves the M3 test list, then red, green, refactor.
+- **M3 in progress (2026-10-27).** The user approved the test list, adding PDF support. HEIC
+  isn't decoded on the server: iPhones send JPEG, and a HEIC file gets a message. Done and
+  pushed, each as a test/feat pair: upload checks (`app/readers/uploads.py`, PDF via pypdfium2);
+  the domain additions (fanciful name cited to Form 5100.31 item 7, `merge.py`, `Location`, and
+  `conflicts`/`instructions_seen` passed to `verify`); the AI reader (`ai.py`, checked live
+  against Kimi); the OCR reader (`ocr.py`); and the dual reader (`dual.py`).
+- **M3 still to do:** `scripts/eval.py`, including the two-call split; Tesseract in the
+  Dockerfile and a container OCR check; timing under `docker --cpus=0.1`; the RapidOCR
+  comparison; the pixel bold check; and the README test-case list for M3.
 - The Mac now has Tesseract 5.5.3 (Homebrew) and Docker; the `.venv` is set up and `.env` holds
   the Kimi key.
 
@@ -187,6 +194,18 @@ with Valorant's anti-cheat.
   - search origin codes: Japan `59`, South Korea `5D`, China `96`, Ukraine `6N`
   - fetch one request every two seconds
 - **The pre-commit hook may reformat files and abort the commit.** Re-stage and commit again.
+- **Check CI after every push** (`gh run list --limit 4`). A Linux-only failure went unnoticed
+  for two pushes. Reproduce Linux locally with
+  `docker run --rm -v "$PWD":/repo:ro python:3.13-slim sh -c "pip install -q --require-hashes
+  --no-deps -r /repo/requirements-dev.txt && cd /repo && python -m pytest -q -p no:cacheprovider"`.
+- **Generated files differ by OS.** Pillow's Linux wheel bundles a different zlib, so the same PNG
+  compresses to different bytes; compare PNGs by content. `zipfile` records the OS unless
+  `create_system` is set. Regenerating synthetic labels on the Mac rewrites three background-photo
+  JPEGs (a different encoder); restore them with `git checkout` unless they were meant to change.
+- **Tesseract:** page mode 3 keeps a paragraph's lines in order (mode 11 interleaves columns).
+  It reads PNG from stdin 4.5 times faster than PPM. Tilted photos give no text at all, and real
+  COLA scans come back with misreads ("érink", "durng"), so the word-for-word warning cross-check
+  sends those to review.
 - **Lock files on the Mac.** `pip-tools` isn't in the lock files; install it into the `.venv`
   (`.venv/bin/python -m pip install pip-tools`). Compiling on macOS drops `colorama`, a
   Windows-only dependency of pytest and bandit, so put its pinned, hashed entry back (copy it
