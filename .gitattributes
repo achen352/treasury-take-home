@@ -3,3 +3,8 @@
 *.jpg binary
 *.jpeg binary
 *.webp binary
+*.ttf binary
+*.gif binary
+*.pdf binary
+# Hostile upload fixtures must stay byte-exact.
+tests/fixtures/hostile/** binary
