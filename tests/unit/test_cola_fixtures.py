@@ -58,6 +58,7 @@ def test_application_data_agrees_with_the_registry(item: tuple[Path, FixtureTrut
     assert truth.application.imported == (record["source"] == "Imported")
     if truth.application.imported:
         assert truth.application.country_of_origin == str(record["origin_code"]).title()
+    assert truth.application.fanciful_name == (record["fanciful_name"] or None)
 
 
 @pytest.mark.parametrize("item", COLA, ids=fixture_id)
