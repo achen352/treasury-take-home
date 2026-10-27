@@ -1,0 +1,17 @@
+# Only the app package and the runtime lock file belong in the image.
+# Secrets in particular must never be baked into a layer.
+.env
+.env.*
+.git
+.github
+.venv
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+htmlcov
+tests
+scripts
+*.md
