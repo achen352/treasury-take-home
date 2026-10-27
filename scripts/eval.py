@@ -51,6 +51,7 @@ class FixtureResult:
     offline: bool  # read by OCR alone
     latency: float  # seconds
     fields: dict[str, bool] = field(default_factory=dict)  # field -> read as printed
+    findings: dict[str, str] = field(default_factory=dict)  # field -> "status: first reason"
 
 
 @dataclass(frozen=True)
@@ -87,6 +88,11 @@ def score(truth: FixtureTruth, report: Report, latency: float) -> FixtureResult:
         offline=Flag.OFFLINE in report.flags,
         latency=round(latency, 3),
         fields=fields,
+        findings={
+            result.field.value: result.status.value
+            + (f": {result.notes[0]}" if result.notes and result.status.value != "pass" else "")
+            for result in report.results
+        },
     )
 
 
