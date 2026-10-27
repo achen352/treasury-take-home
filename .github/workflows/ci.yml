@@ -38,6 +38,15 @@ jobs:
         run: docker build -t cola-label-verifier:ci .
       - name: Image runs as a non-root user
         run: test "$(docker run --rm --entrypoint id cola-label-verifier:ci -u)" != "0"
+      - name: Image ships without pip
+        # pip is not needed at runtime, and its vendored libraries are attack surface.
+        run: |
+          for py in /opt/venv/bin/python /usr/local/bin/python; do
+            if docker run --rm --entrypoint "$py" cola-label-verifier:ci -c "import pip" 2>/dev/null; then
+              echo "pip is importable via $py"
+              exit 1
+            fi
+          done
       - name: Container serves /healthz without a Server header
         run: |
           docker run -d -p 8000:8000 --name app cola-label-verifier:ci
