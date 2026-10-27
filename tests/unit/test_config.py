@@ -61,3 +61,59 @@ def test_secure_defaults() -> None:
     assert settings.extractor_mode is ExtractorMode.DUAL
     assert settings.enable_docs is False
     assert settings.llm_api_key is None
+
+
+def test_ai_reader_defaults_suit_kimi() -> None:
+    settings = make_settings()
+
+    assert settings.llm_base_url == "https://api.moonshot.ai/v1"
+    assert settings.llm_model == "kimi-k2.6"
+    assert settings.llm_first_token_timeout == 4.5
+    assert settings.llm_total_timeout == 7.5
+    assert settings.llm_image_max_side == 1100
+    assert settings.llm_disable_thinking is True
+
+
+def test_ai_reader_settings_load_from_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LLM_BASE_URL", "https://example.openai.azure.com/openai/v1")
+    monkeypatch.setenv("LLM_MODEL", "gpt-label-reader")
+    monkeypatch.setenv("LLM_FIRST_TOKEN_TIMEOUT", "3")
+    monkeypatch.setenv("LLM_TOTAL_TIMEOUT", "6")
+    monkeypatch.setenv("LLM_IMAGE_MAX_SIDE", "1400")
+    monkeypatch.setenv("LLM_DISABLE_THINKING", "false")
+
+    settings = make_settings()
+
+    assert settings.llm_base_url == "https://example.openai.azure.com/openai/v1"
+    assert settings.llm_model == "gpt-label-reader"
+    assert (settings.llm_first_token_timeout, settings.llm_total_timeout) == (3, 6)
+    assert settings.llm_image_max_side == 1400
+    assert settings.llm_disable_thinking is False
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"llm_base_url": "http://api.moonshot.ai/v1"},  # the key would travel unencrypted
+        {"llm_base_url": "ftp://api.moonshot.ai/v1"},
+        {"llm_first_token_timeout": 0},
+        {"llm_total_timeout": -1},
+        {"llm_first_token_timeout": 8, "llm_total_timeout": 7.5},
+        {"llm_image_max_side": 100},
+        {"llm_image_max_side": 10_000},
+        {"llm_model": ""},
+    ],
+    ids=[
+        "plain-http",
+        "not-http",
+        "zero-first-token",
+        "negative-total",
+        "first-token-after-total",
+        "image-too-small",
+        "image-too-large",
+        "empty-model",
+    ],
+)
+def test_bad_ai_reader_settings_fail_fast(overrides: dict[str, object]) -> None:
+    with pytest.raises(ValidationError):
+        make_settings(**overrides)
