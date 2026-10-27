@@ -203,6 +203,11 @@ _PROOF = re.compile(
     r"|\bproof\s*:?\s*(?P<after>\d{1,3}(?:[.,]\d{1,2})?)\b",
     re.IGNORECASE,
 )
+# "14% TO 15%", "13-14%", "12.5 to 13.5%": wine may state a range (27 CFR 4.36).
+_RANGE = re.compile(
+    _NUMBER + r"\s*%?\s*(?:to|-|\N{EN DASH})\s*(?P<high>\d{1,3}(?:[.,]\d{1,3})?)\s*%",
+    re.IGNORECASE,
+)
 # A percentage counts as alcohol content when the words around it say so. This keeps
 # "100% Blue Agave" from being read as the ABV.
 _ALCOHOL_AFTER = re.compile(r"\s*(?:alc|abv|vol|alcohol|by\s+vol)", re.IGNORECASE)
@@ -213,7 +218,8 @@ _ALCOHOL_BEFORE = re.compile(r"(?:alc|alcohol|abv)\.?(?:\s+content)?\s*:?\s*$", 
 class Alcohol:
     """Alcohol content read from text. `problem` says, in plain words, why it can't be used."""
 
-    abv: Decimal | None = None  # percent alcohol by volume
+    abv: Decimal | None = None  # percent alcohol by volume; the low end of a range
+    abv_high: Decimal | None = None  # the high end, when the label states a range
     proof: Decimal | None = None
     problem: str | None = None
 
@@ -229,6 +235,19 @@ def parse_alcohol(text: str | None) -> Alcohol:
     text = _prepare(text)
 
     matches = list(_PERCENT.finditer(text))
+    # Like single percentages, a range counts when the words around it say alcohol, or when
+    # nothing else in the text does (an application field holding just "14% to 15%").
+    ranges = list(_RANGE.finditer(text))
+    stated_ranges = [match for match in ranges if _states_alcohol(text, match)]
+    if not stated_ranges and not any(_states_alcohol(text, match) for match in matches):
+        stated_ranges = ranges
+    if stated_ranges:
+        match = stated_ranges[0]
+        low, high = _to_decimal(match["num"]), _to_decimal(match["high"])
+        if not 0 < low < high <= 100:
+            return Alcohol(problem=f'"{match.group(0).strip()}" is not a possible range.')
+        return Alcohol(abv=low, abv_high=high)
+
     stated = [match for match in matches if _states_alcohol(text, match)] or matches
     abvs: set[Decimal] = set()
     for match in stated:

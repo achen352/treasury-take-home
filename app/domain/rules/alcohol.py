@@ -34,6 +34,16 @@ def check_alcohol(
     label = parse_alcohol(label_text)
     if label.problem:
         return result(Status.REVIEW, label.problem)
+    if label.abv is not None and label.abv_high is not None:
+        stated = f"{format_number(label.abv)}% to {format_number(label.abv_high)}%"
+        application_range = parse_alcohol(application_text)
+        if (application_range.abv, application_range.abv_high) == (label.abv, label.abv_high):
+            return result(Status.PASS, f"Same alcohol content range ({stated}).")
+        return result(
+            Status.REVIEW,
+            f"The label states a range ({stated}); a person should compare it with the "
+            "application.",
+        )
     if label.abv is None:
         return result(
             Status.FAIL,

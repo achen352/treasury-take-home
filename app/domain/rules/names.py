@@ -33,7 +33,9 @@ _STATEMENT_WORDS = frozenset(
     }
 )  # fmt: skip
 _ORIGIN_WORDING = re.compile(
-    r"^(?:product of|produce of|made in|produced in|imported from|country of origin"
+    r"^(?:product of|produce of|imported from|country of origin"
+    r"|(?:made|produced|bottled|distilled|brewed|blended)"
+    r"(?: and (?:produced|bottled|distilled|brewed|blended))* in"
     r"|hecho en|producto de|produit de|prodotto in) "
 )
 # "Republic of Armenia", "the Federal Republic of Germany", "Kingdom of Spain". A plain prefix
@@ -79,7 +81,7 @@ def check_country(expected: str | None, found: str | None, *, cfr: str) -> Field
 
 def _bottler_key(text: str) -> str:
     words = (word for word in normalize_text(text).split() if word not in _STATEMENT_WORDS)
-    return " ".join(sorted(words))
+    return " ".join(sorted(set(words)))  # some statements repeat the name: "X, Inc. X, Inc. ..."
 
 
 def _country_key(text: str) -> str:
