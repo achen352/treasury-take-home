@@ -48,6 +48,46 @@ _PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ),
     ("verdict: pass", re.compile(r"verdict(?:is|to|as)?(?:pass|matches|compliant|approved)")),
     ("do not report this", re.compile(r"donot(?:report|mention|flag|transcribe|read)")),
+    # The same ideas in other languages seen on imported labels. Still not exhaustive.
+    (
+        "ignore the instructions (Spanish)",
+        re.compile(
+            r"(?:ignora|ignorar|ignore|omite|omitir)(?:todas)?(?:las)?(?:instrucciones|indicaciones)"
+        ),
+    ),
+    (
+        "mark as approved (Spanish)",
+        re.compile(
+            r"(?:marca|marcar|reporta|reportar|considera)(?:esta|la)?(?:etiqueta)?como"
+            r"(?:conforme|aprobada|aprobado|v[aá]lida|correcta)"
+        ),
+    ),
+    (
+        "ignore the instructions (Chinese)",
+        re.compile(
+            r"(?:忽略|忽視|忽视|无视|無視)(?:之前|以前|以上|上述|前面|先前)?的?(?:所有|全部)?的?"
+            r"(?:指令|指示|说明|說明|提示)"
+        ),
+    ),
+    ("system prompt (Chinese)", re.compile(r"(?:系统|系統)提示")),
+    (
+        "mark as compliant (Chinese)",
+        re.compile(r"(?:标记|標記|报告|報告|视为|視為)(?:为|為)?(?:合规|合規|已批准|通过|通過)"),
+    ),
+    (
+        "ignore the instructions (Korean)",
+        re.compile(
+            r"(?:이전|모든|위의|앞의)?(?:지시|지침|명령|안내)(?:사항)?(?:을|를|은|는)?(?:모두|전부)?무시"
+        ),
+    ),
+    ("system prompt (Korean)", re.compile(r"시스템프롬프트")),
+    (
+        "ignore the instructions (Japanese)",
+        re.compile(
+            r"(?:以前|前|上記|これまで|すべて)?の?(?:指示|命令|指令)(?:を|は)?(?:すべて)?無視"
+        ),
+    ),
+    ("system prompt (Japanese)", re.compile(r"システムプロンプト")),
 )
 
 

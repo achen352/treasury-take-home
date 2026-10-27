@@ -2,6 +2,7 @@
 
 import re
 import unicodedata
+from collections import Counter
 from dataclasses import dataclass
 from decimal import Decimal
 
@@ -63,15 +64,57 @@ _FULLWIDTH = range(0xFF01, 0xFF5F)  # fullwidth forms of the printable ASCII cha
 def lookalike_characters(text: str, allowed: str = "") -> list[str]:
     """Characters that imitate Latin ones (other alphabets, fullwidth forms), in order.
 
-    Characters that also appear in `allowed`, usually the application's own text, are not
-    reported, so a genuinely Greek or Cyrillic brand name isn't mistaken for a spoof.
+    Cyrillic and Greek letters only count when they are mixed with Latin ones: a name written
+    entirely in Cyrillic is just Cyrillic, not a spoof. Characters that also appear in `allowed`,
+    usually the application's own text, are not reported either.
     """
+    mixed = any(char_script(ch) == "Latin" for ch in text)
     found: list[str] = []
     for ch in text:
         code = ord(ch)
-        if (code in _LOOKALIKES or code in _FULLWIDTH) and ch not in allowed and ch not in found:
+        imitates = code in _FULLWIDTH or (mixed and code in _LOOKALIKES)
+        if imitates and ch not in allowed and ch not in found:
             found.append(ch)
     return found
+
+
+# ---- scripts ----
+
+# Unicode character names start with their script: "LATIN SMALL LETTER A", "HANGUL SYLLABLE
+# GA", "CJK UNIFIED IDEOGRAPH-737A". Chinese and Japanese share characters, so they are grouped.
+_SCRIPTS = {
+    "LATIN": "Latin",
+    "CYRILLIC": "Cyrillic",
+    "GREEK": "Greek",
+    "HANGUL": "Korean",
+    "CJK": "Chinese or Japanese",
+    "HIRAGANA": "Chinese or Japanese",
+    "KATAKANA": "Chinese or Japanese",
+    "ARABIC": "Arabic",
+    "HEBREW": "Hebrew",
+    "THAI": "Thai",
+    "DEVANAGARI": "Devanagari",
+    "GEORGIAN": "Georgian",
+    "ARMENIAN": "Armenian",
+}
+
+
+def char_script(ch: str) -> str | None:
+    """The script of a letter; None for digits, punctuation and spaces."""
+    if not ch.isalpha():
+        return None
+    words = unicodedata.name(ch, "").split()
+    for word in words:
+        for part in word.split("-"):
+            if part in _SCRIPTS:
+                return _SCRIPTS[part]
+    return words[0].title() if words else None
+
+
+def dominant_script(text: str) -> str | None:
+    """The script most of the letters in `text` are written in; None if it has no letters."""
+    counts = Counter(script for ch in text if (script := char_script(ch)))
+    return counts.most_common(1)[0][0] if counts else None
 
 
 def latinize(text: str) -> str:
