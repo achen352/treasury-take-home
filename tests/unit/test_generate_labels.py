@@ -6,6 +6,7 @@ import pytest
 from PIL import Image, ImageChops, ImageFont, ImageStat
 
 from app.domain.models import Verdict
+from app.domain.normalize import dominant_script
 from scripts import generate_labels
 from scripts.fixtures import FIXTURES_ROOT, FixtureTruth, load_fixtures
 
@@ -35,6 +36,9 @@ EXPECTED: dict[str, set[Verdict]] = {
     "beer-no-abv": {M},
     "import-with-country": {M},
     "import-without-country": {D},
+    # other scripts: the brand name need not be in English (27 CFR 5.55)
+    "cyrillic-brand": {R},
+    "cyrillic-brand-cyrillic-application": {M},
     # adversarial: must never come out "Matches"
     "injection-visible": NEVER_MATCHES,
     "injection-low-contrast": NEVER_MATCHES,
@@ -173,3 +177,13 @@ def test_text_layout_is_the_same_on_every_platform() -> None:
     # Linux builds of Pillow ship the Raqm layout engine and Windows builds don't; pinning the
     # basic engine keeps a fresh generation pixel-identical to the committed fixtures anywhere.
     assert generate_labels.font("sans", 30).layout_engine == ImageFont.Layout.BASIC
+
+
+def test_cyrillic_fixtures_print_the_brand_in_cyrillic() -> None:
+    _, romanized = committed()["cyrillic-brand"]
+    _, cyrillic = committed()["cyrillic-brand-cyrillic-application"]
+
+    assert romanized.printed.brand_name == cyrillic.printed.brand_name
+    assert dominant_script(romanized.printed.brand_name or "") == "Cyrillic"
+    assert dominant_script(romanized.application.brand_name) == "Latin"
+    assert dominant_script(cyrillic.application.brand_name) == "Cyrillic"
