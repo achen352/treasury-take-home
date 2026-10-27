@@ -60,7 +60,7 @@ class Word:
     text: str
     confidence: float
     box: Box  # in the upright image's pixels
-    line: tuple[int, int, int, int]  # (pass, block, paragraph, line), to rebuild the lines
+    line: tuple[int, int, int, int]  # (angle, block, paragraph, line), to rebuild the lines
 
 
 @dataclass(frozen=True)
@@ -85,16 +85,16 @@ class OcrPage:
 def read_page(label: LabelImage, index: int, *, angles: Sequence[int] = (0,)) -> OcrPage:
     """Read one image, turned by each angle in turn, with every box in upright coordinates."""
     words: list[Word] = []
-    for pass_index, angle in enumerate(angles):
+    for angle in angles:
         image = label.image if angle == 0 else label.image.rotate(angle, expand=True)
-        for word in run_tesseract(image, pass_index=pass_index):
+        for word in run_tesseract(image, angle=angle):
             box = rotate_box_back(word.box, angle, label.image.size)
             words.append(replace(word, box=box))
     return OcrPage(image=index, words=tuple(words))
 
 
 def run_tesseract(
-    image: Image.Image, *, timeout: float = PASS_TIMEOUT, pass_index: int = 0
+    image: Image.Image, *, timeout: float = PASS_TIMEOUT, angle: int = 0
 ) -> list[Word]:
     found = shutil.which("tesseract")
     if found is None:
@@ -122,11 +122,11 @@ def run_tesseract(
         raise OcrUnavailable("failed") from None
     if done.returncode != 0:
         raise OcrUnavailable("failed")
-    return parse_tsv(done.stdout.decode("utf-8", errors="replace"), pass_index)
+    return parse_tsv(done.stdout.decode("utf-8", errors="replace"), angle)
 
 
-def parse_tsv(output: str, pass_index: int = 0) -> list[Word]:
-    """Tesseract's TSV: one row per element; level 5 rows are words."""
+def parse_tsv(output: str, angle: int = 0) -> list[Word]:
+    """Tesseract's TSV, from a pass at `angle`: one row per element; level 5 rows are words."""
     words = []
     for row in output.splitlines()[1:]:
         cells = row.split("\t")
@@ -141,7 +141,7 @@ def parse_tsv(output: str, pass_index: int = 0) -> list[Word]:
         except ValueError:
             continue
         if text and confidence >= 0:
-            words.append(Word(text, confidence, box, (pass_index, block, paragraph, line)))
+            words.append(Word(text, confidence, box, (angle, block, paragraph, line)))
     return words
 
 
