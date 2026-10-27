@@ -320,3 +320,67 @@ def test_volumes_compare_exactly_within_a_system_and_within_half_a_percent_acros
 @given(st.text())
 def test_parsing_net_contents_never_raises(text: str) -> None:
     parse_net_contents(text)
+
+
+# ---- formats found on real approved labels ----
+
+
+@pytest.mark.parametrize(
+    ("text", "abv", "proof"),
+    [
+        ("53.5 ALC/VOL", Decimal("53.5"), None),  # Belle Isle: no % sign
+        ("45 ABV", Decimal(45), None),
+        ("53.5 ALC/VOL 750ML 107 PROOF", Decimal("53.5"), Decimal(107)),
+        ("ALC/VOL 54% PROOF 108", Decimal(54), Decimal(108)),  # Old Boy: proof after the word
+        ("42.8% ALC/VOL 85.6\N{DEGREE SIGN} US PROOF", Decimal("42.8"), Decimal("85.6")),
+        ("12%ALC. VOL.", Decimal(12), None),
+    ],
+)
+def test_alcohol_formats_from_real_labels(text: str, abv: Decimal, proof: Decimal | None) -> None:
+    alcohol = parse_alcohol(text)
+
+    assert (alcohol.abv, alcohol.proof, alcohol.problem) == (abv, proof, None)
+
+
+@pytest.mark.parametrize("text", ["750ML", "BARREL PROOF 2024", "Aged 12 years"])
+def test_numbers_without_a_percent_or_alcohol_word_are_still_not_abv(text: str) -> None:
+    assert parse_alcohol(text).abv is None
+
+
+@pytest.mark.parametrize(
+    ("text", "fl_oz"),
+    [
+        ("1 PINT", Decimal(16)),
+        ("1 Pint/16 fl oz", Decimal(16)),
+        ("1 PINT (16 FL. OZ.)", Decimal(16)),
+        ("1 PINT 0.9 FL OZ", Decimal("16.9")),
+        ("1 QUART", Decimal(32)),
+    ],
+)
+def test_pints_and_quarts_are_read(text: str, fl_oz: Decimal) -> None:
+    contents = parse_net_contents(text)
+
+    assert contents.problem is None
+    assert contents.volume is not None
+    assert contents.volume.ml == fl_oz * FL_OZ.ml
+
+
+def test_a_pint_and_point_nine_ounces_is_the_same_as_500_ml() -> None:
+    contents = parse_net_contents("1 PINT 0.9 FL OZ")
+
+    assert contents.volume is not None
+    assert same_volume(contents.volume, Volume(Decimal(500), ML))
+
+
+def test_a_number_right_after_a_word_and_a_period_is_read() -> None:
+    contents = parse_net_contents("12%ALC. VOL.750ML")  # Worth Cellars
+
+    assert contents.volume is not None
+    assert contents.volume.ml == Decimal(750)
+
+
+def test_the_tail_of_a_decimal_is_still_never_read_as_a_number() -> None:
+    contents = parse_net_contents("0.75 L")
+
+    assert contents.volume is not None
+    assert contents.volume.ml == Decimal(750)

@@ -159,3 +159,43 @@ def test_wrong_or_missing_country_fails(found: str | None) -> None:
 
 def test_application_without_a_country_goes_to_review() -> None:
     assert check_country(None, "Product of Mexico", cfr="27 CFR 5.69").status is Status.REVIEW
+
+
+# ---- what real approved labels do ----
+
+
+def test_names_that_differ_only_in_spacing_pass_with_a_note() -> None:
+    result = brand("TERREPASSERI", "TERRE PASSERI")
+
+    assert result.status is Status.PASS
+    assert any("spacing" in note for note in result.notes)
+
+
+@pytest.mark.parametrize(
+    ("expected", "found"),
+    [
+        (
+            "Switchback Brewing Co., Burlington, Vermont",
+            "BREWED IN BURLINGTON, VERMONT BY SWITCHBACK BREWING CO.",
+        ),
+        (
+            "Tox Brewing Co., New London, CT",
+            "PROUDLY BREWED AND PACKAGED BY TOX BREWING CO. IN NEW LONDON, CT",
+        ),
+        (
+            "Aniche Cellars, Cook, Washington USA",
+            "Produced and bottled by Aniche Cellars in Cook, Washington USA",
+        ),
+    ],
+    ids=["place-first", "proudly-and-in", "in-before-place"],
+)
+def test_bottler_words_in_any_order_pass(expected: str, found: str) -> None:
+    assert check_bottler(expected, found, cfr="x").status is Status.PASS
+
+
+@pytest.mark.parametrize(
+    ("expected", "found"),
+    [("Armenia", "Republic of Armenia"), ("Germany", "Product of the Federal Republic of Germany")],
+)
+def test_long_form_country_names_match(expected: str, found: str) -> None:
+    assert check_country(expected, found, cfr="x").status is Status.PASS

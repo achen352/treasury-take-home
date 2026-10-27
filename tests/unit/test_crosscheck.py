@@ -175,3 +175,11 @@ def test_offline_never_fails_and_never_passes_the_warning(results: list[FieldRes
             assert after.status is Status.REVIEW
         if after.field is LabelField.HEALTH_WARNING:
             assert after.status is Status.REVIEW
+
+
+def test_ocr_that_runs_warning_words_together_still_confirms_it() -> None:
+    ocr = OLD_TOM_OCR_TEXT.replace("GOVERNMENT WARNING:", "GOVERNMENTWARNING:").replace(
+        "(1)", "(I)"
+    )
+
+    assert cross_check([WARNING_PASS], ocr) == [WARNING_PASS]

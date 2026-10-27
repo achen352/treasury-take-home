@@ -140,3 +140,52 @@ def test_fullwidth_warning_goes_to_review_not_pass_or_fail() -> None:
     text = fullwidth(WARNING_HEADER) + " " + BODY
 
     assert warning(text).status is Status.REVIEW
+
+
+# ---- what real approved labels do ----
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        HEALTH_WARNING.replace("GOVERNMENT WARNING:", "GOVERNMENTWARNING:")
+        .replace("to drive a car", "to drivea car")
+        .replace("Consumption", "Consumpt ion"),
+        HEALTH_WARNING.replace("because", "be- cause").replace("machinery", "ma-\nchinery"),
+        HEALTH_WARNING.replace("(1)", "(I)"),
+        HEALTH_WARNING.replace("(1)", "(l)"),
+    ],
+    ids=[
+        "run-together-and-split-words",
+        "line-break-hyphens",
+        "numbering-capital-I",
+        "numbering-l",
+    ],
+)
+def test_typesetting_quirks_on_real_labels_still_pass(text: str) -> None:
+    assert warning(text).status is Status.PASS
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        HEALTH_WARNING.replace("General, women", "General women"),
+        HEALTH_WARNING.replace("defects.", "defects. ."),
+        HEALTH_WARNING + "\N{RIGHT DOUBLE QUOTATION MARK}",
+    ],
+    ids=["missing-comma", "stray-period", "stray-quote"],
+)
+def test_punctuation_only_differences_go_to_review_with_a_diff(text: str) -> None:
+    result = warning(text)
+
+    assert result.status is Status.REVIEW
+    assert any("punctuation" in note for note in result.notes)
+    assert any(segment.op is not DiffOp.SAME for segment in result.diff)
+
+
+def test_missing_words_still_fail() -> None:
+    text = HEALTH_WARNING.replace("pregnancy because of", "pregnancy of").replace(
+        "drive a car", "drive car"
+    )  # FLOS, approved by TTB
+
+    assert warning(text).status is Status.FAIL
