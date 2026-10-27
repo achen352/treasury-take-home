@@ -442,3 +442,21 @@ def test_fullwidth_volumes_are_read() -> None:
 
     assert contents.volume is not None
     assert contents.volume.ml == Decimal(750)
+
+
+@pytest.mark.parametrize(
+    ("text", "low", "high"),
+    [
+        ("ALC. 14% TO 15% BY VOL.", Decimal(14), Decimal(15)),  # Kuromatsu-Hakushika sake
+        ("13-14% alc/vol", Decimal(13), Decimal(14)),
+        ("Alc. 12.5 to 13.5% by vol.", Decimal("12.5"), Decimal("13.5")),
+    ],
+)
+def test_alcohol_ranges_are_read(text: str, low: Decimal, high: Decimal) -> None:
+    alcohol = parse_alcohol(text)
+
+    assert (alcohol.abv, alcohol.abv_high, alcohol.problem) == (low, high, None)
+
+
+def test_a_backwards_range_is_a_problem() -> None:
+    assert parse_alcohol("ALC. 15% TO 14% BY VOL.").problem

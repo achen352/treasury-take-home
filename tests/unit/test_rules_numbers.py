@@ -143,3 +143,16 @@ def test_missing_net_contents_fails(found: str | None) -> None:
 @pytest.mark.parametrize("expected", [None, "a bottle"])
 def test_missing_or_unreadable_application_volume_goes_to_review(expected: str | None) -> None:
     assert contents(expected, "750 mL").status is Status.REVIEW
+
+
+def test_the_same_alcohol_range_passes() -> None:
+    result = check_alcohol(WINE, "14% to 15%", "ALC. 14% TO 15% BY VOL.", cfr="27 CFR 4.36")
+
+    assert result.status is Status.PASS
+
+
+def test_a_range_against_a_single_value_goes_to_review() -> None:
+    result = check_alcohol(WINE, "14.5%", "ALC. 14% TO 15% BY VOL.", cfr="27 CFR 4.36")
+
+    assert result.status is Status.REVIEW
+    assert any("range" in note for note in result.notes)

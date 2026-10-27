@@ -248,3 +248,17 @@ def test_names_in_the_same_non_latin_script_compare_normally(
 
 def test_a_country_printed_in_two_languages_matches() -> None:
     assert check_country("Korea", "Product of Korea 대한민국산", cfr="x").status is Status.PASS
+
+
+def test_produced_and_bottled_in_counts_as_a_country_statement() -> None:
+    assert check_country("China", "PRODUCED AND BOTTLED IN CHINA", cfr="x").status is Status.PASS
+
+
+def test_a_name_repeated_in_the_importer_statement_still_matches() -> None:
+    result = check_bottler(
+        "Diamond Hong, Inc., Brooklyn, New York 11232 U.S.A.",
+        "Imported By Diamond Hong, Inc. Diamond Hong, Inc. Brooklyn, New York 11232 U.S.A.",
+        cfr="x",
+    )
+
+    assert result.status is Status.PASS
