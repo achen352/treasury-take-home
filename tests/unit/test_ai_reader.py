@@ -20,7 +20,8 @@ from PIL import Image
 from app.config import Settings
 from app.domain.constants import HEALTH_WARNING
 from app.readers.ai import (
-    MAX_REPLY_BYTES,
+    MAX_REPLY_CHARS,
+    MAX_STREAM_BYTES,
     PROMPT,
     REPLY_SCHEMA,
     OpenAICompatibleVisionExtractor,
@@ -320,7 +321,44 @@ def test_a_reply_over_the_size_cap_is_not_read_to_the_end() -> None:
     failure = unavailable(FakeProvider(handler), llm_total_timeout=5)
 
     assert failure.reason == "reply_too_large"
-    assert len(pulled) * 100 < 2 * MAX_REPLY_BYTES
+    assert len(pulled) * 100 < 2 * MAX_REPLY_CHARS
+
+
+def test_a_normal_reply_streamed_one_token_per_event_is_accepted() -> None:
+    # Kimi wraps every token in about 200 bytes of JSON, so a full reading is far larger on the
+    # wire than its own text. Only the text counts toward the reply cap.
+    envelope = {
+        "id": "chatcmpl-" + "0" * 24,
+        "object": "chat.completion.chunk",
+        "created": 1_793_000_000,
+        "model": "kimi-k2.6",
+    }
+    text = json.dumps(GOOD_REPLY)
+    events = [{**envelope, **content(text[i : i + 3])} for i in range(0, len(text), 3)]
+    chunks = sse(*events, {**envelope, **finish()}, "[DONE]")
+
+    assert sum(len(chunk) for chunk in chunks) > 64 * 1024
+    assert read(FakeProvider(chunks=chunks), llm_total_timeout=5).label.brand_name == (
+        "OLD TOM DISTILLERY"
+    )
+
+
+def test_reasoning_that_never_ends_is_cut_off_at_the_stream_cap() -> None:
+    pulled: list[int] = []
+
+    async def thinks_forever() -> AsyncIterator[bytes]:
+        while len(pulled) < 100_000:
+            pulled.append(1)
+            event = {"choices": [{"index": 0, "delta": {"reasoning_content": "hmm " * 50}}]}
+            yield sse(event)[0]
+
+    async def handler(request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(200, content=thinks_forever())
+
+    failure = unavailable(FakeProvider(handler), llm_total_timeout=5)
+
+    assert failure.reason == "reply_too_large"
+    assert len(pulled) * 250 < 2 * MAX_STREAM_BYTES
 
 
 # ---- failures ----
