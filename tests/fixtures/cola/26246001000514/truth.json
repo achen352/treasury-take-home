@@ -8,6 +8,7 @@
     "beverage_type": "beer",
     "imported": false,
     "brand_name": "FOREVER ALONE",
+    "fanciful_name": "AMARILLO",
     "class_type": "India Pale Ale",
     "alcohol_content": "7.5%",
     "net_contents": "16 fl oz",
@@ -15,6 +16,7 @@
   },
   "printed": {
     "brand_name": "FOREVER ALONE",
+    "fanciful_name": "AMARILLO",
     "class_type": "INDIA PALE ALE",
     "alcohol_content": "7.5% ALC. BY VOL.",
     "net_contents": "1 PINT (16 FL. OZ.)",
@@ -24,7 +26,6 @@
     "warning_body_bold": false
   },
   "other_text": [
-    "AMARILLO",
     "RESIDENT CULTURE",
     "Hazy IPA hopped exclusively with Amarillo hops."
   ],

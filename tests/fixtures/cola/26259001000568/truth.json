@@ -9,6 +9,7 @@
     "beverage_type": "wine",
     "imported": false,
     "brand_name": "STOLEN ROOTS",
+    "fanciful_name": "GSM",
     "class_type": "GSM",
     "alcohol_content": "13.9%",
     "net_contents": "750 mL",
@@ -16,6 +17,7 @@
   },
   "printed": {
     "brand_name": "Stolen Roots",
+    "fanciful_name": "GSM",
     "class_type": "GSM",
     "alcohol_content": "13.9% Alc./Vol.",
     "net_contents": "750ml",

@@ -9,6 +9,7 @@
     "beverage_type": "spirits",
     "imported": true,
     "brand_name": "WUCHANG RICE BAIJIU",
+    "fanciful_name": "YEAR OF THE GOAT EDITION",
     "class_type": "Spirits Distilled From Grain",
     "alcohol_content": "50%",
     "net_contents": "500 mL",
@@ -17,6 +18,7 @@
   },
   "printed": {
     "brand_name": "五常大米酒 WU CHANG RICE BAIJIU",
+    "fanciful_name": "YEAR OF THE GOAT EDITION",
     "class_type": "SPIRITS DISTILLED FROM GRAIN",
     "alcohol_content": "Alc. 50% By Vol.",
     "net_contents": "500mL",

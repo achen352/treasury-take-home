@@ -80,6 +80,6 @@ def test_aniche_records_beatrix_as_the_fanciful_name_not_the_brand() -> None:
     aniche = next(truth for _, truth in COLA if truth.id == "cola-26247001000534")
 
     assert aniche.application.brand_name == "ANICHE CELLARS"
-    assert aniche.application.fanciful_name == "Beatrix"
+    assert aniche.application.fanciful_name == "BEATRIX"  # as the registry records it
     assert aniche.printed.fanciful_name == "Beatrix"
     assert "Beatrix" not in aniche.other_text

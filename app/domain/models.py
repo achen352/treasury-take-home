@@ -23,6 +23,7 @@ class LabelField(StrEnum):
     """The checked fields. Values match the attribute names on the data models."""
 
     BRAND = "brand_name"
+    FANCIFUL = "fanciful_name"
     CLASS_TYPE = "class_type"
     ALCOHOL = "alcohol_content"
     NET_CONTENTS = "net_contents"
@@ -74,6 +75,7 @@ class ApplicationData(BaseModel):
     beverage_type: BeverageType
     imported: bool = False
     brand_name: str = Field(max_length=MAX_NAME)
+    fanciful_name: str | None = Field(default=None, max_length=MAX_NAME)
     class_type: str = Field(max_length=MAX_NAME)
     alcohol_content: str | None = Field(default=None, max_length=MAX_SHORT)
     net_contents: str = Field(max_length=MAX_SHORT)
@@ -92,6 +94,7 @@ class ExtractedLabel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
     brand_name: str | None = Field(default=None, max_length=MAX_NAME)
+    fanciful_name: str | None = Field(default=None, max_length=MAX_NAME)
     class_type: str | None = Field(default=None, max_length=MAX_NAME)
     alcohol_content: str | None = Field(default=None, max_length=MAX_SHORT)
     net_contents: str | None = Field(default=None, max_length=MAX_SHORT)
@@ -104,6 +107,26 @@ class ExtractedLabel(BaseModel):
     def value(self, field: LabelField) -> str | None:
         value: str | None = getattr(self, field.value)
         return value
+
+
+class Box(BaseModel):
+    """A rectangle on an image, in pixels from the top left corner."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    left: int = Field(ge=0)
+    top: int = Field(ge=0)
+    width: int = Field(ge=0)
+    height: int = Field(ge=0)
+
+
+class Location(BaseModel):
+    """Where text was found: which of the label's images (0 is the first), and where on it."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    image: int = Field(ge=0)
+    box: Box
 
 
 class DiffOp(StrEnum):
@@ -119,6 +142,7 @@ class DiffSegment(BaseModel):
     op: DiffOp
     expected: str = ""
     found: str = ""
+    location: Location | None = None  # where the differing words are on the label, if found
 
 
 class FieldResult(BaseModel):
@@ -134,6 +158,7 @@ class FieldResult(BaseModel):
     notes: tuple[str, ...] = ()
     diff: tuple[DiffSegment, ...] = ()
     second_reading: str | None = None  # what the OCR reader saw, when it disagreed
+    location: Location | None = None  # where the text was found on the label, if it was
 
     def at_least(self, status: Status, note: str, **updates: object) -> Self:
         """Move toward `status` but never away from a worse one, recording why."""

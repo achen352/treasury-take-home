@@ -77,7 +77,7 @@ application data ----------------------------------------------------+         |
 
 | Field | Pass | Needs review | Fail |
 |---|---|---|---|
-| Brand, class/type | Same after ignoring case, punctuation, spacing and common abbreviations | Similarity score of 90 or more out of 100 (`OLD TOM DISTILLERS` vs `DISTILLERY` scores 94) | Below 90 (`OLD TOM DISTILLERY RESERVE` scores 82) |
+| Brand, fanciful name (when the application has one), class/type | Same after ignoring case, punctuation, spacing and common abbreviations | Similarity score of 90 or more out of 100 (`OLD TOM DISTILLERS` vs `DISTILLERY` scores 94) | Below 90 (`OLD TOM DISTILLERY RESERVE` scores 82) |
 | Bottler (name and address) | The same words in any order, ignoring "bottled by" wording | A more forgiving score of 85 or more ("KY" vs "Kentucky") | Below 85 |
 | Country of origin | Same after removing wording like "Product of" | Score of 90 or more | Below 90 ("New Mexico" vs "Mexico") |
 | Alcohol, proof, net contents | The same number; up to 0.5% apart only when converting between metric and US units | Unreadable, ambiguous (two ABVs) or impossible values; a range that doesn't match the application | A clearly different number; proof that isn't twice the ABV |
@@ -89,8 +89,9 @@ Some situations always go to review, whatever the score:
 - letters from another alphabet disguised as Latin ones
 - a name in a different script from the application
 - an application field with nothing to compare
+- the label's images disagreeing on a field (such as two different ABVs on the front and back)
 - the OCR reader failing to confirm what the AI read
-- text that seems to address an AI
+- text that seems to address an AI, whether the tripwire finds it or the AI reader reports it
 
 The overall result is **Does not match** if any field fails, otherwise **Needs review** if any
 field needs review, otherwise **Matches**.

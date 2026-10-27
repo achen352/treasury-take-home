@@ -1,6 +1,6 @@
 """Runs every rule for the beverage type and combines the results into one report."""
 
-from collections.abc import Collection, Iterable
+from collections.abc import Collection, Iterable, Mapping, Sequence
 
 from app.domain.constants import CFR
 from app.domain.crosscheck import cross_check, offline_policy
@@ -29,6 +29,16 @@ HIDDEN_CHARACTERS = (
     "Hidden characters (such as zero-width spaces or text-direction controls) were removed "
     "from this reading; a person should check it."
 )
+IMAGES_DISAGREE = (
+    "The label's images disagree on this field ({readings}); a person should check it."
+)
+INSTRUCTIONS_SEEN = (
+    "The AI reader reported text on the label that addresses an AI system ({seen}). This may be "
+    "a prompt-injection attempt; a person should review the label."
+)
+# Only the start of each reported instruction is quoted back, and only the first few.
+QUOTED_INSTRUCTIONS = 3
+QUOTED_LENGTH = 200
 
 
 def overall_verdict(results: Iterable[FieldResult], flags: Collection[Flag]) -> Verdict:
@@ -46,12 +56,16 @@ def verify(
     *,
     read_by: Reader = Reader.AI,
     ocr_text: str | None = None,
+    conflicts: Mapping[LabelField, Sequence[str]] | None = None,
+    instructions_seen: Sequence[str] = (),
 ) -> Report:
     """Check a label reading against its application.
 
     `read_by` says which reader produced `reading`. With the AI reader, `ocr_text` (if given)
     is the independent OCR reading used to confirm it. With the OCR reader alone, the offline
-    policy applies and the label can't come out as "Matches".
+    policy applies and the label can't come out as "Matches". `conflicts` lists fields on which
+    the label's images disagree, and `instructions_seen` is text the reader reported as
+    addressing an AI. Both can only send the label toward a person.
     """
     beverage = application.beverage_type
     ocr = ocr_text[:MAX_OCR_TEXT] if ocr_text is not None else None
@@ -76,6 +90,17 @@ def verify(
             label(LabelField.BRAND),
             cfr=cfr(LabelField.BRAND),
         ),
+    ]
+    if application.fanciful_name is not None:
+        results.append(
+            check_name(
+                LabelField.FANCIFUL,
+                application.fanciful_name,
+                label(LabelField.FANCIFUL),
+                cfr=cfr(LabelField.FANCIFUL),
+            )
+        )
+    results += [
         check_name(
             LabelField.CLASS_TYPE,
             application.class_type,
@@ -114,6 +139,18 @@ def verify(
         result.at_least(Status.REVIEW, HIDDEN_CHARACTERS) if result.field in hidden else result
         for result in results
     ]
+    if conflicts:
+        results = [
+            result.at_least(
+                Status.REVIEW,
+                IMAGES_DISAGREE.format(
+                    readings="; ".join(f'"{v}"' for v in conflicts[result.field])
+                ),
+            )
+            if result.field in conflicts
+            else result
+            for result in results
+        ]
 
     flags: set[Flag] = set()
     if read_by is Reader.OCR:
@@ -132,6 +169,12 @@ def verify(
             f"({'; '.join(phrases)}). This may be a prompt-injection attempt; "
             "a person should review the label.",
         )
+    if instructions_seen:
+        flags.add(Flag.POSSIBLE_INJECTION)
+        quoted = "; ".join(
+            f'"{text[:QUOTED_LENGTH]}"' for text in instructions_seen[:QUOTED_INSTRUCTIONS]
+        )
+        notes = (*notes, INSTRUCTIONS_SEEN.format(seen=quoted))
 
     return Report(
         verdict=overall_verdict(results, flags),

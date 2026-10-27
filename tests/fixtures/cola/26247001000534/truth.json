@@ -9,6 +9,7 @@
     "beverage_type": "wine",
     "imported": false,
     "brand_name": "ANICHE CELLARS",
+    "fanciful_name": "BEATRIX",
     "class_type": "Estate Chardonnay",
     "alcohol_content": "12%",
     "net_contents": "750 mL",
@@ -16,6 +17,7 @@
   },
   "printed": {
     "brand_name": "Aniche Cellars",
+    "fanciful_name": "Beatrix",
     "class_type": "Estate Chardonnay",
     "alcohol_content": "12% ALC BY VOL",
     "net_contents": "750ML",
@@ -25,7 +27,6 @@
     "warning_body_bold": false
   },
   "other_text": [
-    "Beatrix",
     "Hecate's Key Vineyard",
     "100% estate chardonnay",
     "Columbia Gorge AVA",

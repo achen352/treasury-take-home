@@ -8,6 +8,7 @@
     "beverage_type": "wine",
     "imported": false,
     "brand_name": "WORTH CELLARS",
+    "fanciful_name": "FIELD AND SPARK",
     "class_type": "Sparkling Pinot Meunier",
     "alcohol_content": "12%",
     "net_contents": "750 mL",
@@ -15,6 +16,7 @@
   },
   "printed": {
     "brand_name": "WORTH CELLARS",
+    "fanciful_name": "Field & Spark",
     "class_type": "SPARKLING PINOT MEUNIER",
     "alcohol_content": "12%ALC. VOL.",
     "net_contents": "750ML",
@@ -24,7 +26,6 @@
     "warning_body_bold": false
   },
   "other_text": [
-    "Field & Spark",
     "LEELANAU PENINSULA",
     "2022 SPARKLING PINOT MEUNIER",
     "SPARKLING 12%ALC. VOL.750ML",

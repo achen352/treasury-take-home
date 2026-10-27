@@ -9,6 +9,7 @@
     "beverage_type": "spirits",
     "imported": false,
     "brand_name": "BELLE ISLE",
+    "fanciful_name": "BOURBON",
     "class_type": "Straight Bourbon Whiskey",
     "alcohol_content": "53.5% Alc./Vol. (107 Proof)",
     "net_contents": "750 mL",
@@ -16,6 +17,7 @@
   },
   "printed": {
     "brand_name": "BELLE ISLE",
+    "fanciful_name": "BOURBON",
     "class_type": "STRAIGHT BOURBON WHISKEY",
     "alcohol_content": "53.5 ALC/VOL 107 PROOF",
     "net_contents": "750ML",
@@ -25,7 +27,6 @@
     "warning_body_bold": false
   },
   "other_text": [
-    "BOURBON",
     "BOTTLE 1 OF 200"
   ],
   "hidden_text": [],

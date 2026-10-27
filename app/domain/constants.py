@@ -12,6 +12,9 @@ HEALTH_WARNING = (
 )
 WARNING_HEADER = "GOVERNMENT WARNING:"
 WARNING_CFR = "27 CFR 16.21-16.22"
+# The fanciful name is an entry on the application form (item 7, "if any"), not a section of
+# the regulations, so the form is what a mismatch is cited against.
+FANCIFUL_CITATION = "TTB Form 5100.31, item 7 (fanciful name)"
 
 _SPIRITS, _WINE, _BEER = BeverageType.SPIRITS, BeverageType.WINE, BeverageType.BEER
 
@@ -19,6 +22,7 @@ _SPIRITS, _WINE, _BEER = BeverageType.SPIRITS, BeverageType.WINE, BeverageType.B
 # For imported wine, TTB defers country-of-origin marking to Customs (27 CFR 4.35(e)).
 CFR: dict[LabelField, dict[BeverageType, str]] = {
     LabelField.BRAND: {_SPIRITS: "27 CFR 5.64", _WINE: "27 CFR 4.33", _BEER: "27 CFR 7.64"},
+    LabelField.FANCIFUL: dict.fromkeys(BeverageType, FANCIFUL_CITATION),
     LabelField.CLASS_TYPE: {_SPIRITS: "27 CFR 5.63", _WINE: "27 CFR 4.34", _BEER: "27 CFR 7.63"},
     LabelField.ALCOHOL: {_SPIRITS: "27 CFR 5.65", _WINE: "27 CFR 4.36", _BEER: "27 CFR 7.65"},
     LabelField.NET_CONTENTS: {_SPIRITS: "27 CFR 5.70", _WINE: "27 CFR 4.37", _BEER: "27 CFR 7.70"},

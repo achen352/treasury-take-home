@@ -8,6 +8,7 @@
     "beverage_type": "beer",
     "imported": false,
     "brand_name": "ADK FOX BREWING",
+    "fanciful_name": "COOKED AT 70",
     "class_type": "Hazy India Pale Ale",
     "alcohol_content": "6.5%",
     "net_contents": "1 pint",
@@ -15,6 +16,7 @@
   },
   "printed": {
     "brand_name": "ADK FOX BREWING",
+    "fanciful_name": "Cooked at 70",
     "class_type": "HAZY INDIA PALE ALE",
     "alcohol_content": "ALC BY VOL 6.5 %",
     "net_contents": "1 PINT",
@@ -24,7 +26,6 @@
     "warning_body_bold": false
   },
   "other_text": [
-    "Cooked at 70",
     "HAZY IPA",
     "BEER",
     "IBU 72",

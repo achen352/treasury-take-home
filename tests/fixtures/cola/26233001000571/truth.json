@@ -10,6 +10,7 @@
     "beverage_type": "spirits",
     "imported": true,
     "brand_name": "OHANYAN",
+    "fanciful_name": "SIGNATURE",
     "class_type": "Vodka",
     "alcohol_content": "40%",
     "net_contents": "700 mL",
@@ -18,6 +19,7 @@
   },
   "printed": {
     "brand_name": "OHANYAN",
+    "fanciful_name": "SIGNATURE",
     "class_type": "Vodka",
     "alcohol_content": "Alc. 40% BY Vol.",
     "net_contents": "700 ml.",
@@ -28,7 +30,6 @@
     "warning_body_bold": false
   },
   "other_text": [
-    "SIGNATURE",
     "LXXX",
     "100% neutral spirits distilled from wheat.",
     "Produced by: OHANYAN BRANDY COMPANY LLC Yerevan, Republic of Armenia, 0085",

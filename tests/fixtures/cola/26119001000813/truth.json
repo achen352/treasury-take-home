@@ -9,6 +9,7 @@
     "beverage_type": "spirits",
     "imported": true,
     "brand_name": "REA 25",
+    "fanciful_name": "SINGLE DISTILLED SOJU",
     "class_type": "Single Distilled Soju",
     "alcohol_content": "25%",
     "net_contents": "375 mL",
@@ -17,6 +18,7 @@
   },
   "printed": {
     "brand_name": "려 REA 25",
+    "fanciful_name": "Single Distilled Soju",
     "class_type": "Single Distilled Soju",
     "alcohol_content": "25% alc./vol.",
     "net_contents": "375 mL",
