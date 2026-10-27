@@ -1,0 +1,55 @@
+{
+  "id": "cola-26106001000008",
+  "description": "KUROMATSU-HAKUSHIKA (sake - imported, Japan), approved 06/09/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. The brand is printed in kanji (\"黒松 白鹿\") and in Latin letters; the alcohol content is a range (\"14% TO 15%\"), which wine (sake included) may state.",
+  "images": [
+    "1-front.jpg",
+    "2-back.jpg"
+  ],
+  "application": {
+    "beverage_type": "wine",
+    "imported": true,
+    "brand_name": "KUROMATSU-HAKUSHIKA",
+    "class_type": "Sake",
+    "alcohol_content": "14% to 15%",
+    "net_contents": "720 mL",
+    "bottler": "Hosoda Bros. Inc., San Francisco, CA 94107",
+    "country_of_origin": "Japan"
+  },
+  "printed": {
+    "brand_name": "黒松白鹿 KUROMATSU-HAKUSHIKA",
+    "class_type": "SAKE",
+    "alcohol_content": "ALC. 14% TO 15% BY VOL.",
+    "net_contents": "NET CONT:720ML(24.3 FL.OZ.)",
+    "bottler": "IMPORTED BY HOSODA BROS. INC. SAN FRANCISCO, CA. 94107",
+    "country_of_origin": "PRODUCT OF JAPAN",
+    "health_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+    "warning_header_bold": true,
+    "warning_body_bold": false
+  },
+  "other_text": [
+    "黒松",
+    "白鹿",
+    "Type:Junmai",
+    "Black Pine and White Deer... Together they represent our proud tradition",
+    "PRODUCED BY TATSUUMA-HONKE BREWING CO. LTD.",
+    "登録商標",
+    "特撰"
+  ],
+  "hidden_text": [],
+  "acceptable": [
+    "Matches"
+  ],
+  "tags": [
+    "cola",
+    "other-script",
+    "wine"
+  ],
+  "cola": {
+    "ttb_id": "26106001000008",
+    "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26106001000008",
+    "label_sizes": {
+      "1-front.jpg": "3.7 inches W X 4 inches H",
+      "2-back.jpg": "2.75 inches W X 3.9 inches H"
+    }
+  }
+}

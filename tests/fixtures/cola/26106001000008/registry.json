@@ -1,0 +1,29 @@
+{
+  "ttb_id": "26106001000008",
+  "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26106001000008",
+  "status": "APPROVED",
+  "brand_name": "KUROMATSU-HAKUSHIKA",
+  "fanciful_name": "",
+  "class_type_code": "SAKE - IMPORTED",
+  "origin_code": "JAPAN",
+  "approval_date": "06/09/2026",
+  "qualifications": "",
+  "total_bottle_capacity": "",
+  "product_type": "Wine",
+  "source": "Imported",
+  "applicant": "HOSODA BROS. INC.\n1444 TENNESSEE ST\nSAN FRANCISCO CA 94107",
+  "images": [
+    {
+      "filename": "Hakushika Kuromatsu 720ml Front 6-8-2026 - Jun 8 2026 - 9-38 PM.jpg",
+      "image_type": "Brand (front) or keg collar",
+      "dimensions": "3.7 inches W X 4 inches H",
+      "saved_as": "1-front.jpg"
+    },
+    {
+      "filename": "Kuromatsu Hakushika label 720ml back.JPG",
+      "image_type": "Back",
+      "dimensions": "2.75 inches W X 3.9 inches H",
+      "saved_as": "2-back.jpg"
+    }
+  ]
+}

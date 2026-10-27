@@ -1,0 +1,54 @@
+{
+  "id": "cola-26147001000244",
+  "description": "WUCHANG RICE BAIJIU (other specialties & proprietaries, China), approved 06/01/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. The brand is printed in Chinese (\"五常大米酒\") and as \"WU CHANG RICE BAIJIU\" (the registry spells it WUCHANG); the back repeats the details in Chinese, and the country is stated as \"PRODUCED AND BOTTLED IN CHINA\".",
+  "images": [
+    "1-front.jpg",
+    "2-back.jpg"
+  ],
+  "application": {
+    "beverage_type": "spirits",
+    "imported": true,
+    "brand_name": "WUCHANG RICE BAIJIU",
+    "class_type": "Spirits Distilled From Grain",
+    "alcohol_content": "50%",
+    "net_contents": "500 mL",
+    "bottler": "Diamond Hong, Inc., Brooklyn, New York 11232 U.S.A.",
+    "country_of_origin": "China"
+  },
+  "printed": {
+    "brand_name": "五常大米酒 WU CHANG RICE BAIJIU",
+    "class_type": "SPIRITS DISTILLED FROM GRAIN",
+    "alcohol_content": "Alc. 50% By Vol.",
+    "net_contents": "500mL",
+    "bottler": "Imported By Diamond Hong, Inc. Diamond Hong, Inc. Brooklyn, New York 11232 U.S.A.",
+    "country_of_origin": "PRODUCED AND BOTTLED IN CHINA",
+    "health_warning": "GOVERNMENT WARNING: (1) ACCORDING TO THE SURGEON GENERAL, WOMEN SHOULD NOT DRINK ALCOHOLIC BEVERAGES DURING PREGNANCY BECAUSE OF THE RISK OF BIRTH DEFECTS. (2) CONSUMPTION OF ALCOHOLIC BEVERAGES IMPAIRS YOUR ABILITY TO DRIVE A CAR OR OPERATE MACHINERY, AND MAY CAUSE HEALTH PROBLEMS.",
+    "warning_header_bold": true,
+    "warning_body_bold": false
+  },
+  "other_text": [
+    "穗香千里 SUI XIANG QIAN LI",
+    "WUCHANG RICE BAIJIU - YEAR OF THE GOAT EDITION",
+    "香型: 香米型",
+    "净含量: 500ml 酒精度: 50%vol",
+    "产地: 中国哈尔滨五常",
+    "美国大文行酒业有限公司总经销"
+  ],
+  "hidden_text": [],
+  "acceptable": [
+    "Matches"
+  ],
+  "tags": [
+    "cola",
+    "other-script",
+    "spirits"
+  ],
+  "cola": {
+    "ttb_id": "26147001000244",
+    "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26147001000244",
+    "label_sizes": {
+      "1-front.jpg": "3 inches W X 6.3 inches H",
+      "2-back.jpg": "2.9 inches W X 6.4 inches H"
+    }
+  }
+}

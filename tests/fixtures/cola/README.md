@@ -1,6 +1,7 @@
 # Real labels from TTB's public COLA registry
 
-These 16 approved labels (6 spirits, 6 wines, 4 beers; 6 imported) are public records from
+These 19 approved labels (8 spirits, 7 wines, 4 beers; 9 imported, 3 of them in other scripts)
+are public records from
 [TTB's Public COLA Registry](https://ttbonline.gov/colasonline/publicSearchColasBasic.do).
 Each folder holds:
 
@@ -50,6 +51,23 @@ Four approved labels deviate from the 27 CFR 16.21 text, so their right result i
 - **Switchback** isn't a deviation, but its warning is set in one heavy condensed typeface, so
   whether the header is bold can't be settled from the image. The right result is **Needs
   review**.
+
+## Labels in other scripts
+
+Mandatory information must be in English, except the brand name (27 CFR 5.55 and 7.55; for
+wine, 4.38(c) also exempts the place of production and the producer). Three labels test this.
+All of them should come out "Matches":
+
+| Label | What it does |
+|---|---|
+| REA 25 (South Korea) | brand printed as Hangul "려" next to "REA 25"; back label almost all Korean |
+| Wuchang Rice Baijiu (China) | brand in Chinese and as "WU CHANG" (the registry says WUCHANG); "PRODUCED AND BOTTLED IN CHINA"; importer name printed twice |
+| Kuromatsu-Hakushika (Japan) | brand in kanji and Latin letters; alcohol stated as a range, "14% TO 15%" |
+
+A name printed in a different script from the application goes to review, since spelling
+can't be compared across scripts. A name printed in both scripts is compared in the
+application's script. Recent Ukrainian exports turned out to be labelled in English, so two
+synthetic labels cover Cyrillic brands instead.
 
 The label-reading prompt still has to handle one more case. At **Aniche Cellars**, the big
 name "Beatrix" is the fanciful name, and the brand appears only in the bottler statement.

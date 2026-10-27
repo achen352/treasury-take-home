@@ -1,0 +1,29 @@
+{
+  "ttb_id": "26147001000244",
+  "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26147001000244",
+  "status": "APPROVED",
+  "brand_name": "WUCHANG RICE BAIJIU",
+  "fanciful_name": "YEAR OF THE GOAT EDITION",
+  "class_type_code": "OTHER SPECIALTIES & PROPRIETARIES",
+  "origin_code": "CHINA",
+  "approval_date": "06/01/2026",
+  "qualifications": "",
+  "total_bottle_capacity": "",
+  "product_type": "Distilled Spirits",
+  "source": "Imported",
+  "applicant": "DIAMOND HONG, INC.\n211 41ST ST STE B\nBROOKLYN NY 11232",
+  "images": [
+    {
+      "filename": "wuchang_goat_front.jpg",
+      "image_type": "Brand (front) or keg collar",
+      "dimensions": "3 inches W X 6.3 inches H",
+      "saved_as": "1-front.jpg"
+    },
+    {
+      "filename": "wuchang_goat_back.jpg",
+      "image_type": "Back",
+      "dimensions": "2.9 inches W X 6.4 inches H",
+      "saved_as": "2-back.jpg"
+    }
+  ]
+}

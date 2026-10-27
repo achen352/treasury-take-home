@@ -1,0 +1,29 @@
+{
+  "ttb_id": "26119001000813",
+  "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26119001000813",
+  "status": "APPROVED",
+  "brand_name": "REA 25",
+  "fanciful_name": "SINGLE DISTILLED SOJU",
+  "class_type_code": "OTHER SPECIALTIES & PROPRIETARIES",
+  "origin_code": "SOUTH KOREA",
+  "approval_date": "06/08/2026",
+  "qualifications": "",
+  "total_bottle_capacity": "",
+  "product_type": "Distilled Spirits",
+  "source": "Imported",
+  "applicant": "BEKSEJU USA, INC.\n7123 TELEGRAPH RD\nMONTEBELLO CA 90640",
+  "images": [
+    {
+      "filename": "RES25 Single Distilled soju_FT5.jpg",
+      "image_type": "Brand (front) or keg collar",
+      "dimensions": "3 inches W X 5.88 inches H",
+      "saved_as": "1-front.jpg"
+    },
+    {
+      "filename": "RES25 Single Distilled soju_BK5.jpg",
+      "image_type": "Back",
+      "dimensions": "3 inches W X 5.88 inches H",
+      "saved_as": "2-back.jpg"
+    }
+  ]
+}
