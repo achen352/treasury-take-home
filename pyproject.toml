@@ -10,6 +10,7 @@ dependencies = [
     "pydantic-settings",
     "rapidfuzz",
     "pillow",
+    "pypdfium2",
 ]
 
 [project.optional-dependencies]
@@ -62,3 +63,8 @@ python_version = "3.13"
 strict = true
 plugins = ["pydantic.mypy"]
 files = ["app", "scripts"]
+
+[[tool.mypy.overrides]]
+# pypdfium2 ships no type information.
+module = ["pypdfium2", "pypdfium2.*"]
+ignore_missing_imports = true

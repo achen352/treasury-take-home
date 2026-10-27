@@ -144,11 +144,18 @@ Four approved labels differ from the regulation's text, and the tool reports the
 
 ## Security
 
-- **Uploads (M3):**
-  - file type is judged by content, not by file name
-  - size and pixel limits stop decompression bombs
-  - every image is re-encoded, which drops metadata and anything appended to the file
-  - nothing is written to disk
+- **Uploads:**
+  - file type is judged by its first bytes, not by file name: PNG, JPEG, WebP and PDF only,
+    and Pillow may open only the format those bytes claim (so it never reaches Ghostscript)
+  - size, pixel and image-count limits stop decompression bombs
+  - every image is rebuilt from its pixels, which drops metadata (including GPS location),
+    extra animation frames and anything appended to the file
+  - transparent pixels are flattened onto white, so text hidden in them stays hidden
+  - PDF pages are rendered with a PDFium build that has no JavaScript engine, so only what a
+    person can see is read, never a hidden text layer, and scripts can't run
+  - nothing is written to disk, which a test checks with Python's audit hooks
+  - iPhone HEIC photos aren't decoded on the server: iPhones send JPEG when uploading from the
+    photo library, and a HEIC file gets a message explaining that
 - **Prompt injection.** Text printed on a label to steer the AI can at most make one reading
   wrong, because the model only transcribes, has no tools, and never decides. The OCR
   cross-check catches a reading that drifts from what's printed. A tripwire, which works in
@@ -181,7 +188,7 @@ Four approved labels differ from the regulation's text, and the tool reports the
 
 The app imports few libraries, all open source under permissive licenses. Every package,
 including the ones these pull in, is pinned to an exact version and checked against a hash on
-install. That comes to 18 runtime packages in all.
+install. That comes to 19 runtime packages in all.
 
 | Library | Used for | License |
 |---|---|---|
@@ -189,6 +196,7 @@ install. That comes to 18 runtime packages in all.
 | Pydantic, pydantic-settings | Data validation and settings | MIT |
 | RapidFuzz | Similarity scores for near-miss names | MIT |
 | Pillow | Image decoding and re-encoding, and drawing test labels | MIT-CMU |
+| pypdfium2 (bundles PDFium, Chrome's PDF engine) | Rendering PDF label pages as images | BSD-3-Clause, Apache-2.0 |
 | DejaVu fonts (bundled, test labels only) | Drawing test labels identically on every OS | Bitstream Vera (permissive) |
 
 Planned for M3: `httpx2` (BSD-3-Clause), the HTTP client the tests already use, becomes a

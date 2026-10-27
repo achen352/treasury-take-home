@@ -187,6 +187,11 @@ with Valorant's anti-cheat.
   - search origin codes: Japan `59`, South Korea `5D`, China `96`, Ukraine `6N`
   - fetch one request every two seconds
 - **The pre-commit hook may reformat files and abort the commit.** Re-stage and commit again.
+- **Lock files on the Mac.** `pip-tools` isn't in the lock files; install it into the `.venv`
+  (`.venv/bin/python -m pip install pip-tools`). Compiling on macOS drops `colorama`, a
+  Windows-only dependency of pytest and bandit, so put its pinned, hashed entry back (copy it
+  from git) or the Windows machine's `--require-hashes` install breaks. In zsh, pass
+  `--extra dev` as written, not through a `${var:+...}` expansion.
 - **Ruff S105 and Bandit B105 flag names such as `PASS` and `token`** as possible passwords.
   Rename the variable or add a commented suppression.
 - **Read files with `encoding="utf-8"`.** Windows' default code page breaks on non-ASCII

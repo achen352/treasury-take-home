@@ -27,7 +27,7 @@
   {
     "file": "pdf-named.jpg",
     "expect": "reject",
-    "why": "A PDF document, named .jpg."
+    "why": "A PDF with no pages, named .jpg: judged by its content it is a PDF, and an empty one."
   },
   {
     "file": "empty.png",
@@ -58,5 +58,30 @@
     "file": "exif-rotated.jpg",
     "expect": "sanitize",
     "why": "A JPEG stored sideways with an EXIF rotation flag; it must be turned upright."
+  },
+  {
+    "file": "pdf-hidden-text.pdf",
+    "expect": "sanitize",
+    "why": "A PDF label with instructions in invisible text and in white on white; only what a person can see may be read."
+  },
+  {
+    "file": "pdf-javascript.pdf",
+    "expect": "sanitize",
+    "why": "A PDF label that runs a script when opened; the page may be rendered, the script never."
+  },
+  {
+    "file": "pdf-encrypted.pdf",
+    "expect": "reject",
+    "why": "A password-protected PDF."
+  },
+  {
+    "file": "pdf-too-many-pages.pdf",
+    "expect": "reject",
+    "why": "A PDF with 7 pages, one more than a label may have images."
+  },
+  {
+    "file": "pdf-odd-page.pdf",
+    "expect": "reject",
+    "why": "A PDF whose page is 10 points wide and 5,000 tall, far too thin to be a label."
   }
 ]
