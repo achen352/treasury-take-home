@@ -23,9 +23,7 @@ from app.domain.models import (
 from app.domain.verifier import verify
 from app.readers import ocr
 from app.readers.ocr import (
-    OcrPage,
     OcrUnavailable,
-    Word,
     attach_locations,
     has_warning_header,
     locate,
@@ -37,6 +35,7 @@ from app.readers.ocr import (
 )
 from app.readers.uploads import LabelImage, prepare_upload
 from scripts.fixtures import FIXTURES_ROOT, load_fixtures
+from tests.fakes import words_page
 from tests.samples import OLD_TOM_APPLICATION, OLD_TOM_READING
 
 SYNTHETIC = FIXTURES_ROOT / "synthetic"
@@ -58,21 +57,6 @@ def tsv(*rows: tuple[int, int, int, int, int, int, int, float, str]) -> str:
             f"5\t1\t{block}\t{par}\t{line}\t{word}\t{left}\t{top}\t{width}\t40\t{conf}\t{text}"
         )
     return "\n".join(lines) + "\n"
-
-
-def words_page(*lines: str, image: int = 0) -> OcrPage:
-    """A page whose words sit on a grid: line n at y = 100 n, word m at x = 200 m."""
-    words = [
-        Word(
-            text=text,
-            confidence=95.0,
-            box=Box(left=200 * m, top=100 * n, width=180, height=40),
-            line=(0, 1, 1, n),
-        )
-        for n, line_text in enumerate(lines)
-        for m, text in enumerate(line_text.split())
-    ]
-    return OcrPage(image=image, words=tuple(words))
 
 
 # ---- running Tesseract ----
