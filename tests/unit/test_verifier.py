@@ -138,7 +138,7 @@ def test_every_finding_cites_its_regulation(
     )
     report = verify(application, reading_with(country_of_origin="Mexico"))
 
-    assert all(re.match(r"(27|19) CFR \d", result.cfr) for result in report.results)
+    assert all(re.match(r"(27|19) CFR (part )?\d", result.cfr) for result in report.results)
     assert next(result.cfr for result in report.results if result.field is field) == cfr
 
 
