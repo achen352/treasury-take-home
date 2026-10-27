@@ -191,6 +191,11 @@ def test_two_different_abvs_are_a_problem() -> None:
     assert parse_alcohol("45% Alc./Vol. ... 40% Alc./Vol.").problem
 
 
+@pytest.mark.parametrize("text", ["45% Alc./Vol. (90 Proof) 80 Proof", "45% Alc./Vol. (500 Proof)"])
+def test_two_proofs_or_an_impossible_proof_are_a_problem(text: str) -> None:
+    assert parse_alcohol(text).problem
+
+
 def test_the_same_abv_stated_twice_is_fine() -> None:
     assert parse_alcohol("45% ALC/VOL - 45.0% alc/vol").abv == Decimal(45)
 

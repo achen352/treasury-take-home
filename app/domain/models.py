@@ -80,10 +80,6 @@ class ApplicationData(BaseModel):
     bottler: str = Field(max_length=MAX_BOTTLER)
     country_of_origin: str | None = Field(default=None, max_length=MAX_SHORT)
 
-    def value(self, field: LabelField) -> str | None:
-        value: str | None = getattr(self, field.value, None)
-        return value
-
 
 class ExtractedLabel(BaseModel):
     """Text transcribed from a label image. None means the field wasn't found.
