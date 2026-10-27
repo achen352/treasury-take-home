@@ -191,8 +191,9 @@ install. That comes to 18 runtime packages in all.
 | Pillow | Image decoding and re-encoding, and drawing test labels | MIT-CMU |
 | DejaVu fonts (bundled, test labels only) | Drawing test labels identically on every OS | Bitstream Vera (permissive) |
 
-Planned for M3: the `openai` client library and `pytesseract` (both Apache-2.0), plus the
-Tesseract OCR engine (Apache-2.0), installed in the container image. Test and lint tools
+Planned for M3: `httpx2` (BSD-3-Clause), the HTTP client the tests already use, becomes a
+runtime dependency for calling the AI reader, and the Tesseract OCR engine (Apache-2.0) is
+installed in the container image and run directly, so no Python wrapper is needed. Test and lint tools
 (pytest, Hypothesis, Ruff, mypy) are development-only and never ship.
 
 Keeping them safe:
@@ -216,6 +217,12 @@ deployment should do:
   For agency use, point the adapter at a FedRAMP-authorized model, such as Azure OpenAI in
   Treasury's tenant. Alternatively, run the OCR-only mode (`EXTRACTOR_MODE=ocr`), which sends
   nothing outside the server.
+- **Kimi is slower than a US-hosted model would be.** From the US, reading a label takes about
+  5 seconds: about 0.7 s is the round trip to Moonshot's servers in Asia, and the model writes
+  about 55 tokens a second. In one evening's testing, about 1 call in 4 also waited 9 to 16
+  seconds in Kimi's queue. An agency deployment on Azure OpenAI in a US region removes the round
+  trip and can reserve capacity so requests don't queue. Its speed and accuracy on these labels
+  haven't been measured here.
 - **Render's free tier hosts the demo.** It isn't FedRAMP-authorized or on Azure, where the
   agency runs. It has 0.1 CPU and 512 MB of memory, and it sleeps when idle, so the first request
   after a quiet spell is slow. The same Docker image runs on Azure App Service.

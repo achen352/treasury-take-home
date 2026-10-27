@@ -11,7 +11,10 @@ from CLAUDE.md".
   workflow are green.
 - Fixtures: 39 synthetic labels, 19 real COLA labels and 12 hostile files.
 - Live URL: <https://treasury-take-home-1uz2.onrender.com> (only `/healthz`).
-- **Next: M3, the label readers.** Start by proposing its test list (below) for approval.
+- **Next: M3, the label readers.** The decisions below were agreed on 2026-10-27, after measuring
+  Kimi's latency. Next step: the user approves the M3 test list, then red, green, refactor.
+- The Mac now has Tesseract 5.5.3 (Homebrew) and Docker; the `.venv` is set up and `.env` holds
+  the Kimi key.
 
 ## How we work (the user's preferences)
 
@@ -66,8 +69,14 @@ from CLAUDE.md".
   - animated images: first frame only, or rejected
   - nothing written to disk
 - **The `Extractor` protocol, a `FakeExtractor` for tests, and an `OpenAICompatibleVisionExtractor`:**
-  - For Kimi, use `json_object` with the schema in the prompt, validated by Pydantic. Turn off
-    `kimi-k2.6` thinking, and time out after about 3.5 seconds.
+  - **Agreed 2026-10-27, from latency tests (see Gotchas):** call Kimi with one POST through
+    `httpx2` (already installed; no `openai` SDK). Use strict `json_schema` output with short
+    keys, still validated by Pydantic. Thinking off (`"thinking": {"type": "disabled"}`, sent
+    only when configured, so Azure works too). Send the AI a copy scaled to about 1100 px on the
+    long side (OCR keeps full size). Stream the reply: no first token by about 4.5 s, or no
+    finish by about 7.5 s, means fall back to OCR. One call per image, run concurrently.
+  - Splitting the warning into its own concurrent call is measured in the eval and adopted
+    only if it lowers p50 by 0.5 s or more without losing accuracy.
   - The model sees only the images, never the application data. A contract test asserts that the
     outbound request carries none.
   - Prompt rules:
@@ -80,9 +89,11 @@ from CLAUDE.md".
     - prefer the English versions of mandatory fields
 - **Failure handling.** If the model times out, returns 429 or 500, truncated JSON or a refusal,
   or puts 100k characters in a field, fall back to OCR and still answer within 5 seconds. Keys
-  never appear in logs or errors, even when the provider's error echoes the request. Use `respx`
-  for stubbed HTTP; it isn't installed yet.
+  never appear in logs or errors, even when the provider's error echoes the request. Stub HTTP
+  with `httpx2`'s built-in `MockTransport`, not `respx` (which needs the original `httpx`).
 - **The Tesseract reader (English only)** and heuristics that locate each field in its text.
+  - Run the `tesseract` binary directly: the image goes in on stdin and TSV (words, boxes,
+    confidence) comes out on stdout. Not `pytesseract`, which writes temporary files.
   - Tesseract goes into the Dockerfile; Trivy will scan it.
   - OCR tests are marked `ocr`.
   - Compare against RapidOCR on the fixtures.
@@ -180,3 +191,19 @@ with Valorant's anti-cheat.
   Rename the variable or add a commented suppression.
 - **Read files with `encoding="utf-8"`.** Windows' default code page breaks on non-ASCII
   fixtures.
+- **Kimi latency (measured 2026-10-27 from the Mac, about 45 calls).**
+  - With thinking on, `kimi-k2.6` takes 68 to 72 s (about 2,500 reasoning tokens). Always send
+    thinking off.
+  - With thinking off at 1100 px, a call takes 4.6 to 6.0 s: about 0.7 s network (the servers
+    are behind Cloudflare, far away), about 1.6 to 2 s reading the image, and about 2.7 s
+    writing about 150 tokens at about 55 tokens/s. Full size (1600×2000) takes 6.7 to 7.9 s;
+    640 px takes about 4.7 s. JPEG and PNG are the same.
+  - About 1 call in 4 stalled for 9 to 16 s before its first token. Concurrent calls stall
+    together, so a backup ("hedged") request doesn't help. No rate-limit headers; the account
+    is paid.
+  - The `k3` models can't turn thinking off (low effort still reasons 180 to 300 tokens):
+    `kimi-k3` 8 to 10 s, `kimi-k3.1-pro-highspeed` 5.6 s. `k2.7-code-highspeed` only allows
+    thinking on.
+  - A bare prompt once dropped "GOVERNMENT WARNING:" from the warning and "Distilled and
+    bottled by" from the bottler; an explicit prompt fixed both.
+  - Tesseract reads the OLD TOM label in 0.44 s of CPU here, so roughly 4 s on Render's 0.1 CPU.
