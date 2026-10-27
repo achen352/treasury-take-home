@@ -71,3 +71,14 @@ def test_approved_labels_match_unless_a_deviation_is_documented(
         assert "Deviation:" in truth.description or "Uncertain:" in truth.description
     else:
         assert truth.acceptable == (Verdict.MATCHES,)
+
+
+def test_aniche_records_beatrix_as_the_fanciful_name_not_the_brand() -> None:
+    # The big name on the label is the fanciful name; the brand appears only in the bottler
+    # statement. A reader that reports "Beatrix" as the brand fails the brand check.
+    aniche = next(truth for _, truth in COLA if truth.id == "cola-26247001000534")
+
+    assert aniche.application.brand_name == "ANICHE CELLARS"
+    assert aniche.application.fanciful_name == "Beatrix"
+    assert aniche.printed.fanciful_name == "Beatrix"
+    assert "Beatrix" not in aniche.other_text

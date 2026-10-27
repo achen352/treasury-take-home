@@ -5,15 +5,20 @@ from pydantic import ValidationError
 
 from app.domain.models import (
     ApplicationData,
+    Box,
+    DiffOp,
+    DiffSegment,
     ExtractedLabel,
     FieldResult,
     LabelField,
+    Location,
     Status,
     worst,
 )
 
 READING_CAPS = [
     ("brand_name", 200),
+    ("fanciful_name", 200),
     ("class_type", 200),
     ("alcohol_content", 100),
     ("net_contents", 100),
@@ -91,3 +96,49 @@ def test_application_rejects_unknown_fields_and_over_long_values() -> None:
         ApplicationData.model_validate({**OLD_TOM, "verdict": "PASS"})
     with pytest.raises(ValidationError):
         ApplicationData.model_validate({**OLD_TOM, "brand_name": "x" * 201})
+
+
+def test_the_application_and_the_reading_carry_an_optional_fanciful_name() -> None:
+    application = ApplicationData.model_validate({**OLD_TOM, "fanciful_name": "Beatrix"})
+
+    assert application.fanciful_name == "Beatrix"
+    assert ApplicationData.model_validate(OLD_TOM).fanciful_name is None
+    assert ExtractedLabel().value(LabelField.FANCIFUL) is None
+    with pytest.raises(ValidationError):
+        ApplicationData.model_validate({**OLD_TOM, "fanciful_name": "x" * 201})
+
+
+def test_a_location_names_an_image_and_a_box_on_it() -> None:
+    location = Location(image=1, box=Box(left=10, top=20, width=300, height=40))
+
+    assert location.model_dump() == {
+        "image": 1,
+        "box": {"left": 10, "top": 20, "width": 300, "height": 40},
+    }
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        {"image": -1, "box": {"left": 0, "top": 0, "width": 1, "height": 1}},
+        {"image": 0, "box": {"left": -5, "top": 0, "width": 1, "height": 1}},
+        {"image": 0, "box": {"left": 0, "top": 0, "width": -1, "height": 1}},
+        {"image": 0, "box": {"left": 0, "top": 0, "width": 1, "height": 1, "depth": 2}},
+    ],
+    ids=["negative-image", "negative-left", "negative-width", "unknown-field"],
+)
+def test_impossible_locations_are_rejected(bad: dict[str, object]) -> None:
+    with pytest.raises(ValidationError):
+        Location.model_validate(bad)
+
+
+def test_results_and_diff_words_have_no_location_until_one_is_found() -> None:
+    result = FieldResult(field=LabelField.BRAND, status=Status.PASS, cfr="27 CFR 5.64")
+    segment = DiffSegment(op=DiffOp.CHANGED, expected="drink", found="drinks")
+    where = Location(image=0, box=Box(left=1, top=2, width=3, height=4))
+
+    assert result.location is None
+    assert segment.location is None
+    assert result.at_least(Status.REVIEW, "why").location is None
+    located = result.model_copy(update={"location": where})
+    assert located.at_least(Status.REVIEW, "why").location == where
