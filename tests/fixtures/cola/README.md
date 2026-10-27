@@ -48,9 +48,10 @@ Four approved labels deviate from the 27 CFR 16.21 text, so their right result i
   **Does not match**.
 - **NUMA**, **Ohanyan** and **Forever Alone**: punctuation only (stray periods, a missing
   comma, a stray quotation mark). The right result is **Needs review**.
-- **Switchback** isn't a deviation, but its warning is set in one heavy condensed typeface, so
-  whether the header is bold can't be settled from the image. The right result is **Needs
-  review**.
+
+A second reviewer checked the three transcriptions that decide a result: FLOS's missing words,
+Ohanyan's missing comma, and Switchback's bold header. That header is set in a heavy condensed
+typeface but is visibly bolder than the body, so Switchback is expected to match.
 
 ## Labels in other scripts
 

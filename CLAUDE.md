@@ -125,9 +125,9 @@ from CLAUDE.md".
 
 ## Open items with the user
 
-- **Spot-check three transcriptions** (`tests/fixtures/cola/`): FLOS `26245001000184` (are
-  "because" and "a" really missing?), Ohanyan `26233001000571` (no comma after "GENERAL"?) and
-  Switchback `26239001000680` (is the warning header visibly bold?).
+- **Spot-check: done.** The user confirmed FLOS (missing words) and Ohanyan (no comma).
+  Switchback's header is clearly bold, so it now expects "Matches". Bold detection in heavy
+  condensed typefaces stays a known hard case for M3's readers.
 - **Usage limit.** Set one in the Moonshot console, if it offers one.
 - **CLAUDE.md before submission.** Decide whether this file stays in the public repo.
 

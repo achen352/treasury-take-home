@@ -1,6 +1,6 @@
 {
   "id": "cola-26239001000680",
-  "description": "SWITCHBACK (ale, Vermont), approved 10/13/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. Uncertain: the whole warning is set in one heavy condensed face, so whether the header is bolder than the body cannot be judged from the image, and the right result is Needs review. The bottler statement puts the place first (\"Brewed in Burlington, Vermont by ...\").",
+  "description": "SWITCHBACK (ale, Vermont), approved 10/13/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. The whole warning is set in one heavy condensed typeface, but the header is visibly bolder than the body (confirmed by a second reviewer). The bottler statement puts the place first (\"Brewed in Burlington, Vermont by ...\").",
   "images": [
     "1-front.jpg"
   ],
@@ -19,7 +19,9 @@
     "alcohol_content": "ALC: 5.7% BY VOL.",
     "net_contents": "12 FL. OZ.",
     "bottler": "BREWED IN BURLINGTON, VERMONT BY SWITCHBACK BREWING CO.",
-    "health_warning": "GOVERNMENT WARNING: (1) ACCORDING TO THE SURGEON GENERAL, WOMEN SHOULD NOT DRINK ALCOHOLIC BEVERAGES DURING PREGNANCY BECAUSE OF THE RISK OF BIRTH DEFECTS. (2) CONSUMPTION OF ALCOHOLIC BEVERAGES IMPAIRS YOUR ABILITY TO DRIVE A CAR OR OPERATE MACHINERY, AND MAY CAUSE HEALTH PROBLEMS."
+    "health_warning": "GOVERNMENT WARNING: (1) ACCORDING TO THE SURGEON GENERAL, WOMEN SHOULD NOT DRINK ALCOHOLIC BEVERAGES DURING PREGNANCY BECAUSE OF THE RISK OF BIRTH DEFECTS. (2) CONSUMPTION OF ALCOHOLIC BEVERAGES IMPAIRS YOUR ABILITY TO DRIVE A CAR OR OPERATE MACHINERY, AND MAY CAUSE HEALTH PROBLEMS.",
+    "warning_header_bold": true,
+    "warning_body_bold": false
   },
   "other_text": [
     "Lil' Pine IPA",
@@ -28,12 +30,11 @@
   ],
   "hidden_text": [],
   "acceptable": [
-    "Needs review"
+    "Matches"
   ],
   "tags": [
     "beer",
-    "cola",
-    "uncertain-bold"
+    "cola"
   ],
   "cola": {
     "ttb_id": "26239001000680",
