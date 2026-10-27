@@ -26,7 +26,13 @@ jobs:
       - name: Type check
         run: mypy
       - name: Tests
-        run: pytest --cov --cov-report=term-missing
+        # Failed test ids also become annotations, which are visible without opening the log.
+        run: |
+          set -o pipefail
+          pytest --cov --cov-report=term-missing 2>&1 | tee pytest.log || {
+            grep -E "^(FAILED|ERROR) " pytest.log | cut -c1-300 | sed 's/^/::error title=pytest::/'
+            exit 1
+          }
 
   container:
     runs-on: ubuntu-latest
