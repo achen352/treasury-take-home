@@ -1,0 +1,35 @@
+{
+  "id": "photo-kitchen-counter",
+  "description": "OLD TOM lying on a dim kitchen counter (AI-generated background).",
+  "images": [
+    "label.jpg"
+  ],
+  "application": {
+    "beverage_type": "spirits",
+    "imported": false,
+    "brand_name": "OLD TOM DISTILLERY",
+    "class_type": "Kentucky Straight Bourbon Whiskey",
+    "alcohol_content": "45% Alc./Vol. (90 Proof)",
+    "net_contents": "750 mL",
+    "bottler": "Old Tom Distillery, Louisville, Kentucky"
+  },
+  "printed": {
+    "brand_name": "OLD TOM DISTILLERY",
+    "class_type": "Kentucky Straight Bourbon Whiskey",
+    "alcohol_content": "45% Alc./Vol. (90 Proof)",
+    "net_contents": "750 mL",
+    "bottler": "Distilled and bottled by Old Tom Distillery, Louisville, Kentucky",
+    "health_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+    "warning_header_bold": true,
+    "warning_body_bold": false
+  },
+  "other_text": [],
+  "hidden_text": [],
+  "acceptable": [
+    "Matches",
+    "Needs review"
+  ],
+  "tags": [
+    "hard-to-read"
+  ]
+}

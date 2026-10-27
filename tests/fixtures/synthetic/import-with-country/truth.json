@@ -1,0 +1,38 @@
+{
+  "id": "import-with-country",
+  "description": "An imported tequila showing \"Product of Mexico\". \"100% DE AGAVE\" must not be read as the ABV.",
+  "images": [
+    "label.png"
+  ],
+  "application": {
+    "beverage_type": "spirits",
+    "imported": true,
+    "brand_name": "SOL DE AGAVE",
+    "class_type": "Tequila Blanco",
+    "alcohol_content": "40% Alc./Vol. (80 Proof)",
+    "net_contents": "750 mL",
+    "bottler": "Agave Imports LLC, San Diego, California",
+    "country_of_origin": "Mexico"
+  },
+  "printed": {
+    "brand_name": "SOL DE AGAVE",
+    "class_type": "Tequila Blanco",
+    "alcohol_content": "40% Alc./Vol. (80 Proof)",
+    "net_contents": "750 mL",
+    "bottler": "Imported by Agave Imports LLC, San Diego, California",
+    "country_of_origin": "Product of Mexico",
+    "health_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+    "warning_header_bold": true,
+    "warning_body_bold": false
+  },
+  "other_text": [
+    "100% DE AGAVE"
+  ],
+  "hidden_text": [],
+  "acceptable": [
+    "Matches"
+  ],
+  "tags": [
+    "known-answer"
+  ]
+}

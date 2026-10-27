@@ -1,0 +1,32 @@
+{
+  "id": "beer-no-abv",
+  "description": "A beer with no alcohol statement, which 27 CFR 7.65 allows.",
+  "images": [
+    "label.png"
+  ],
+  "application": {
+    "beverage_type": "beer",
+    "imported": false,
+    "brand_name": "COPPER KETTLE",
+    "class_type": "India Pale Ale",
+    "net_contents": "12 fl oz",
+    "bottler": "Copper Kettle Brewing Company, Denver, Colorado"
+  },
+  "printed": {
+    "brand_name": "COPPER KETTLE",
+    "class_type": "India Pale Ale",
+    "net_contents": "12 FL. OZ.",
+    "bottler": "Brewed and canned by Copper Kettle Brewing Company, Denver, Colorado",
+    "health_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+    "warning_header_bold": true,
+    "warning_body_bold": false
+  },
+  "other_text": [],
+  "hidden_text": [],
+  "acceptable": [
+    "Matches"
+  ],
+  "tags": [
+    "known-answer"
+  ]
+}
