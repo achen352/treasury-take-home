@@ -1,0 +1,62 @@
+[
+  {
+    "file": "decompression-bomb.png",
+    "expect": "reject",
+    "why": "Under 100 KB, but declares 50,000 x 50,000 pixels (2.5 billion)."
+  },
+  {
+    "file": "polyglot-zip.png",
+    "expect": "sanitize",
+    "why": "A valid PNG with a ZIP archive appended; re-encoding must drop it."
+  },
+  {
+    "file": "polyglot-html.png",
+    "expect": "sanitize",
+    "why": "A valid PNG with HTML and a script appended; re-encoding must drop it."
+  },
+  {
+    "file": "html-named.png",
+    "expect": "reject",
+    "why": "An HTML page with a script, named .png."
+  },
+  {
+    "file": "svg-script.png",
+    "expect": "reject",
+    "why": "An SVG containing a script, named .png."
+  },
+  {
+    "file": "pdf-named.jpg",
+    "expect": "reject",
+    "why": "A PDF document, named .jpg."
+  },
+  {
+    "file": "empty.png",
+    "expect": "reject",
+    "why": "A zero-byte file."
+  },
+  {
+    "file": "truncated.png",
+    "expect": "reject",
+    "why": "The first half of a valid PNG."
+  },
+  {
+    "file": "animated.png",
+    "expect": "sanitize",
+    "why": "An animated PNG whose second frame shows a different brand; only one frame may be read."
+  },
+  {
+    "file": "png-named.jpg",
+    "expect": "accept",
+    "why": "A genuine PNG with a .jpg name: file types are judged by content, not by name."
+  },
+  {
+    "file": "exif-instructions.jpg",
+    "expect": "sanitize",
+    "why": "A JPEG whose EXIF description carries injection text; metadata must be stripped."
+  },
+  {
+    "file": "exif-rotated.jpg",
+    "expect": "sanitize",
+    "why": "A JPEG stored sideways with an EXIF rotation flag; it must be turned upright."
+  }
+]
