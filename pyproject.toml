@@ -11,6 +11,7 @@ dependencies = [
     "rapidfuzz",
     "pillow",
     "pypdfium2",
+    "httpx2",
 ]
 
 [project.optional-dependencies]
@@ -18,7 +19,6 @@ dev = [
     "pytest",
     "pytest-cov",
     "hypothesis",
-    "httpx2",
     "ruff",
     "mypy",
     "pre-commit",

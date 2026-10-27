@@ -189,7 +189,7 @@ Four approved labels differ from the regulation's text, and the tool reports the
 
 The app imports few libraries, all open source under permissive licenses. Every package,
 including the ones these pull in, is pinned to an exact version and checked against a hash on
-install. That comes to 19 runtime packages in all.
+install. That comes to 22 runtime packages in all.
 
 | Library | Used for | License |
 |---|---|---|
@@ -198,11 +198,11 @@ install. That comes to 19 runtime packages in all.
 | RapidFuzz | Similarity scores for near-miss names | MIT |
 | Pillow | Image decoding and re-encoding, and drawing test labels | MIT-CMU |
 | pypdfium2 (bundles PDFium, Chrome's PDF engine) | Rendering PDF label pages as images | BSD-3-Clause, Apache-2.0 |
+| httpx2, httpcore2, truststore | Calling the AI reader over HTTPS, with the operating system's certificate store | BSD-3-Clause, BSD-3-Clause, MIT |
 | DejaVu fonts (bundled, test labels only) | Drawing test labels identically on every OS | Bitstream Vera (permissive) |
 
-Planned for M3: `httpx2` (BSD-3-Clause), the HTTP client the tests already use, becomes a
-runtime dependency for calling the AI reader, and the Tesseract OCR engine (Apache-2.0) is
-installed in the container image and run directly, so no Python wrapper is needed. Test and lint tools
+Planned for M3: the Tesseract OCR engine (Apache-2.0), installed in the container image and
+run directly, so no Python wrapper is needed. Test and lint tools
 (pytest, Hypothesis, Ruff, mypy) are development-only and never ship.
 
 Keeping them safe:
