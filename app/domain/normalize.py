@@ -122,8 +122,9 @@ def normalize_text(text: str) -> str:
 
 # ---- numbers ----
 
-# A number that isn't the tail of a longer word or number: matches "45" but not "5" in "45".
-_NUMBER = r"(?<![\w.,])(?P<num>\d{1,5}(?:[.,]\d{1,3})?)"
+# A number that isn't the tail of a longer word or number: matches "45" but not "5" in "45" or
+# "0.5". A period after a word is fine, so "VOL.750ML" still yields 750.
+_NUMBER = r"(?<![\w,])(?<!\d\.)(?P<num>\d{1,5}(?:[.,]\d{1,3})?)"
 
 
 def _prepare(text: str) -> str:
@@ -147,10 +148,18 @@ def format_number(value: Decimal) -> str:
 
 # ---- alcohol content ----
 
+# A percentage, or a bare number directly followed by "ALC" or "ABV" (some approved labels
+# print "53.5 ALC/VOL" with no percent sign).
 _PERCENT = re.compile(
-    r"(?P<sign>(?<![\w.,-])-)?" + _NUMBER + r"\s*(?:%|percent\b|per\s+cent\b)", re.IGNORECASE
+    r"(?P<sign>(?<![\w.,-])-)?" + _NUMBER + r"\s*(?:%|percent\b|per\s+cent\b|(?=(?:alc|abv)\b))",
+    re.IGNORECASE,
 )
-_PROOF = re.compile(_NUMBER + r"\s*proof\b", re.IGNORECASE)
+# "90 Proof", "85.6° US PROOF" and, in label tables, "PROOF 108".
+_PROOF = re.compile(
+    _NUMBER + r"\s*(?:\N{DEGREE SIGN}\s*)?(?:U\.?\s?S\.?\s*)?proof\b"
+    r"|\bproof\s*:?\s*(?P<after>\d{1,3}(?:[.,]\d{1,2})?)\b",
+    re.IGNORECASE,
+)
 # A percentage counts as alcohol content when the words around it say so. This keeps
 # "100% Blue Agave" from being read as the ABV.
 _ALCOHOL_AFTER = re.compile(r"\s*(?:alc|abv|vol|alcohol|by\s+vol)", re.IGNORECASE)
@@ -184,7 +193,7 @@ def parse_alcohol(text: str | None) -> Alcohol:
         if match["sign"] or not 0 < value <= 100:
             return Alcohol(problem=f'"{match.group(0).strip()}" is not a possible alcohol content.')
         abvs.add(value)
-    proofs = {_to_decimal(match["num"]) for match in _PROOF.finditer(text)}
+    proofs = {_to_decimal(match["num"] or match["after"]) for match in _PROOF.finditer(text)}
 
     if len(abvs) > 1:
         listed = ", ".join(f"{format_number(abv)}%" for abv in sorted(abvs))
@@ -210,7 +219,9 @@ ML = Unit("mL", Decimal(1), "metric")
 CL = Unit("cL", Decimal(10), "metric")
 LITRE = Unit("L", Decimal(1000), "metric")
 FL_OZ = Unit("fl oz", Decimal("29.5735295625"), "us")  # the US fluid ounce, exactly
-UNITS = (ML, CL, LITRE, FL_OZ)
+PINT = Unit("pint", 16 * FL_OZ.ml, "us")
+QUART = Unit("quart", 32 * FL_OZ.ml, "us")
+UNITS = (ML, CL, LITRE, FL_OZ, PINT, QUART)
 
 # Within one system, values must match exactly. Across systems, labels round the conversion
 # (750 mL is printed as 25.4 fl oz), so allow half a percent.
@@ -218,11 +229,12 @@ VOLUME_TOLERANCE = Decimal("0.005")
 
 _VOLUME = re.compile(
     _NUMBER + r"\s*(?:(?P<ml>millilit(?:er|re)s?|ml)|(?P<cl>centilit(?:er|re)s?|cl)"
-    r"|(?P<l>lit(?:er|re)s?|l)|(?P<fl_oz>fl\.?\s*oz\.?|fluid\s+ounces?))(?![a-z])",
+    r"|(?P<l>lit(?:er|re)s?|l)|(?P<fl_oz>fl\.?\s*oz\.?|fluid\s+ounces?)"
+    r"|(?P<pint>pints?|pt\.?)|(?P<quart>quarts?|qt\.?))(?![a-z])",
     re.IGNORECASE,
 )
 _BARE_OUNCES = re.compile(_NUMBER + r"\s*(?:oz|ounces?)\b", re.IGNORECASE)
-_UNIT_GROUPS = {"ml": ML, "cl": CL, "l": LITRE, "fl_oz": FL_OZ}
+_UNIT_GROUPS = {"ml": ML, "cl": CL, "l": LITRE, "fl_oz": FL_OZ, "pint": PINT, "quart": QUART}
 
 
 @dataclass(frozen=True)
@@ -263,10 +275,22 @@ def parse_net_contents(text: str | None) -> NetContents:
         return NetContents()
     text = _prepare(text)
 
-    volumes = [
-        Volume(_to_decimal(match["num"]), _UNIT_GROUPS[str(match.lastgroup)])
-        for match in _VOLUME.finditer(text)
-    ]
+    volumes: list[Volume] = []
+    previous_end = 0
+    for match in _VOLUME.finditer(text):
+        volume = Volume(_to_decimal(match["num"]), _UNIT_GROUPS[str(match.lastgroup)])
+        last = volumes[-1] if volumes else None
+        if (
+            last is not None
+            and last.unit in (PINT, QUART)
+            and volume.unit == FL_OZ
+            and not text[previous_end : match.start()].strip()
+        ):
+            # "1 PINT 0.9 FL OZ" is a single volume: 16.9 fl oz.
+            volumes[-1] = Volume(from_ml(last.ml, FL_OZ) + volume.value, FL_OZ)
+        else:
+            volumes.append(volume)
+        previous_end = match.end()
     if not volumes:
         if _BARE_OUNCES.search(text):
             return NetContents(

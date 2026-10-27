@@ -14,7 +14,12 @@ from rapidfuzz import fuzz
 
 from app.domain.models import FieldResult, LabelField, Status
 from app.domain.normalize import normalize_text
-from app.domain.rules.health_warning import CANONICAL_TOKENS, is_canonical, join_tokens, tokenize
+from app.domain.rules.health_warning import (
+    CANONICAL_TOKENS,
+    contains_warning,
+    join_tokens,
+    tokenize,
+)
 
 # How closely (0-100) the AI's reading must appear somewhere in the OCR text to count as found.
 GROUNDING_SIMILARITY = 90
@@ -40,13 +45,12 @@ def cross_check(results: Sequence[FieldResult], ocr_text: str) -> list[FieldResu
         ]
 
     ocr_key = normalize_text(ocr_text)
-    ocr_tokens = tokenize(ocr_text)
     checked = []
     for result in results:
         if not _confirmable(result):
             checked.append(result)
         elif result.field is LabelField.HEALTH_WARNING:
-            checked.append(_confirm_warning(result, ocr_tokens))
+            checked.append(_confirm_warning(result, ocr_text))
         else:
             checked.append(_confirm_found(result, ocr_key))
     return checked
@@ -85,10 +89,12 @@ def _confirm_found(result: FieldResult, ocr_key: str) -> FieldResult:
     return result.at_least(Status.REVIEW, NOT_FOUND)
 
 
-def _confirm_warning(result: FieldResult, ocr_tokens: Sequence[str]) -> FieldResult:
-    window = _warning_window(ocr_tokens)
-    if window is not None and is_canonical(window):
+def _confirm_warning(result: FieldResult, ocr_text: str) -> FieldResult:
+    # Exact wording, by the same rules as the warning check (spacing, line-break hyphens and
+    # body capitals don't matter). A one-letter difference is not forgiven as OCR noise.
+    if contains_warning(ocr_text):
         return result
+    window = _warning_window(tokenize(ocr_text))
     return result.at_least(
         Status.REVIEW,
         WARNING_DIFFERS,

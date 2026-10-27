@@ -1,8 +1,11 @@
 """The government health warning (27 CFR 16.21-16.22).
 
-The wording must match word for word. Spacing and line breaks don't matter, and neither does
-the capitalization of the body, which labels often print in capitals. The header must be
-exactly "GOVERNMENT WARNING:" and bold, and the rest of the statement must not be bold.
+The wording must match word for word, but labels are typeset in many ways, so these don't
+count: spacing (tight justification runs words together or splits them), hyphens at line
+breaks, the capitalization of the body (often all capitals), and "(I)" or "(l)" for "(1)" in
+typefaces that draw them alike. A difference in punctuation alone, such as a missing comma or a
+stray period, goes to a person. The header must be exactly "GOVERNMENT WARNING:" and bold, and
+the rest of the statement must not be bold.
 """
 
 import re
@@ -15,6 +18,9 @@ from app.domain.models import DiffOp, DiffSegment, FieldResult, LabelField, Stat
 from app.domain.normalize import describe_all, lookalike_characters
 
 _TOKEN = re.compile(r"\w+|[^\w\s]")
+_HYPHENS = re.compile("[-\N{HYPHEN}\N{NON-BREAKING HYPHEN}]")  # the standard text has none
+_NUMBERING = re.compile(r"\(\s*[Il|i]\s*\)")
+_WHITESPACE = re.compile(r"\s+")
 _DIFF_OPS = {
     "equal": DiffOp.SAME,
     "replace": DiffOp.CHANGED,
@@ -28,23 +34,6 @@ def tokenize(text: str) -> list[str]:
     return _TOKEN.findall(text)
 
 
-CANONICAL_TOKENS = tokenize(HEALTH_WARNING)
-HEADER_TOKENS = tokenize(WARNING_HEADER)
-
-
-def comparison_keys(tokens: Sequence[str]) -> list[str]:
-    """The header must match exactly; the rest of the warning ignores case."""
-    header_length = len(HEADER_TOKENS)
-    return [token if i < header_length else token.casefold() for i, token in enumerate(tokens)]
-
-
-CANONICAL_KEYS = comparison_keys(CANONICAL_TOKENS)
-
-
-def is_canonical(tokens: Sequence[str]) -> bool:
-    return comparison_keys(tokens) == CANONICAL_KEYS
-
-
 def join_tokens(tokens: Sequence[str]) -> str:
     """Rebuild readable text: no space before closing punctuation or after an opening one."""
     text = ""
@@ -53,6 +42,45 @@ def join_tokens(tokens: Sequence[str]) -> str:
             text += " "
         text += part
     return text
+
+
+def _cleaned(text: str) -> str:
+    """Undo typesetting: drop line-break hyphens and read "(I)" or "(l)" numbering as "(1)"."""
+    return _NUMBERING.sub("(1)", _HYPHENS.sub("", text))
+
+
+def _compact(text: str) -> str:
+    return _WHITESPACE.sub("", _cleaned(text))
+
+
+CANONICAL_TOKENS = tokenize(HEALTH_WARNING)
+HEADER_TOKENS = tokenize(WARNING_HEADER)
+_CANONICAL = _compact(HEALTH_WARNING)
+_HEADER = _compact(WARNING_HEADER)  # "GOVERNMENTWARNING:"; matched exactly, capitals included
+
+
+def _exact(compact: str) -> bool:
+    head = len(_HEADER)
+    return compact[:head] == _HEADER and compact[head:].casefold() == _CANONICAL[head:].casefold()
+
+
+def _same_words(compact: str) -> bool:
+    """Exact header, and the body has the same letters and digits: only punctuation differs."""
+
+    def letters(text: str) -> str:
+        return "".join(ch for ch in text if ch.isalnum()).casefold()
+
+    head = len(_HEADER)
+    return compact[:head] == _HEADER and letters(compact[head:]) == letters(_CANONICAL[head:])
+
+
+def contains_warning(text: str) -> bool:
+    """Whether `text`, such as a whole OCR reading, contains the exact warning anywhere."""
+    compact = _compact(text)
+    return any(
+        compact[match.start() : match.start() + len(_HEADER)] == _HEADER
+        for match in re.finditer(re.escape(_CANONICAL), compact, re.IGNORECASE)
+    )
 
 
 def check_health_warning(
@@ -70,13 +98,25 @@ def check_health_warning(
             update={"status": Status.FAIL, "notes": ("The government warning is missing.",)}
         )
 
-    tokens = tokenize(text)
-    if not is_canonical(tokens):
-        if is_canonical(tokenize(unicodedata.normalize("NFKC", text))):
+    compact = _compact(text)
+    if not _exact(compact):
+        tokens = tokenize(_cleaned(text))
+        if _exact(_compact(unicodedata.normalize("NFKC", text))):
             result = result.at_least(
                 Status.REVIEW,
                 "The warning is printed in unusual look-alike characters (such as fullwidth "
                 "letters); a person should check it.",
+            )
+        elif _same_words(compact):
+            result = result.model_copy(
+                update={
+                    "status": Status.REVIEW,
+                    "notes": (
+                        "Only the punctuation differs from 27 CFR 16.21; a person should decide "
+                        "whether it matters.",
+                    ),
+                    "diff": _diff(tokens),
+                }
             )
         else:
             result = result.model_copy(
@@ -119,8 +159,13 @@ def _wording_notes(text: str, tokens: Sequence[str]) -> tuple[str, ...]:
     return tuple(notes)
 
 
+def _keys(tokens: Sequence[str]) -> list[str]:
+    """Diff keys: the header must match exactly; the rest of the warning ignores case."""
+    return [t if i < len(HEADER_TOKENS) else t.casefold() for i, t in enumerate(tokens)]
+
+
 def _diff(tokens: Sequence[str]) -> tuple[DiffSegment, ...]:
-    matcher = SequenceMatcher(None, CANONICAL_KEYS, comparison_keys(tokens), autojunk=False)
+    matcher = SequenceMatcher(None, _keys(CANONICAL_TOKENS), _keys(tokens), autojunk=False)
     return tuple(
         DiffSegment(
             op=_DIFF_OPS[op],

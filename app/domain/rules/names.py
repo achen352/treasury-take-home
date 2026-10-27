@@ -16,14 +16,25 @@ NAME_REVIEW_SIMILARITY = 90
 BOTTLER_REVIEW_SIMILARITY = 85  # addresses vary more ("KY" vs "Kentucky"), so be forgiving
 COUNTRY_REVIEW_SIMILARITY = 90
 
-_VERB = (
-    r"(?:bottled|distilled|produced|brewed|vinted|cellared|made|blended|imported|packed"
-    r"|prepared|manufactured|canned|crafted|aged|finished)"
-)
-_BOTTLED_BY = re.compile(rf"^{_VERB}(?: and {_VERB})* by ")
+# Words in a name-and-address statement that say how, not who or where. Real labels put them
+# anywhere: "Brewed in Burlington, Vermont by Switchback Brewing Co.", "Proudly brewed and
+# packaged by Tox Brewing Co. in New London, CT".
+_STATEMENT_WORDS = frozenset(
+    {
+        "bottled", "distilled", "produced", "brewed", "vinted", "cellared", "made", "blended",
+        "imported", "packed", "packaged", "prepared", "manufactured", "canned", "crafted",
+        "aged", "finished", "proudly", "by", "and", "in",
+    }
+)  # fmt: skip
 _ORIGIN_WORDING = re.compile(
     r"^(?:product of|produce of|made in|produced in|imported from|country of origin"
     r"|hecho en|producto de|produit de|prodotto in) "
+)
+# "Republic of Armenia", "the Federal Republic of Germany", "Kingdom of Spain". A plain prefix
+# such as "New" is not a long form, so "New Mexico" stays different from "Mexico".
+_LONG_FORM = re.compile(
+    r"^(?:the )?(?:\w+ ){0,2}?(?:republic|kingdom|commonwealth|principality|federation"
+    r"|grand duchy) of "
 )
 
 Similarity = Callable[[str, str], float]
@@ -35,7 +46,7 @@ def check_name(field: LabelField, expected: str, found: str | None, *, cfr: str)
 
 
 def check_bottler(expected: str, found: str | None, *, cfr: str) -> FieldResult:
-    """Name and address: "Bottled by" style wording is ignored, and matching is forgiving."""
+    """Name and address: the same words in any order, ignoring "bottled by" style wording."""
     return _compare(
         LabelField.BOTTLER,
         expected,
@@ -61,13 +72,15 @@ def check_country(expected: str | None, found: str | None, *, cfr: str) -> Field
 
 
 def _bottler_key(text: str) -> str:
-    return _BOTTLED_BY.sub("", normalize_text(text))
+    words = (word for word in normalize_text(text).split() if word not in _STATEMENT_WORDS)
+    return " ".join(sorted(words))
 
 
 def _country_key(text: str) -> str:
     decomposed = unicodedata.normalize("NFKD", text)
     without_accents = "".join(ch for ch in decomposed if not unicodedata.combining(ch))
-    return _ORIGIN_WORDING.sub("", normalize_text(without_accents))
+    key = _ORIGIN_WORDING.sub("", normalize_text(without_accents))
+    return _LONG_FORM.sub("", key)
 
 
 def _compare(
@@ -108,6 +121,8 @@ def _compare(
             if same_letters
             else "Differs only in capitalization, punctuation, spacing or common abbreviations.",
         )
+    elif found_key.replace(" ", "") == expected_key.replace(" ", ""):
+        result = _with(result, Status.PASS, "Differs only in the spacing between words.")
     else:
         score = similarity(found_key, expected_key)
         if score >= review_at:
