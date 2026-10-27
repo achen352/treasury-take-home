@@ -5,13 +5,17 @@ ARG PYTHON_IMAGE=python:3.13-slim@sha256:b3575dcf816cdacc5292df77a6e3e59b8941631
 # ---- build: install hash-verified dependencies into an isolated venv ----
 FROM ${PYTHON_IMAGE} AS build
 ENV PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1
-RUN python -m venv /opt/venv
+# The venv gets no pip of its own; this stage's pip installs into it.
+RUN python -m venv --without-pip /opt/venv
 COPY requirements.txt /tmp/requirements.txt
-RUN /opt/venv/bin/pip install --require-hashes --no-deps -r /tmp/requirements.txt
+RUN python -m pip --python /opt/venv/bin/python install --require-hashes --no-deps -r /tmp/requirements.txt
 
-# ---- runtime: no build tools, unprivileged user ----
+# ---- runtime: no build tools, no pip, unprivileged user ----
 FROM ${PYTHON_IMAGE} AS runtime
-RUN groupadd --system --gid 10001 app \
+# pip is not needed at runtime, and its vendored libraries (urllib3, msgpack,
+# pkg_resources) are attack surface that image scanners flag.
+RUN python -m pip uninstall --yes --root-user-action=ignore pip \
+ && groupadd --system --gid 10001 app \
  && useradd --system --uid 10001 --gid app --no-create-home --shell /usr/sbin/nologin app
 COPY --from=build /opt/venv /opt/venv
 WORKDIR /srv
