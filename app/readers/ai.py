@@ -26,8 +26,11 @@ from app.readers.uploads import LabelImage, png_bytes
 
 logger = logging.getLogger(__name__)
 
-# A full reading is about 1 KB; anything far past that is a malfunction or an attack.
-MAX_REPLY_BYTES = 64 * 1024
+# A full reading is 1 to 2 KB of text; anything far past that is a malfunction or an attack.
+# The stream itself is much larger, because every token arrives wrapped in its own JSON event,
+# so it has a separate, looser cap that also stops a model that reasons without end.
+MAX_REPLY_CHARS = 16_000
+MAX_STREAM_BYTES = 1_000_000
 MAX_COMPLETION_TOKENS = 1500
 MAX_INSTRUCTIONS = 10
 MAX_INSTRUCTION_LENGTH = 300
@@ -223,7 +226,8 @@ class OpenAICompatibleVisionExtractor:
         loop = asyncio.get_running_loop()
         start = loop.time()
         started = False  # whether any output (answer or reasoning) has arrived
-        received = 0
+        received = 0  # bytes of the event stream
+        length = 0  # characters of the reply itself
         parts: list[str] = []
         finish_reason: str | None = None
         try:
@@ -240,7 +244,7 @@ class OpenAICompatibleVisionExtractor:
                         raise ReaderUnavailable(f"http_{response.status_code}")
                     async for line in response.aiter_lines():
                         received += len(line.encode()) + 1
-                        if received > MAX_REPLY_BYTES:
+                        if received > MAX_STREAM_BYTES:
                             raise ReaderUnavailable("reply_too_large")
                         event = _event(line)
                         if isinstance(event, _Done):
@@ -252,6 +256,9 @@ class OpenAICompatibleVisionExtractor:
                             started = True
                             deadline.reschedule(start + settings.llm_total_timeout)
                         parts.append(text)
+                        length += len(text)
+                        if length > MAX_REPLY_CHARS:
+                            raise ReaderUnavailable("reply_too_large")
                         finish_reason = finished or finish_reason
         except TimeoutError:
             raise ReaderUnavailable("too_slow" if started else "no_first_token") from None

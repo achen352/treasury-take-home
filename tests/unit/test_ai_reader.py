@@ -334,7 +334,7 @@ def test_a_normal_reply_streamed_one_token_per_event_is_accepted() -> None:
         "model": "kimi-k2.6",
     }
     text = json.dumps(GOOD_REPLY)
-    events = [{**envelope, **content(text[i : i + 3])} for i in range(0, len(text), 3)]
+    events = [{**envelope, **content(char)} for char in text]
     chunks = sse(*events, {**envelope, **finish()}, "[DONE]")
 
     assert sum(len(chunk) for chunk in chunks) > 64 * 1024
