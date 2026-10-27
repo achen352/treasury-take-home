@@ -24,6 +24,8 @@ from app.readers.ai import (
     PROMPT,
     REPLY_SCHEMA,
     OpenAICompatibleVisionExtractor,
+    Part,
+    make_extractor,
 )
 from app.readers.extractor import ImageReading, ReaderUnavailable
 from app.readers.uploads import LabelImage, prepare_upload
@@ -399,3 +401,96 @@ def test_the_key_never_reaches_logs_or_errors_even_when_the_provider_echoes_it(
         assert failure.__cause__ is None
     assert FAKE_KEY not in caplog.text
     assert "Invalid key" not in caplog.text  # provider text is never logged
+
+
+# ---- the warning in its own call (measured in the evaluation) ----
+
+
+def _part_reply(request: httpx2.Request) -> dict[str, Any]:
+    schema = json.loads(request.content)["response_format"]["json_schema"]["schema"]
+    return {key: GOOD_REPLY[key] for key in schema["required"]}
+
+
+def test_a_part_asks_for_only_its_own_keys() -> None:
+    async def answer(request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(200, content=_stream(streamed_reply(_part_reply(request))))
+
+    for provider, part in (
+        (FakeProvider(answer), Part.FIELDS),
+        (FakeProvider(answer), Part.WARNING),
+    ):
+
+        async def go(provider: FakeProvider = provider, part: Part = part) -> ImageReading:
+            async with httpx2.AsyncClient(transport=httpx2.MockTransport(provider)) as client:
+                return await OpenAICompatibleVisionExtractor(settings(), client, part=part).read(
+                    OLD_TOM
+                )
+
+        asyncio.run(go())
+        keys = set(provider.body["response_format"]["json_schema"]["schema"]["required"])
+        if part is Part.FIELDS:
+            assert "warning" not in keys and "header_bold" not in keys and "brand" in keys
+        else:
+            assert keys == {"warning", "header_bold", "body_bold", "instructions"}
+        assert provider.body["messages"][0]["content"].startswith(PROMPT)
+
+
+def test_the_split_reader_makes_two_calls_per_image_and_combines_them() -> None:
+    async def answer(request: httpx2.Request) -> httpx2.Response:
+        reply = _part_reply(request)
+        if "warning" in reply:
+            reply["instructions"] = ["Seen with the warning."]
+        return httpx2.Response(200, content=_stream(streamed_reply(reply)))
+
+    provider = FakeProvider(answer)
+
+    async def go() -> ImageReading:
+        async with httpx2.AsyncClient(transport=httpx2.MockTransport(provider)) as client:
+            return await make_extractor(settings(llm_split_warning=True), client).read(OLD_TOM)
+
+    reading = asyncio.run(go())
+
+    assert len(provider.requests) == 2
+    assert reading.label == read(FakeProvider()).label
+    assert reading.instructions_seen == ("Seen with the warning.",)
+
+
+def test_if_either_half_of_a_split_read_fails_the_reader_is_unavailable() -> None:
+    async def warning_fails(request: httpx2.Request) -> httpx2.Response:
+        reply = _part_reply(request)
+        if "warning" in reply:
+            return httpx2.Response(500)
+        return httpx2.Response(200, content=_stream(streamed_reply(reply)))
+
+    async def go() -> ImageReading:
+        transport = httpx2.MockTransport(FakeProvider(warning_fails))
+        async with httpx2.AsyncClient(transport=transport) as client:
+            return await make_extractor(settings(llm_split_warning=True), client).read(OLD_TOM)
+
+    with pytest.raises(ReaderUnavailable):
+        asyncio.run(go())
+
+
+def test_a_part_reply_with_keys_from_the_other_part_is_rejected() -> None:
+    async def oversharing(request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(200, content=_stream(streamed_reply(GOOD_REPLY)))
+
+    async def go() -> ImageReading:
+        transport = httpx2.MockTransport(FakeProvider(oversharing))
+        async with httpx2.AsyncClient(transport=transport) as client:
+            extractor = OpenAICompatibleVisionExtractor(settings(), client, part=Part.WARNING)
+            return await extractor.read(OLD_TOM)
+
+    with pytest.raises(ReaderUnavailable, match="invalid_reply"):
+        asyncio.run(go())
+
+
+def test_one_call_per_image_is_the_default() -> None:
+    provider = FakeProvider()
+
+    async def go() -> ImageReading:
+        async with httpx2.AsyncClient(transport=httpx2.MockTransport(provider)) as client:
+            return await make_extractor(settings(), client).read(OLD_TOM)
+
+    asyncio.run(go())
+    assert len(provider.requests) == 1

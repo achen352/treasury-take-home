@@ -72,6 +72,7 @@ def test_ai_reader_defaults_suit_kimi() -> None:
     assert settings.llm_total_timeout == 7.5
     assert settings.llm_image_max_side == 1100
     assert settings.llm_disable_thinking is True
+    assert settings.llm_split_warning is False
 
 
 def test_ai_reader_settings_load_from_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
