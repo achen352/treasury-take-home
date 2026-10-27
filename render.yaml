@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: cola-label-verifier
+    runtime: docker
+    plan: free
+    region: virginia
+    healthCheckPath: /healthz
+    autoDeployTrigger: checksPass # only ship commits that passed CI
+    envVars:
+      - key: EXTRACTOR_MODE
+        value: dual
+      # Render's proxy is the only route to the container, so trust its X-Forwarded-For.
+      - key: FORWARDED_ALLOW_IPS
+        value: "*"
+      - key: LLM_BASE_URL
+        value: https://api.openai.com/v1
+      # Secrets are entered in the Render dashboard, never committed.
+      - key: LLM_MODEL
+        sync: false
+      - key: LLM_API_KEY
+        sync: false
