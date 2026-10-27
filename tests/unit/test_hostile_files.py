@@ -4,6 +4,7 @@ import io
 import json
 import struct
 import zipfile
+import zlib
 from pathlib import Path
 
 import pypdfium2 as pdfium
@@ -185,9 +186,49 @@ def test_odd_page_pdf_has_a_page_far_too_thin_to_be_a_label(folder: Path) -> Non
     assert max(width, height) > 3_000
 
 
-def test_a_fresh_generation_matches_the_committed_files_byte_for_byte(tmp_path: Path) -> None:
+def _png_content(data: bytes) -> tuple[object, ...]:
+    """What a PNG holds, independent of how its zlib compressed it: the chunk layout, every
+    chunk but the image data, each frame's decompressed pixels, and anything after IEND.
+
+    Pillow's wheels bundle different zlib builds on Linux, macOS and Windows, so the compressed
+    bytes of an identical image differ by OS.
+    """
+    layout: list[bytes] = []
+    chunks: list[bytes] = []
+    frames: list[bytearray] = []
+    offset = 8
+    while offset < len(data):
+        (length,) = struct.unpack(">I", data[offset : offset + 4])
+        kind = data[offset + 4 : offset + 8]
+        body = data[offset + 8 : offset + 8 + length]
+        offset += 12 + length
+        if kind in (b"IDAT", b"fdAT"):
+            if not layout or layout[-1] != kind:
+                layout.append(kind)
+                frames.append(bytearray())
+            frames[-1] += body if kind == b"IDAT" else body[4:]
+            if kind == b"fdAT":
+                chunks.append(body[:4])  # the frame sequence number
+        else:
+            layout.append(kind)
+            chunks.append(kind + body)
+        if kind == b"IEND":
+            break
+    pixels = [zlib.decompress(bytes(frame)) for frame in frames]
+    return tuple(layout), tuple(chunks), tuple(pixels), data[offset:]
+
+
+def test_a_fresh_generation_matches_the_committed_files(tmp_path: Path) -> None:
     # The files must come out the same on every OS, so regenerating never changes them.
     hostile_files.generate(tmp_path)
 
     for name in [*EXPECTED, "manifest.json"]:
-        assert (tmp_path / name).read_bytes() == (COMMITTED / name).read_bytes(), name
+        fresh, committed = (tmp_path / name).read_bytes(), (COMMITTED / name).read_bytes()
+        if name == "truncated.png":
+            # Half of a PNG's compressed bytes: checked as half of png-named.jpg instead.
+            full = (tmp_path / "png-named.jpg").read_bytes()
+            assert fresh == full[: len(full) // 2]
+        elif committed.startswith(b"\x89PNG") and not name.startswith("decompression"):
+            assert _png_content(fresh) == _png_content(committed), name
+        else:
+            assert fresh == committed, name
