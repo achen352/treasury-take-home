@@ -188,3 +188,12 @@ def test_the_results_file_holds_scores_but_no_images_or_keys(
     assert FAKE_KEY not in text
     assert "base64" not in text and "data:image" not in text
     assert len(text) < 50_000
+
+
+def test_each_fixture_records_every_field_result_with_its_first_reason() -> None:
+    misread = OLD_TOM.printed.model_copy(update={"alcohol_content": "40% Alc./Vol. (80 Proof)"})
+
+    scored = score(OLD_TOM, verify(OLD_TOM.application, misread), latency=1.0)
+
+    assert scored.findings["brand_name"] == "pass"
+    assert scored.findings["alcohol_content"].startswith("fail: ")
