@@ -88,6 +88,19 @@ from CLAUDE.md".
   - Compare against RapidOCR on the fixtures.
   - Measure a pixel-based bold check (stroke thickness of the header against the body), and keep
     it only if it's reliable.
+  - **Word positions** (agreed 2026-10-27). OCR returns each word's bounding box. Each field
+    found by OCR gets a location (which image, which box), and so does the differing word in a
+    warning diff. M4 draws these as outlines.
+- **Rotation** (agreed 2026-10-27; propose as tests). Real labels print warnings sideways
+  (Switchback, Tox and Forever Alone; FLOS has vertical ABV and country text; there's also the
+  `warning-rotated` fixture).
+  - Always apply EXIF orientation.
+  - OCR reads upright first. Only if a field, usually the warning, isn't found does it run 90° and
+    270° passes, mapping the boxes back to the original image.
+  - Time that on Render's 0.1 CPU against the 5-second budget.
+  - The AI gets the original image. Add a rotated crop of the warning region only if the eval
+    shows sideways warnings being misread.
+  - Tag fixtures with sideways text (`rotated`) so the eval reports them separately.
 - **The dual reader and merging images:** run the model and OCR concurrently; the offline mode
   is described under Decisions.
 - **`scripts/eval.py`** runs the readers over the synthetic and COLA fixtures. It reports
@@ -100,6 +113,10 @@ from CLAUDE.md".
 - **M4, the single-label page:**
   - upload several images, an application form, and a "Sample labels" picker
   - results shown with an icon and words, never color alone
+  - each field outlined on the label image, marked with an icon and its name (not color alone),
+    and the differing word in the warning outlined. Clicking a result zooms to its spot, and the
+    zoom turns sideways text upright. Rotate buttons on each image. A field OCR couldn't find
+    says so instead of showing an outline.
   - the diff and both readings when they disagree
   - text at 18px or larger, `dir="auto"` for right-to-left scripts, an offline banner
   - a notice that images go to Kimi (Moonshot), so upload only public or test labels

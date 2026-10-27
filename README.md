@@ -25,7 +25,7 @@ Each row is a requirement from the brief, with the stakeholder who raised it.
 | The firewall blocks many outbound ML endpoints (*Marcus Williams*) | A local OCR reader (Tesseract) keeps working when the AI service can't be reached, and the result is marked as read offline. | Planned (M3) |
 | A standalone proof of concept, not integrated with COLA (*Marcus Williams*) | Standalone. The public COLA registry is used only offline, as a source of real test labels. | By design |
 | Store nothing sensitive (*Marcus Williams*) | No database, images are processed in memory, and logs hold no label content. | By design (enforced as uploads arrive in M3 and M4) |
-| Handle labels photographed at angles, in bad light or with glare (*Jenny Park*) | 12 badly photographed test labels. Unreadable fields go to a person instead of being guessed. | Test labels built; readers in M3 |
+| Handle labels photographed at angles, in bad light or with glare (*Jenny Park*) | 12 badly photographed test labels. Photos are turned upright, sideways text is read in a rotated pass, and unreadable fields go to a person instead of being guessed. | Test labels built; readers in M3 |
 | Create or source test labels; AI image generation suggested (*Additional context*) | 39 labels drawn by code (three on AI-generated photo backgrounds), 19 real approved labels from the public COLA registry, and 12 hostile files. | Built |
 | A repo with a README, and a deployed URL (*Deliverables*) | This repository and the Render URL above. | In progress |
 
@@ -70,6 +70,34 @@ application data ----------------------------------------------------+         |
   Otherwise the result is "Matches".
 - **The OCR reader can only move a field toward a person.** If it can't confirm what the AI read,
   the field goes to review. It can never turn a review or a fail into a pass.
+
+## How a result is decided
+
+**Fail** means clearly different. **Needs review** means close, uncertain, or a judgment call.
+
+| Field | Pass | Needs review | Fail |
+|---|---|---|---|
+| Brand, class/type | Same after ignoring case, punctuation, spacing and common abbreviations | Similarity score of 90 or more out of 100 (`OLD TOM DISTILLERS` vs `DISTILLERY` scores 94) | Below 90 (`OLD TOM DISTILLERY RESERVE` scores 82) |
+| Bottler (name and address) | The same words in any order, ignoring "bottled by" wording | A more forgiving score of 85 or more ("KY" vs "Kentucky") | Below 85 |
+| Country of origin | Same after removing wording like "Product of" | Score of 90 or more | Below 90 ("New Mexico" vs "Mexico") |
+| Alcohol, proof, net contents | The same number; up to 0.5% apart only when converting between metric and US units | Unreadable, ambiguous (two ABVs) or impossible values; a range that doesn't match the application | A clearly different number; proof that isn't twice the ABV |
+| Government warning | The exact words, with "GOVERNMENT WARNING:" in capitals and bold | A punctuation-only difference; bold that can't be judged | Any word changed, missing or added; header not in capitals or not bold; a bold body |
+
+Some situations always go to review, whatever the score:
+
+- hidden characters
+- letters from another alphabet disguised as Latin ones
+- a name in a different script from the application
+- an application field with nothing to compare
+- the OCR reader failing to confirm what the AI read
+- text that seems to address an AI
+
+The overall result is **Does not match** if any field fails, otherwise **Needs review** if any
+field needs review, otherwise **Matches**.
+
+The thresholds (90, 85 and 0.5%) were set before any real labels were tested. The evaluation in
+M3 measures how often each one sends a harmless difference to review, or fails a near miss, and
+they'll be adjusted on that evidence.
 
 ## Design decisions
 
@@ -265,7 +293,7 @@ tests/
 | M1 | Checking engine: every rule, the cross-check policy and the verifier | Done |
 | M2 | Test data: drawn labels, real COLA labels, hostile files; fixes found by real labels; other scripts | Done |
 | M3 | Label readers: upload checks, AI reader (Kimi), OCR reader, merging images, evaluation script | Next |
-| M4 | Single-label page | |
+| M4 | Single-label page, with each field outlined on the label image | |
 | M5 | Demo deployment: Kimi on Render, latency check, keep-warm, usage limits | |
 | M6 | Batch upload | |
 | M7 | Final README: evaluation results, tools, trade-offs | |
