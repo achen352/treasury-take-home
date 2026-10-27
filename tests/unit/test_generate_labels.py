@@ -167,3 +167,9 @@ def _contrast_ratio(a: tuple[int, int, int], b: tuple[int, int, int]) -> float:
 
     lighter, darker = sorted((luminance(a), luminance(b)), reverse=True)
     return (lighter + 0.05) / (darker + 0.05)
+
+
+def test_text_layout_is_the_same_on_every_platform() -> None:
+    # Linux builds of Pillow ship the Raqm layout engine and Windows builds don't; pinning the
+    # basic engine keeps a fresh generation pixel-identical to the committed fixtures anywhere.
+    assert generate_labels.font("sans", 30).layout_engine == ImageFont.Layout.BASIC
