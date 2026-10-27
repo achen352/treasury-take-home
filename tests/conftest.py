@@ -1,3 +1,5 @@
+import os
+import shutil
 from collections.abc import Iterator
 
 import pytest
@@ -22,3 +24,13 @@ def app(settings: Settings) -> FastAPI:
 def client(app: FastAPI) -> Iterator[TestClient]:
     with TestClient(app, raise_server_exceptions=False) as test_client:
         yield test_client
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    """Skip OCR tests on a machine without Tesseract, but never in CI, where they must run."""
+    if shutil.which("tesseract") or os.environ.get("CI") == "true":
+        return
+    skip = pytest.mark.skip(reason="Tesseract isn't installed (brew install tesseract)")
+    for item in items:
+        if "ocr" in item.keywords:
+            item.add_marker(skip)
