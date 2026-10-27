@@ -18,3 +18,5 @@ class Settings(BaseSettings):
     extractor_mode: ExtractorMode = ExtractorMode.DUAL
     llm_api_key: SecretStr | None = None
     enable_docs: bool = False
+    port: int = 8000
+    forwarded_allow_ips: str = "127.0.0.1"
