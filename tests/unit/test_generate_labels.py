@@ -87,7 +87,8 @@ def test_committed_fixtures_are_exactly_what_the_generator_makes(tmp_path: Path)
     for fixture, (folder, truth) in committed().items():
         fresh = tmp_path / folder.name
         assert sorted(p.name for p in fresh.iterdir()) == sorted(p.name for p in folder.iterdir())
-        assert (fresh / "truth.json").read_text() == (folder / "truth.json").read_text(), fixture
+        old_truth = (folder / "truth.json").read_bytes()
+        assert (fresh / "truth.json").read_bytes() == old_truth, fixture
         for name in truth.images:
             with Image.open(folder / name) as old, Image.open(fresh / name) as new:
                 assert (old.mode, old.size) == (new.mode, new.size), name

@@ -1,0 +1,37 @@
+{
+  "id": "cyrillic-brand-cyrillic-application",
+  "description": "The same label, with the brand written in Cyrillic on the application too.",
+  "images": [
+    "label.png"
+  ],
+  "application": {
+    "beverage_type": "spirits",
+    "imported": true,
+    "brand_name": "Белая Река",
+    "class_type": "Vodka",
+    "alcohol_content": "40% Alc./Vol. (80 Proof)",
+    "net_contents": "750 mL",
+    "bottler": "White River Imports LLC, Chicago, Illinois",
+    "country_of_origin": "Bulgaria"
+  },
+  "printed": {
+    "brand_name": "БЕЛАЯ РЕКА",
+    "class_type": "Vodka",
+    "alcohol_content": "40% Alc./Vol. (80 Proof)",
+    "net_contents": "750 mL",
+    "bottler": "Imported by White River Imports LLC, Chicago, Illinois",
+    "country_of_origin": "Product of Bulgaria",
+    "health_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+    "warning_header_bold": true,
+    "warning_body_bold": false
+  },
+  "other_text": [],
+  "hidden_text": [],
+  "acceptable": [
+    "Matches"
+  ],
+  "tags": [
+    "known-answer",
+    "other-script"
+  ]
+}
