@@ -199,3 +199,52 @@ def test_bottler_words_in_any_order_pass(expected: str, found: str) -> None:
 )
 def test_long_form_country_names_match(expected: str, found: str) -> None:
     assert check_country(expected, found, cfr="x").status is Status.PASS
+
+
+# ---- other scripts (27 CFR 5.55 and 7.55: the brand name need not be in English) ----
+
+BELAYA_REKA = (
+    "\N{CYRILLIC CAPITAL LETTER BE}\N{CYRILLIC CAPITAL LETTER IE}\N{CYRILLIC CAPITAL LETTER EL}"
+    "\N{CYRILLIC CAPITAL LETTER A}\N{CYRILLIC CAPITAL LETTER YA} \N{CYRILLIC CAPITAL LETTER ER}"
+    "\N{CYRILLIC CAPITAL LETTER IE}\N{CYRILLIC CAPITAL LETTER KA}\N{CYRILLIC CAPITAL LETTER A}"
+)
+
+
+@pytest.mark.parametrize(
+    ("expected", "found"),
+    [("CHAMISUL", "참이슬"), ("BELAYA REKA", BELAYA_REKA), ("Dassai", "獺祭")],
+)
+def test_a_name_in_a_different_script_goes_to_review_not_fail(expected: str, found: str) -> None:
+    result = brand(expected, found)
+
+    assert result.status is Status.REVIEW
+    assert any("script" in note for note in result.notes)
+
+
+def test_a_name_printed_in_both_scripts_is_compared_in_the_applications_script() -> None:
+    result = brand("CHAMISUL", "참이슬 CHAMISUL")
+
+    assert result.status is Status.PASS
+    assert any("Korean" in note for note in result.notes)
+
+
+def test_the_other_script_never_rescues_a_wrong_name() -> None:
+    assert brand("CHAMISUL", "참이슬 CHUM CHURUM").status is Status.FAIL
+
+
+@pytest.mark.parametrize(
+    ("expected", "found", "status"),
+    [
+        (BELAYA_REKA.title(), BELAYA_REKA, Status.PASS),
+        ("참이슬", "참이슬", Status.PASS),
+        ("참이슬", "처음처럼", Status.FAIL),
+    ],
+)
+def test_names_in_the_same_non_latin_script_compare_normally(
+    expected: str, found: str, status: Status
+) -> None:
+    assert brand(expected, found).status is status
+
+
+def test_a_country_printed_in_two_languages_matches() -> None:
+    assert check_country("Korea", "Product of Korea 대한민국산", cfr="x").status is Status.PASS

@@ -189,3 +189,9 @@ def test_missing_words_still_fail() -> None:
     )  # FLOS, approved by TTB
 
     assert warning(text).status is Status.FAIL
+
+
+def test_a_warning_only_in_another_language_fails() -> None:
+    korean = "경고: 임신 중 음주는 태아의 건강을 해칠 수 있습니다."
+
+    assert warning(korean).status is Status.FAIL

@@ -14,6 +14,7 @@ from app.domain.normalize import (
     UNITS,
     Unit,
     Volume,
+    dominant_script,
     from_ml,
     latinize,
     lookalike_characters,
@@ -33,6 +34,11 @@ FULLWIDTH_O = "\N{FULLWIDTH LATIN CAPITAL LETTER O}"
 def tags(text: str) -> str:
     """Encode ASCII as invisible Unicode tag characters (the "ASCII smuggling" trick)."""
     return "".join(chr(0xE0000 + ord(ch)) for ch in text)
+
+
+def fullwidth(text: str) -> str:
+    """The fullwidth forms of ASCII characters, common on Chinese and Japanese labels."""
+    return "".join(chr(ord(ch) + 0xFEE0) if "!" <= ch <= "~" else ch for ch in text)
 
 
 # ---- text normalization ----
@@ -381,6 +387,58 @@ def test_a_number_right_after_a_word_and_a_period_is_read() -> None:
 
 def test_the_tail_of_a_decimal_is_still_never_read_as_a_number() -> None:
     contents = parse_net_contents("0.75 L")
+
+    assert contents.volume is not None
+    assert contents.volume.ml == Decimal(750)
+
+
+# ---- other scripts ----
+
+BELAYA_REKA = (
+    "\N{CYRILLIC CAPITAL LETTER BE}\N{CYRILLIC CAPITAL LETTER IE}\N{CYRILLIC CAPITAL LETTER EL}"
+    "\N{CYRILLIC CAPITAL LETTER A}\N{CYRILLIC CAPITAL LETTER YA} \N{CYRILLIC CAPITAL LETTER ER}"
+    "\N{CYRILLIC CAPITAL LETTER IE}\N{CYRILLIC CAPITAL LETTER KA}\N{CYRILLIC CAPITAL LETTER A}"
+)
+
+
+@pytest.mark.parametrize(
+    ("text", "script"),
+    [
+        ("OLD TOM", "Latin"),
+        ("참이슬", "Korean"),
+        ("獺祭", "Chinese or Japanese"),
+        ("ひやおろし", "Chinese or Japanese"),
+        (BELAYA_REKA, "Cyrillic"),
+        ("\N{GREEK CAPITAL LETTER KAPPA}\N{GREEK CAPITAL LETTER TAU}", "Greek"),
+        (f"OLD T{CYRILLIC_CAPITAL_O}M", "Latin"),  # mostly Latin
+        ("750 mL 45%", "Latin"),
+        ("75% 750", None),
+    ],
+)
+def test_the_main_script_of_a_text_is_detected(text: str, script: str | None) -> None:
+    assert dominant_script(text) == script
+
+
+def test_a_word_entirely_in_another_alphabet_is_not_a_lookalike_spoof() -> None:
+    assert lookalike_characters(BELAYA_REKA) == []
+    assert lookalike_characters(f"OLD T{CYRILLIC_CAPITAL_O}M") == [CYRILLIC_CAPITAL_O]
+    assert lookalike_characters(f"OLD {BELAYA_REKA}")  # mixed with Latin: still suspicious
+
+
+@pytest.mark.parametrize(
+    ("text", "abv"),
+    [
+        ("酒精度 53%vol", Decimal(53)),
+        ("알코올 16.5%", Decimal("16.5")),
+        (fullwidth("40%") + " ALC/VOL", Decimal(40)),
+    ],
+)
+def test_alcohol_on_labels_in_other_languages(text: str, abv: Decimal) -> None:
+    assert parse_alcohol(text).abv == abv
+
+
+def test_fullwidth_volumes_are_read() -> None:
+    contents = parse_net_contents(fullwidth("750ml"))
 
     assert contents.volume is not None
     assert contents.volume.ml == Decimal(750)
