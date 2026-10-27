@@ -123,3 +123,10 @@ def test_only_approved_labels_are_fetched(tmp_path: Path) -> None:
 def test_ttb_ids_must_be_14_digits(tmp_path: Path, bad_id: str) -> None:
     with pytest.raises(ValueError, match="TTB ID"):
         fetch_cola.fetch([bad_id], tmp_path, get=FakeRegistry().get, sleep=lambda _: None)
+
+
+def test_the_http_client_keeps_the_registry_session_cookie() -> None:
+    # The registry only serves label images inside the session that viewed the form.
+    handlers = fetch_cola.OPENER.handlers
+
+    assert any(isinstance(handler, fetch_cola.HTTPCookieProcessor) for handler in handlers)
