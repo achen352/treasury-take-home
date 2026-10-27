@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 
 from app.config import Settings
-from app.web.middleware import RequestContextMiddleware
+from app.web.middleware import DOCS_CSP, RequestContextMiddleware, SecurityHeadersMiddleware
 from app.web.routes import router
 
 
@@ -19,6 +19,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         openapi_url="/openapi.json" if settings.enable_docs else None,
     )
     app.state.settings = settings
+    # Last added runs outermost: security headers must also wrap the 500s
+    # produced by RequestContextMiddleware.
     app.add_middleware(RequestContextMiddleware)
+    app.add_middleware(
+        SecurityHeadersMiddleware,
+        csp_overrides={"/docs": DOCS_CSP} if settings.enable_docs else None,
+    )
     app.include_router(router)
     return app
