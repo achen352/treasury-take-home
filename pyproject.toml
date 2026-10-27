@@ -8,12 +8,14 @@ dependencies = [
     "fastapi",
     "uvicorn",
     "pydantic-settings",
+    "rapidfuzz",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest",
     "pytest-cov",
+    "hypothesis",
     "httpx2",
     "ruff",
     "mypy",
