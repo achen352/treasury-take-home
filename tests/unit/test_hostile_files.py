@@ -183,3 +183,11 @@ def test_odd_page_pdf_has_a_page_far_too_thin_to_be_a_label(folder: Path) -> Non
 
     assert min(width, height) < 36  # under half an inch
     assert max(width, height) > 3_000
+
+
+def test_a_fresh_generation_matches_the_committed_files_byte_for_byte(tmp_path: Path) -> None:
+    # The files must come out the same on every OS, so regenerating never changes them.
+    hostile_files.generate(tmp_path)
+
+    for name in [*EXPECTED, "manifest.json"]:
+        assert (tmp_path / name).read_bytes() == (COMMITTED / name).read_bytes(), name
