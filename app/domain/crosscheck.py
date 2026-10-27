@@ -94,7 +94,7 @@ def _confirm_warning(result: FieldResult, ocr_text: str) -> FieldResult:
     # body capitals don't matter). A one-letter difference is not forgiven as OCR noise.
     if contains_warning(ocr_text):
         return result
-    window = _warning_window(tokenize(ocr_text))
+    window = warning_window(tokenize(ocr_text))
     return result.at_least(
         Status.REVIEW,
         WARNING_DIFFERS,
@@ -102,7 +102,7 @@ def _confirm_warning(result: FieldResult, ocr_text: str) -> FieldResult:
     )
 
 
-def _warning_window(tokens: Sequence[str]) -> list[str] | None:
+def warning_window(tokens: Sequence[str]) -> list[str] | None:
     """The stretch of OCR tokens that lines up best with the required warning, if any."""
     canonical = [token.casefold() for token in CANONICAL_TOKENS]
     ocr = [token.casefold() for token in tokens]

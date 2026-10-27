@@ -563,6 +563,7 @@ def _photo(
     photo: Callable[[Image.Image], Image.Image] | None = None,
     *,
     jpeg_quality: int | None = None,
+    extra_tags: tuple[str, ...] = (),
     **options: Unpack[Options],
 ) -> Spec:
     """A compliant OLD TOM label, photographed badly. Photos are saved as JPEG."""
@@ -572,7 +573,7 @@ def _photo(
         id,
         description,
         (M, R),
-        ("hard-to-read",),
+        ("hard-to-read", *extra_tags),
         OLD_TOM,
         OLD_TOM_APPLICATION,
         photo=photo,
@@ -817,7 +818,10 @@ SPECS: tuple[Spec, ...] = (
     _photo("photo-heavy-jpeg", "OLD TOM saved with very heavy JPEG compression.", jpeg_quality=8),
     _photo("photo-glare-spot", "OLD TOM with a glare spot near the class/type line.", _glare_spot),
     _photo(
-        "warning-rotated", "The warning is printed sideways on a side panel.", warning_rotated=True
+        "warning-rotated",
+        "The warning is printed sideways on a side panel.",
+        warning_rotated=True,
+        extra_tags=("rotated",),
     ),
     _photo(
         "warning-tiny",
