@@ -12,10 +12,12 @@ services:
       # Render's proxy is the only route to the container, so trust its X-Forwarded-For.
       - key: FORWARDED_ALLOW_IPS
         value: "*"
+      # Kimi (Moonshot AI) reads the labels, chosen for cost (see README, Limitations). Any
+      # OpenAI-compatible endpoint works here, such as Azure OpenAI in an agency tenant.
       - key: LLM_BASE_URL
-        value: https://api.openai.com/v1
-      # Secrets are entered in the Render dashboard, never committed.
+        value: https://api.moonshot.ai/v1
       - key: LLM_MODEL
-        sync: false
+        value: kimi-k2.6
+      # The key is entered in the Render dashboard, never committed.
       - key: LLM_API_KEY
         sync: false

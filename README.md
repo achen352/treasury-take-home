@@ -21,7 +21,7 @@ Each row is a requirement from the brief, with the stakeholder who raised it.
 | Results in about 5 seconds, because the last vendor took 30 to 40 (*Sarah Chen*) | The AI model makes one call to read the label, and the checks themselves are plain code that runs in milliseconds. Latency is measured against 5 seconds. | Planned (M3, M5) |
 | Simple enough for agents over 50: "clean, obvious, no hunting for buttons" (*Sarah Chen*) | One page with one main button and large text. Results are shown with an icon and words, never color alone, and an automated accessibility scan checks the page (Section 508). | Planned (M4) |
 | Batch uploads of 200 to 300 labels at once (*Sarah Chen, for Janet*) | A batch upload takes a spreadsheet of application data, and failures are listed first. | Planned (M6) |
-| The agency runs on Azure under FedRAMP (*Marcus Williams*) | The prototype is hosted on Render. The container and the AI adapter move to Azure App Service and Azure OpenAI without code changes. | Documented path |
+| The agency runs on Azure under FedRAMP (*Marcus Williams*) | Not used here, for cost: the prototype runs on Render's free tier and reads labels with Kimi (see [Limitations](#assumptions-and-limitations)). The Docker image and the AI adapter move to Azure App Service and Azure OpenAI by configuration alone. | Documented path |
 | The firewall blocks many outbound ML endpoints (*Marcus Williams*) | A local OCR reader (Tesseract) keeps working when the AI service can't be reached, and the result is marked as read offline. | Planned (M3) |
 | A standalone proof of concept, not integrated with COLA (*Marcus Williams*) | Standalone. The public COLA registry is used only offline, as a source of real test labels. | By design |
 | Store nothing sensitive (*Marcus Williams*) | No database, images are processed in memory, and logs hold no label content. | By design (enforced as uploads arrive in M3 and M4) |
@@ -85,8 +85,8 @@ as the work goes on.
 | **Warning rules settled against real labels.** | Exact wording and header capitals are required. Spacing, hyphens at line breaks and the body's capitalization don't count. A difference in punctuation alone goes to review instead of failing, because 3 of 19 approved labels have one. |
 | **Forgiving names, strict judgments.** | Differences in case, punctuation, spacing or common abbreviations ("Co." and "Company") pass with a note, and near misses go to review. A name printed in another script, such as a Hangul brand against a romanized application, goes to review, because 27 CFR 5.55 and 7.55 allow non-English brand names. |
 | **Careful numbers.** | A percentage counts as the ABV only when the words around it say alcohol, so "100% Blue Agave" isn't an ABV. Proof must equal twice the ABV. Volumes must match exactly within metric or US units and within 0.5% across them (750 mL = 25.4 fl oz). Pints, quarts and wine ABV ranges are supported. |
-| **One adapter for the AI provider.** | The vision reader speaks the OpenAI-compatible API. Development uses Moonshot's Kimi model, and only synthetic and public test labels are sent to it. The deployed app uses OpenAI. In the agency, the same adapter would point at Azure OpenAI in Treasury's own tenant. Production avoids a China-based provider because of recent federal orders removing China's DeepSeek from agency systems. |
-| **Render now, Azure as the path.** | Render's free tier gives a live URL with the least setup. The Docker image and the adapter are what Azure App Service would run. |
+| **Kimi reads the labels, through one swappable adapter.** | The vision reader speaks the OpenAI-compatible API, so the provider is configuration, not code. This prototype uses Moonshot AI's Kimi model in development and in the demo, because the author already has credits for it and the exercise has no budget. In an agency, the same adapter would point at Azure OpenAI in Treasury's own tenant. The trade-off is listed under [Limitations](#assumptions-and-limitations). |
+| **Render's free tier, with Azure as the path.** | Render gives a live URL at no cost with the least setup. The same Docker image is what Azure App Service would run. |
 | **Python, FastAPI, server-rendered pages.** | The pages are plain HTML from the server, made interactive with HTMX, so there is no frontend build. pytest makes test-first work easy, and Python has strong libraries for images and fuzzy matching. |
 | **Test-driven, with approved test lists.** | Each milestone starts with a plain-English list of test cases agreed before coding. Commits come in `test:` and `feat:` pairs, so `git log` shows each test failing before the code that makes it pass. |
 | **Test labels drawn from their own ground truth.** | Each label is drawn from its truth file, so the right answer is known exactly. AI image generation is used only for photo backgrounds, because AI-generated label text is garbled. Real approved labels come from the public registry. |
@@ -142,13 +142,57 @@ Four approved labels differ from the regulation's text, and the tool reports the
 - **Container.** A multi-stage build, a base image pinned by digest, a non-root user, and no
   pip in the runtime image.
 - **What production would still need:**
+  - a FedRAMP-authorized model provider and host (see [Limitations](#assumptions-and-limitations))
   - FedRAMP authorization and an ATO
   - single sign-on
   - an audit log of who checked what
   - records retention
   - a Section 508 audit
 
+## Dependencies
+
+The app imports few libraries, all open source under permissive licenses. Every package,
+including the ones these pull in, is pinned to an exact version and checked against a hash on
+install. That comes to 18 runtime packages in all.
+
+| Library | Used for | License |
+|---|---|---|
+| FastAPI, Starlette, Uvicorn | Web framework and server | MIT, BSD-3-Clause, BSD-3-Clause |
+| Pydantic, pydantic-settings | Data validation and settings | MIT |
+| RapidFuzz | Similarity scores for near-miss names | MIT |
+| Pillow | Image decoding and re-encoding, and drawing test labels | MIT-CMU |
+| DejaVu fonts (bundled, test labels only) | Drawing test labels identically on every OS | Bitstream Vera (permissive) |
+
+Planned for M3: the `openai` client library and `pytesseract` (both Apache-2.0), plus the
+Tesseract OCR engine (Apache-2.0), installed in the container image. Test and lint tools
+(pytest, Hypothesis, Ruff, mypy) are development-only and never ship.
+
+Keeping them safe:
+
+- **pip-audit** checks every pinned version against known vulnerabilities, on every push and
+  weekly.
+- **A CycloneDX SBOM** (software bill of materials) lists every component, which federal buyers
+  ask for under Executive Order 14028.
+- **Trivy** scans the finished container image.
+- **Dependabot**, GitHub's update bot, opens a pull request when a pinned library, the base image
+  or a CI action has a newer version. It never changes anything by itself. Each update is
+  reviewed, tested by CI and merged by hand.
+
 ## Assumptions and limitations
+
+Two limitations come from keeping the prototype free to run. Neither is what an agency
+deployment should do:
+
+- **Kimi, a China-based AI provider, reads the labels.** Images uploaded to the demo are sent to
+  Moonshot AI's API. Upload only public or test labels, such as the samples in this repository.
+  For agency use, point the adapter at a FedRAMP-authorized model, such as Azure OpenAI in
+  Treasury's tenant. Alternatively, run the OCR-only mode (`EXTRACTOR_MODE=ocr`), which sends
+  nothing outside the server.
+- **Render's free tier hosts the demo.** It isn't FedRAMP-authorized or on Azure, where the
+  agency runs. It has 0.1 CPU and 512 MB of memory, and it sleeps when idle, so the first request
+  after a quiet spell is slow. The same Docker image runs on Azure App Service.
+
+The rest are scope limits:
 
 - **Warning type size isn't measured.** That needs the label's physical size, which COLA records,
   so it's a possible later addition.
@@ -222,7 +266,7 @@ tests/
 | M2 | Test data: drawn labels, real COLA labels, hostile files; fixes found by real labels; other scripts | Done |
 | M3 | Label readers: upload checks, AI reader (Kimi), OCR reader, merging images, evaluation script | Next |
 | M4 | Single-label page | |
-| M5 | Production model (OpenAI), latency check, keep-warm | |
+| M5 | Demo deployment: Kimi on Render, latency check, keep-warm, usage limits | |
 | M6 | Batch upload | |
 | M7 | Final README: evaluation results, tools, trade-offs | |
 
