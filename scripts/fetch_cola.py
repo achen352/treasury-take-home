@@ -14,8 +14,10 @@ import sys
 import time
 import urllib.request
 from collections.abc import Callable, Sequence
+from http.cookiejar import CookieJar
 from pathlib import Path
 from urllib.parse import quote
+from urllib.request import HTTPCookieProcessor
 
 from PIL import Image
 from pydantic import BaseModel
@@ -119,12 +121,16 @@ def parse_form(page: str) -> ColaForm:
     )
 
 
+# The registry serves label images only within the session that viewed the form.
+OPENER = urllib.request.build_opener(HTTPCookieProcessor(CookieJar()))
+
+
 def http_get(url: str) -> bytes:
     if not url.startswith(BASE + "/"):
         raise ValueError(f"Refusing to fetch outside the COLA registry: {url}")
     # The check above pins the scheme and host to the registry's HTTPS address.
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})  # noqa: S310
-    with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310
+    with OPENER.open(request, timeout=30) as response:
         data: bytes = response.read(MAX_BYTES + 1)
     if len(data) > MAX_BYTES:
         raise ValueError(f"Response larger than {MAX_BYTES} bytes: {url}")
