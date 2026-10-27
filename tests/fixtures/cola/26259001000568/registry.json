@@ -1,0 +1,29 @@
+{
+  "ttb_id": "26259001000568",
+  "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26259001000568",
+  "status": "APPROVED",
+  "brand_name": "STOLEN ROOTS",
+  "fanciful_name": "GSM",
+  "class_type_code": "TABLE RED WINE",
+  "origin_code": "CALIFORNIA",
+  "approval_date": "10/15/2026",
+  "qualifications": "",
+  "total_bottle_capacity": "",
+  "product_type": "Wine",
+  "source": "Domestic",
+  "applicant": "Stolen Roots, Stolen Roots Inc\n1251 W LAUREL AVE UNIT 9-13\nLompoc CA 93436\nSTOLEN ROOTS (Used on label)",
+  "images": [
+    {
+      "filename": "SR GSM 2024 front label.jpg",
+      "image_type": "Brand (front) or keg collar",
+      "dimensions": "3.46 inches W X 3.43 inches H",
+      "saved_as": "1-front.jpg"
+    },
+    {
+      "filename": "SR GSM 2024 back label.jpg",
+      "image_type": "Back",
+      "dimensions": "3.46 inches W X 3.43 inches H",
+      "saved_as": "2-back.jpg"
+    }
+  ]
+}

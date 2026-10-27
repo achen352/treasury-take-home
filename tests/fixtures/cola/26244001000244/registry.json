@@ -1,0 +1,29 @@
+{
+  "ttb_id": "26244001000244",
+  "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26244001000244",
+  "status": "APPROVED",
+  "brand_name": "TERREPASSERI",
+  "fanciful_name": "",
+  "class_type_code": "TABLE WHITE WINE",
+  "origin_code": "ITALY",
+  "approval_date": "10/09/2026",
+  "qualifications": "",
+  "total_bottle_capacity": "",
+  "product_type": "Wine",
+  "source": "Imported",
+  "applicant": "Il Bacco Wine Merchant Inc\n110 SWALM ST\nWestbury NY 11590",
+  "images": [
+    {
+      "filename": "retro.jpg",
+      "image_type": "Brand (front) or keg collar",
+      "dimensions": "1.97 inches W X 3.54 inches H",
+      "saved_as": "1-front.jpg"
+    },
+    {
+      "filename": "TERREPASSERI_CHARDONNAY.jpg",
+      "image_type": "Back",
+      "dimensions": "3.93 inches W X 3.94 inches H",
+      "saved_as": "2-back.jpg"
+    }
+  ]
+}

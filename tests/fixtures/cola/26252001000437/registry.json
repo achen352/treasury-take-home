@@ -1,0 +1,23 @@
+{
+  "ttb_id": "26252001000437",
+  "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26252001000437",
+  "status": "APPROVED",
+  "brand_name": "ADK FOX BREWING",
+  "fanciful_name": "COOKED AT 70",
+  "class_type_code": "ALE",
+  "origin_code": "NEW YORK",
+  "approval_date": "10/07/2026",
+  "qualifications": "",
+  "total_bottle_capacity": "",
+  "product_type": "Malt Beverage",
+  "source": "Domestic",
+  "applicant": "ADK FOX, Adirondack Fox Brewery LLC\n111 OHIO AVE BLDG\nPlattsburgh NY 12903\nADK FOX (Used on label)",
+  "images": [
+    {
+      "filename": "cooked_at_70_can.jpg",
+      "image_type": "Brand (front) or keg collar",
+      "dimensions": "8.5 inches W X 5 inches H",
+      "saved_as": "1-front.jpg"
+    }
+  ]
+}

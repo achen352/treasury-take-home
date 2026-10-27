@@ -1,0 +1,35 @@
+{
+  "ttb_id": "26233001000571",
+  "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26233001000571",
+  "status": "APPROVED",
+  "brand_name": "OHANYAN",
+  "fanciful_name": "SIGNATURE",
+  "class_type_code": "VODKA 80-89 PROOF FB",
+  "origin_code": "ARMENIA",
+  "approval_date": "10/13/2026",
+  "qualifications": "",
+  "total_bottle_capacity": "",
+  "product_type": "Distilled Spirits",
+  "source": "Imported",
+  "applicant": "IMPORTERS DIRECT WHOLESALE CO., INC.\n1944 GARDENA AVE\nGLENDALE CA 91204",
+  "images": [
+    {
+      "filename": "Signature vodka Front.jpg",
+      "image_type": "Brand (front) or keg collar",
+      "dimensions": "3 inches W X 7 inches H",
+      "saved_as": "1-front.jpg"
+    },
+    {
+      "filename": "Signature vodka side.jpg",
+      "image_type": "Other",
+      "dimensions": "2 inches W X 7 inches H",
+      "saved_as": "2-other.jpg"
+    },
+    {
+      "filename": "Signature vodka back.jpg",
+      "image_type": "Back",
+      "dimensions": "6 inches W X 3 inches H",
+      "saved_as": "3-back.jpg"
+    }
+  ]
+}

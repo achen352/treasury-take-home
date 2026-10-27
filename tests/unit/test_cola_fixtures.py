@@ -61,5 +61,13 @@ def test_application_data_agrees_with_the_registry(item: tuple[Path, FixtureTrut
 
 
 @pytest.mark.parametrize("item", COLA, ids=fixture_id)
-def test_approved_labels_are_expected_to_match(item: tuple[Path, FixtureTruth]) -> None:
-    assert item[1].acceptable == (Verdict.MATCHES,)
+def test_approved_labels_match_unless_a_deviation_is_documented(
+    item: tuple[Path, FixtureTruth],
+) -> None:
+    _, truth = item
+    if {"deviation", "uncertain-bold"} & set(truth.tags):
+        # TTB approved the label, but something on it differs from 16.21 or can't be verified.
+        assert Verdict.MATCHES not in truth.acceptable
+        assert "Deviation:" in truth.description or "Uncertain:" in truth.description
+    else:
+        assert truth.acceptable == (Verdict.MATCHES,)

@@ -1,0 +1,53 @@
+{
+  "id": "cola-26240001000053",
+  "description": "SAVANNAH (vodka 80-89 proof, Florida), approved 10/16/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. Small, low-resolution images; the warning is in capitals with some words run together.",
+  "images": [
+    "1-front.png",
+    "2-neck.png",
+    "3-back.png"
+  ],
+  "application": {
+    "beverage_type": "spirits",
+    "imported": false,
+    "brand_name": "SAVANNAH",
+    "class_type": "Vodka",
+    "alcohol_content": "40% Alc./Vol. (80 Proof)",
+    "net_contents": "1.75 L",
+    "bottler": "Brew Theory, Sanford, FL"
+  },
+  "printed": {
+    "brand_name": "SAVANNAH",
+    "class_type": "VODKA",
+    "alcohol_content": "40% ALC/VOL (80 PROOF)",
+    "net_contents": "1.75L",
+    "bottler": "Produced and bottled by Brew Theory Sanford, FL",
+    "health_warning": "GOVERNMENT WARNING: (1) ACCORDING TO THE SURGEON GENERAL, WOMEN SHOULD NOT DRINK ALCOHOLIC BEVERAGES DURING PREGNANCY BECAUSE OF THE RISK OF BIRTH DEFECTS. (2) CONSUMPTION OF ALCOHOLIC BEVERAGES IMPAIRS YOUR ABILITY TO DRIVE A CAR OR OPERATE MACHINERY, AND MAY CAUSE HEALTH PROBLEMS.",
+    "warning_header_bold": true,
+    "warning_body_bold": false
+  },
+  "other_text": [
+    "HANDCRAFTED",
+    "DISTILLED FROM SELECT CORN & BLUE RIDGE SPRING WATER",
+    "BEST OF THE LOWCOUNTRY",
+    "SAVANNAH VODKA",
+    "100% select corn",
+    "DISTILLED FROM GRAIN GLUTEN FREE"
+  ],
+  "hidden_text": [],
+  "acceptable": [
+    "Matches"
+  ],
+  "tags": [
+    "cola",
+    "spirits"
+  ],
+  "cola": {
+    "ttb_id": "26240001000053",
+    "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26240001000053",
+    "label_sizes": {
+      "1-front.png": "4.21 inches W X 6.11 inches H",
+      "2-neck.png": "6.08 inches W X 1.2 inches H",
+      "3-back.png": "4.27 inches W X 2 inches H"
+    }
+  }
+}

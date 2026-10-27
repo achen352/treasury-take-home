@@ -1,0 +1,53 @@
+{
+  "id": "cola-26245001000184",
+  "description": "FLOS (table white wine, Spain), approved 10/20/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. Deviation: the warning omits \"because\" and \"a\" (\"...during pregnancy of the risk...\", \"...to drive car...\"), so the right result is Does not match even though the label was approved.",
+  "images": [
+    "1-front.jpg",
+    "2-back.png"
+  ],
+  "application": {
+    "beverage_type": "wine",
+    "imported": true,
+    "brand_name": "FLOS",
+    "class_type": "White Wine",
+    "alcohol_content": "12%",
+    "net_contents": "750 mL",
+    "bottler": "Puerto Rico Supplies Group, Inc, Bayamon, Puerto Rico",
+    "country_of_origin": "Spain"
+  },
+  "printed": {
+    "brand_name": "FLOS",
+    "class_type": "White Wine",
+    "alcohol_content": "Alc. 12% by vol.",
+    "net_contents": "750 ml",
+    "bottler": "Imported by: PUERTO RICO SUPPLIES GROUP, INC BAYAMON, PUERTO RICO",
+    "country_of_origin": "Product of Spain",
+    "health_warning": "GOVERNMENT WARNING: (1) ACCORDING TO THE SURGEON GENERAL, WOMEN SHOULD NOT DRINK ALCOHOLIC BEVERAGES DURING PREGNANCY OF THE RISK OF BIRTH DEFECTS. (2) CONSUMPTION OF ALCOHOLIC BEVERAGES IMPAIRS YOUR ABILITY TO DRIVE CAR OR OPERATE MACHINERY, AND MAY CAUSE HEALTH PROBLEMS.",
+    "warning_header_bold": true,
+    "warning_body_bold": false
+  },
+  "other_text": [
+    "D.O. CATALUNYA",
+    "Moscatell de gra petit 51%, Moscatell d'Alexandria 46% Sauvignon Blanc 3%",
+    "BOTTLED BY: MASIA PUIGMOLTO, S.L. CASTELLET I LA GORNAL",
+    "CONTAINS SULFITES",
+    "12% alc./vol."
+  ],
+  "hidden_text": [],
+  "acceptable": [
+    "Does not match"
+  ],
+  "tags": [
+    "cola",
+    "deviation",
+    "wine"
+  ],
+  "cola": {
+    "ttb_id": "26245001000184",
+    "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26245001000184",
+    "label_sizes": {
+      "1-front.jpg": "19.69 inches W X 19.69 inches H",
+      "2-back.png": "4.33 inches W X 3.94 inches H"
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "id": "cola-26233001000571",
+  "description": "OHANYAN (vodka 80-89 proof fb, Armenia), approved 10/13/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. Deviation: no comma after \"SURGEON GENERAL\" in the warning (punctuation only), so the right result is Needs review. Tight justification runs words together (\"GOVERNMENTWARNING:\"), and the country appears only as \"Republic of Armenia\" in the producer address.",
+  "images": [
+    "1-front.jpg",
+    "2-other.jpg",
+    "3-back.jpg"
+  ],
+  "application": {
+    "beverage_type": "spirits",
+    "imported": true,
+    "brand_name": "OHANYAN",
+    "class_type": "Vodka",
+    "alcohol_content": "40%",
+    "net_contents": "700 mL",
+    "bottler": "Importers Direct Wholesale Co. Inc., Glendale, CA 91204",
+    "country_of_origin": "Armenia"
+  },
+  "printed": {
+    "brand_name": "OHANYAN",
+    "class_type": "Vodka",
+    "alcohol_content": "Alc. 40% BY Vol.",
+    "net_contents": "700 ml.",
+    "bottler": "IMPORTED BY: IMPORTERS DIRECT WHOLESALE CO.INC.Glendale, CA 91204",
+    "country_of_origin": "Republic of Armenia",
+    "health_warning": "GOVERNMENT WARNING: (1) ACCORDING TO THE SURGEON GENERAL WOMEN SHOULD NOT DRINK ALCOHOLIC BEVERAGES DURING PREGNANCY BECAUSE OF THE RISK OF BIRTH DEFECTS. (2) CONSUMPTION OF ALCOHOLIC BEVERAGES IMPAIRS YOUR ABILITY TO DRIVE A CAR OR OPERATE MACHINERY, AND MAY CAUSE HEALTH PROBLEMS.",
+    "warning_header_bold": true,
+    "warning_body_bold": false
+  },
+  "other_text": [
+    "SIGNATURE",
+    "LXXX",
+    "100% neutral spirits distilled from wheat.",
+    "Produced by: OHANYAN BRANDY COMPANY LLC Yerevan, Republic of Armenia, 0085",
+    "CA CRV"
+  ],
+  "hidden_text": [],
+  "acceptable": [
+    "Needs review"
+  ],
+  "tags": [
+    "cola",
+    "deviation",
+    "spirits"
+  ],
+  "cola": {
+    "ttb_id": "26233001000571",
+    "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26233001000571",
+    "label_sizes": {
+      "1-front.jpg": "3 inches W X 7 inches H",
+      "2-other.jpg": "2 inches W X 7 inches H",
+      "3-back.jpg": "6 inches W X 3 inches H"
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "id": "cola-26244001000018",
+  "description": "TOX BREWING CO. (beer, Connecticut), approved 10/01/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. \"Proudly brewed and packaged by ... in New London, CT\"; net contents in pints and fluid ounces.",
+  "images": [
+    "1-front.jpg"
+  ],
+  "application": {
+    "beverage_type": "beer",
+    "imported": false,
+    "brand_name": "TOX BREWING CO.",
+    "class_type": "German Style Doppelbock Lager",
+    "alcohol_content": "9.5%",
+    "net_contents": "16 fl oz",
+    "bottler": "Tox Brewing Co., New London, CT"
+  },
+  "printed": {
+    "brand_name": "Tox Brewing Co.",
+    "class_type": "German Style Doppelbock Lager",
+    "alcohol_content": "9.5% Alc/Vol",
+    "net_contents": "1 Pint/16 fl oz",
+    "bottler": "PROUDLY BREWED AND PACKAGED BY TOX BREWING CO. IN NEW LONDON, CT",
+    "health_warning": "GOVERNMENT WARNING: (1) ACCORDING TO THE SURGEON GENERAL, WOMEN SHOULD NOT DRINK ALCOHOLIC BEVERAGES DURING PREGNANCY BECAUSE OF THE RISK OF BIRTH DEFECTS. (2) CONSUMPTION OF ALCOHOLIC BEVERAGES IMPAIRS YOUR ABILITY TO DRIVE A CAR OR OPERATE MACHINERY, AND MAY CAUSE HEALTH PROBLEMS.",
+    "warning_header_bold": true,
+    "warning_body_bold": false
+  },
+  "other_text": [
+    "BIG POPPY",
+    "Store Cold, Drink Fresh."
+  ],
+  "hidden_text": [],
+  "acceptable": [
+    "Matches"
+  ],
+  "tags": [
+    "beer",
+    "cola"
+  ],
+  "cola": {
+    "ttb_id": "26244001000018",
+    "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26244001000018",
+    "label_sizes": {
+      "1-front.jpg": "8 inches W X 5 inches H"
+    }
+  }
+}

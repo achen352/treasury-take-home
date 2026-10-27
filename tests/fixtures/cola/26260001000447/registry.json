@@ -1,0 +1,29 @@
+{
+  "ttb_id": "26260001000447",
+  "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26260001000447",
+  "status": "APPROVED",
+  "brand_name": "THE DALMATIAN DOG",
+  "fanciful_name": "",
+  "class_type_code": "TABLE RED WINE",
+  "origin_code": "CROATIA",
+  "approval_date": "10/14/2026",
+  "qualifications": "",
+  "total_bottle_capacity": "",
+  "product_type": "Wine",
+  "source": "Imported",
+  "applicant": "Novovino Wine Company, LLC\n235 N PAULINA ST\nChicago IL 60612",
+  "images": [
+    {
+      "filename": "Dalmatian Babic BACK.jpg",
+      "image_type": "Brand (front) or keg collar",
+      "dimensions": "3.17 inches W X 3.62 inches H",
+      "saved_as": "1-front.jpg"
+    },
+    {
+      "filename": "Dalmatian Babic FRONT.jpg",
+      "image_type": "Back",
+      "dimensions": "5.18 inches W X 3.62 inches H",
+      "saved_as": "2-back.jpg"
+    }
+  ]
+}

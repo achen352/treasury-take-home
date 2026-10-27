@@ -92,11 +92,13 @@ def test_fixture_images_exist_open_and_fit_the_upload_limit(
     item: tuple[Path, FixtureTruth],
 ) -> None:
     folder, truth = item
+    # Generated labels are drawn at a readable size; real labels are whatever TTB stores.
+    smallest = 64 if truth.cola else 800
     for name in truth.images:
         path = folder / name
         assert path.stat().st_size < MAX_UPLOAD_BYTES
         with Image.open(path) as image:
-            assert 800 <= max(image.size) <= 4000
+            assert smallest <= max(image.size) <= 4000
 
 
 @pytest.mark.parametrize("item", ALL_FIXTURES, ids=fixture_id)

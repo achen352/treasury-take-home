@@ -1,0 +1,48 @@
+{
+  "id": "cola-26271001000331",
+  "description": "WORTH CELLARS (sparkling wine/champagne, Michigan), approved 10/13/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. Alcohol and volume are run together on one line: \"12%ALC. VOL.750ML\".",
+  "images": [
+    "1-front.jpg"
+  ],
+  "application": {
+    "beverage_type": "wine",
+    "imported": false,
+    "brand_name": "WORTH CELLARS",
+    "class_type": "Sparkling Pinot Meunier",
+    "alcohol_content": "12%",
+    "net_contents": "750 mL",
+    "bottler": "Worth Cellars, Lake Leelanau, MI 49653"
+  },
+  "printed": {
+    "brand_name": "WORTH CELLARS",
+    "class_type": "SPARKLING PINOT MEUNIER",
+    "alcohol_content": "12%ALC. VOL.",
+    "net_contents": "750ML",
+    "bottler": "PRODUCED AND BOTTLED BY WORTH CELLARS LAKE LEELANAU, MI 49653",
+    "health_warning": "GOVERNMENT WARNING: (1) ACCORDING TO THE SURGEON GENERAL, WOMEN SHOULD NOT DRINK ALCOHOLIC BEVERAGES DURING PREGNANCY BECAUSE OF THE RISK OF BIRTH DEFECTS. (2) CONSUMPTION OF ALCOHOLIC BEVERAGES IMPAIRS YOUR ABILITY TO DRIVE A CAR OR OPERATE MACHINERY, AND MAY CAUSE HEALTH PROBLEMS.",
+    "warning_header_bold": true,
+    "warning_body_bold": false
+  },
+  "other_text": [
+    "Field & Spark",
+    "LEELANAU PENINSULA",
+    "2022 SPARKLING PINOT MEUNIER",
+    "SPARKLING 12%ALC. VOL.750ML",
+    "CONTAINS SULFITES"
+  ],
+  "hidden_text": [],
+  "acceptable": [
+    "Matches"
+  ],
+  "tags": [
+    "cola",
+    "wine"
+  ],
+  "cola": {
+    "ttb_id": "26271001000331",
+    "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26271001000331",
+    "label_sizes": {
+      "1-front.jpg": "8.5 inches W X 3.5 inches H"
+    }
+  }
+}

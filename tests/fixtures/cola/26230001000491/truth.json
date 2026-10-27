@@ -1,0 +1,52 @@
+{
+  "id": "cola-26230001000491",
+  "description": "ROYAL STAG (other imported whisky fb, India), approved 10/06/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. The warning body is in capitals; proof is written \"85.6° US PROOF\"; \"40.66% GRAIN NEUTRAL SPIRITS\" must not be read as the ABV.",
+  "images": [
+    "1-front.jpg",
+    "2-other.jpg"
+  ],
+  "application": {
+    "beverage_type": "spirits",
+    "imported": true,
+    "brand_name": "ROYAL STAG",
+    "class_type": "Whisky",
+    "alcohol_content": "42.8% Alc./Vol. (85.6 Proof)",
+    "net_contents": "750 mL",
+    "bottler": "Eastern Liquors USA Inc, Westbury NY 11590",
+    "country_of_origin": "India"
+  },
+  "printed": {
+    "brand_name": "ROYAL STAG",
+    "class_type": "WHISKY",
+    "alcohol_content": "42.8% ALC/VOL 85.6° US PROOF",
+    "net_contents": "CONTENTS : 750 ml",
+    "bottler": "IMPORTED BY : EASTERN LIQUORS USA INC WESTBURY NY 11590",
+    "country_of_origin": "MADE IN INDIA",
+    "health_warning": "GOVERNMENT WARNING: (1) ACCORDING TO THE SURGEON GENERAL, WOMEN SHOULD NOT DRINK ALCOHOLIC BEVERAGES DURING PREGNANCY BECAUSE OF THE RISK OF BIRTH DEFECTS. (2) CONSUMPTION OF ALCOHOLIC BEVERAGES IMPAIRS YOUR ABILITY TO DRIVE A CAR OR OPERATE MACHINERY, AND MAY CAUSE HEALTH PROBLEMS.",
+    "warning_header_bold": true,
+    "warning_body_bold": false
+  },
+  "other_text": [
+    "SEAGRAM'S",
+    "MADE WITH A FINE BLEND OF MALTED GRAINS",
+    "40.66% GRAIN NEUTRAL SPIRITS",
+    "BLENDED AND BOTTLED BY PERNOD RICARD INDIA PVT. LTD.",
+    "FOR OVERSEAS EXPORT ONLY"
+  ],
+  "hidden_text": [],
+  "acceptable": [
+    "Matches"
+  ],
+  "tags": [
+    "cola",
+    "spirits"
+  ],
+  "cola": {
+    "ttb_id": "26230001000491",
+    "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26230001000491",
+    "label_sizes": {
+      "1-front.jpg": "2.7 inches W X 6.7 inches H",
+      "2-other.jpg": "2.6 inches W X 6.7 inches H"
+    }
+  }
+}

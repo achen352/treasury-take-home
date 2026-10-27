@@ -1,0 +1,47 @@
+{
+  "id": "cola-26257001000366",
+  "description": "BELLE ISLE (straight bourbon whisky, Virginia), approved 09/16/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. Prints \"53.5 ALC/VOL\" with no percent sign, and in this typeface the \"(1)\" of the warning looks like \"(I)\".",
+  "images": [
+    "1-front.png",
+    "2-back.png"
+  ],
+  "application": {
+    "beverage_type": "spirits",
+    "imported": false,
+    "brand_name": "BELLE ISLE",
+    "class_type": "Straight Bourbon Whiskey",
+    "alcohol_content": "53.5% Alc./Vol. (107 Proof)",
+    "net_contents": "750 mL",
+    "bottler": "Belle Isle Craft Spirits, Richmond, VA 23224"
+  },
+  "printed": {
+    "brand_name": "BELLE ISLE",
+    "class_type": "STRAIGHT BOURBON WHISKEY",
+    "alcohol_content": "53.5 ALC/VOL 107 PROOF",
+    "net_contents": "750ML",
+    "bottler": "PRODUCED & BOTTLED BY BELLE ISLE CRAFT SPIRITS RICHMOND, VA 23224",
+    "health_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+    "warning_header_bold": true,
+    "warning_body_bold": false
+  },
+  "other_text": [
+    "BOURBON",
+    "BOTTLE 1 OF 200"
+  ],
+  "hidden_text": [],
+  "acceptable": [
+    "Matches"
+  ],
+  "tags": [
+    "cola",
+    "spirits"
+  ],
+  "cola": {
+    "ttb_id": "26257001000366",
+    "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26257001000366",
+    "label_sizes": {
+      "1-front.png": "9 inches W X 9 inches H",
+      "2-back.png": "9 inches W X 9 inches H"
+    }
+  }
+}

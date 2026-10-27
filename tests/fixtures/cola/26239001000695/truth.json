@@ -1,0 +1,51 @@
+{
+  "id": "cola-26239001000695",
+  "description": "OLD BOY BOURBON (straight bourbon whisky, Kentucky), approved 10/06/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. Alcohol and proof are in a table with the numbers written below the words (\"ALC/VOL 54%\", \"PROOF 108\"), next to an age, a barrel number and a bottle number.",
+  "images": [
+    "1-front.jpg",
+    "2-front.jpg",
+    "3-back.jpg"
+  ],
+  "application": {
+    "beverage_type": "spirits",
+    "imported": false,
+    "brand_name": "OLD BOY BOURBON",
+    "class_type": "Kentucky Straight Bourbon Whiskey",
+    "alcohol_content": "54%",
+    "net_contents": "750 mL",
+    "bottler": "Boundary Oak Distillery, Radcliff, KY"
+  },
+  "printed": {
+    "brand_name": "OLD BOY BOURBON",
+    "class_type": "KENTUCKY STRAIGHT BOURBON WHISKEY",
+    "alcohol_content": "ALC/VOL 54% PROOF 108",
+    "net_contents": "750ML",
+    "bottler": "BOTTLED & DISTILLED BY BOUNDARY OAK DISTILLERY, RADCLIFF, KY",
+    "health_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+    "warning_header_bold": true,
+    "warning_body_bold": false
+  },
+  "other_text": [
+    "SELECTED & BOTTLED EXCLUSIVELY FOR WMA Old Boys 2026",
+    "AGED 3yr BARREL NO. 1 BOTTLE NO. 1",
+    "BOUNDARY OAK DISTILLERY HARDIN COUNTY, KY",
+    "SINGLE BARREL UNCUT UNFILTERED"
+  ],
+  "hidden_text": [],
+  "acceptable": [
+    "Matches"
+  ],
+  "tags": [
+    "cola",
+    "spirits"
+  ],
+  "cola": {
+    "ttb_id": "26239001000695",
+    "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26239001000695",
+    "label_sizes": {
+      "1-front.jpg": "3 inches W X 1.25 inches H",
+      "2-front.jpg": "3 inches W X 4.25 inches H",
+      "3-back.jpg": "3.25 inches W X 5 inches H"
+    }
+  }
+}

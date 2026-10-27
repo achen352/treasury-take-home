@@ -1,0 +1,29 @@
+{
+  "ttb_id": "26216001000692",
+  "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26216001000692",
+  "status": "APPROVED",
+  "brand_name": "NUMA",
+  "fanciful_name": "",
+  "class_type_code": "OTHER GIN FB",
+  "origin_code": "ITALY",
+  "approval_date": "10/15/2026",
+  "qualifications": "",
+  "total_bottle_capacity": "",
+  "product_type": "Distilled Spirits",
+  "source": "Imported",
+  "applicant": "Hollywood Distributors LLC\n236 N CHESTER AVE STE 101A\nPasadena CA 91106",
+  "images": [
+    {
+      "filename": "Romae-F2.png",
+      "image_type": "Brand (front) or keg collar",
+      "dimensions": "2.91 inches W X 4.21 inches H",
+      "saved_as": "1-front.png"
+    },
+    {
+      "filename": "Romae-B2.png",
+      "image_type": "Back",
+      "dimensions": "2.91 inches W X 4.29 inches H",
+      "saved_as": "2-back.png"
+    }
+  ]
+}

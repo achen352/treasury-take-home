@@ -1,0 +1,48 @@
+{
+  "id": "cola-26252001000437",
+  "description": "ADK FOX BREWING (ale, New York), approved 10/07/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. Net contents are given only as \"1 PINT\".",
+  "images": [
+    "1-front.jpg"
+  ],
+  "application": {
+    "beverage_type": "beer",
+    "imported": false,
+    "brand_name": "ADK FOX BREWING",
+    "class_type": "Hazy India Pale Ale",
+    "alcohol_content": "6.5%",
+    "net_contents": "1 pint",
+    "bottler": "Adirondack Fox Brewery LLC, 111 Ohio Ave, Plattsburgh, NY 12903"
+  },
+  "printed": {
+    "brand_name": "ADK FOX BREWING",
+    "class_type": "HAZY INDIA PALE ALE",
+    "alcohol_content": "ALC BY VOL 6.5 %",
+    "net_contents": "1 PINT",
+    "bottler": "BREWED BY: ADIRONDACK FOX BREWERY LLC 111 OHIO AVE, PLATTSBURGH, NY 12903",
+    "health_warning": "GOVERNMENT WARNING: (1) ACCORDING TO THE SURGEON GENERAL, WOMEN SHOULD NOT DRINK ALCOHOLIC BEVERAGES DURING PREGNANCY BECAUSE OF THE RISK OF BIRTH DEFECTS. (2) CONSUMPTION OF ALCOHOLIC BEVERAGES IMPAIRS YOUR ABILITY TO DRIVE A CAR OR OPERATE MACHINERY, AND MAY CAUSE HEALTH PROBLEMS.",
+    "warning_header_bold": true,
+    "warning_body_bold": false
+  },
+  "other_text": [
+    "Cooked at 70",
+    "HAZY IPA",
+    "BEER",
+    "IBU 72",
+    "CRAFTED IN PLATTSBURGH"
+  ],
+  "hidden_text": [],
+  "acceptable": [
+    "Matches"
+  ],
+  "tags": [
+    "beer",
+    "cola"
+  ],
+  "cola": {
+    "ttb_id": "26252001000437",
+    "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26252001000437",
+    "label_sizes": {
+      "1-front.jpg": "8.5 inches W X 5 inches H"
+    }
+  }
+}

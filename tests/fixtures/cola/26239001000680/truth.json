@@ -1,0 +1,45 @@
+{
+  "id": "cola-26239001000680",
+  "description": "SWITCHBACK (ale, Vermont), approved 10/13/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. Uncertain: the whole warning is set in one heavy condensed face, so whether the header is bolder than the body cannot be judged from the image, and the right result is Needs review. The bottler statement puts the place first (\"Brewed in Burlington, Vermont by ...\").",
+  "images": [
+    "1-front.jpg"
+  ],
+  "application": {
+    "beverage_type": "beer",
+    "imported": false,
+    "brand_name": "SWITCHBACK",
+    "class_type": "Ale",
+    "alcohol_content": "5.7%",
+    "net_contents": "12 fl oz",
+    "bottler": "Switchback Brewing Co., Burlington, Vermont"
+  },
+  "printed": {
+    "brand_name": "Switchback",
+    "class_type": "ALE",
+    "alcohol_content": "ALC: 5.7% BY VOL.",
+    "net_contents": "12 FL. OZ.",
+    "bottler": "BREWED IN BURLINGTON, VERMONT BY SWITCHBACK BREWING CO.",
+    "health_warning": "GOVERNMENT WARNING: (1) ACCORDING TO THE SURGEON GENERAL, WOMEN SHOULD NOT DRINK ALCOHOLIC BEVERAGES DURING PREGNANCY BECAUSE OF THE RISK OF BIRTH DEFECTS. (2) CONSUMPTION OF ALCOHOLIC BEVERAGES IMPAIRS YOUR ABILITY TO DRIVE A CAR OR OPERATE MACHINERY, AND MAY CAUSE HEALTH PROBLEMS."
+  },
+  "other_text": [
+    "Lil' Pine IPA",
+    "100% EMPLOYEE-OWNED 100% NATURALLY CONDITIONED 100% UNFILTERED 100% VERMONT MADE",
+    "BURLINGTON, VT"
+  ],
+  "hidden_text": [],
+  "acceptable": [
+    "Needs review"
+  ],
+  "tags": [
+    "beer",
+    "cola",
+    "uncertain-bold"
+  ],
+  "cola": {
+    "ttb_id": "26239001000680",
+    "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26239001000680",
+    "label_sizes": {
+      "1-front.jpg": "8.2 inches W X 4.8 inches H"
+    }
+  }
+}

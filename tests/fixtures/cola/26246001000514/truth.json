@@ -1,0 +1,47 @@
+{
+  "id": "cola-26246001000514",
+  "description": "FOREVER ALONE (ale, North Carolina), approved 10/07/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. Deviation: a stray closing quotation mark after \"problems.”\" in the warning (punctuation only), so the right result is Needs review. Hand-lettered brand and alcohol statement.",
+  "images": [
+    "1-front.png"
+  ],
+  "application": {
+    "beverage_type": "beer",
+    "imported": false,
+    "brand_name": "FOREVER ALONE",
+    "class_type": "India Pale Ale",
+    "alcohol_content": "7.5%",
+    "net_contents": "16 fl oz",
+    "bottler": "Resident Culture Brewing Company, 2101 Central Ave, Charlotte, NC 28205"
+  },
+  "printed": {
+    "brand_name": "FOREVER ALONE",
+    "class_type": "INDIA PALE ALE",
+    "alcohol_content": "7.5% ALC. BY VOL.",
+    "net_contents": "1 PINT (16 FL. OZ.)",
+    "bottler": "Brewed by Resident Culture Brewing Company 2101 Central Ave, Charlotte, NC 28205",
+    "health_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.”",
+    "warning_header_bold": true,
+    "warning_body_bold": false
+  },
+  "other_text": [
+    "AMARILLO",
+    "RESIDENT CULTURE",
+    "Hazy IPA hopped exclusively with Amarillo hops."
+  ],
+  "hidden_text": [],
+  "acceptable": [
+    "Needs review"
+  ],
+  "tags": [
+    "beer",
+    "cola",
+    "deviation"
+  ],
+  "cola": {
+    "ttb_id": "26246001000514",
+    "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26246001000514",
+    "label_sizes": {
+      "1-front.png": "8.25 inches W X 5 inches H"
+    }
+  }
+}

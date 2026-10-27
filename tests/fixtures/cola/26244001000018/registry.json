@@ -1,0 +1,23 @@
+{
+  "ttb_id": "26244001000018",
+  "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26244001000018",
+  "status": "APPROVED",
+  "brand_name": "TOX BREWING CO.",
+  "fanciful_name": "BIG POPPY",
+  "class_type_code": "BEER",
+  "origin_code": "CONNECTICUT",
+  "approval_date": "10/01/2026",
+  "qualifications": "",
+  "total_bottle_capacity": "",
+  "product_type": "Malt Beverage",
+  "source": "Domestic",
+  "applicant": "Tox Brewing Company, Tox Brewing Company, LLC\n123 BANK ST\nNew London CT 06320\nTOX BREWING CO. (Used on label)",
+  "images": [
+    {
+      "filename": "bigPoppyLowRes.jpg",
+      "image_type": "Brand (front) or keg collar",
+      "dimensions": "8 inches W X 5 inches H",
+      "saved_as": "1-front.jpg"
+    }
+  ]
+}

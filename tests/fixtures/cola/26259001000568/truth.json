@@ -1,0 +1,50 @@
+{
+  "id": "cola-26259001000568",
+  "description": "STOLEN ROOTS (table red wine, California), approved 10/15/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. No explicit class/type statement: the label shows \"GSM\" and the grape blend (\"40% Mourvedre...\"), which must not be read as the ABV. The registry code is TABLE RED WINE.",
+  "images": [
+    "1-front.jpg",
+    "2-back.jpg"
+  ],
+  "application": {
+    "beverage_type": "wine",
+    "imported": false,
+    "brand_name": "STOLEN ROOTS",
+    "class_type": "GSM",
+    "alcohol_content": "13.9%",
+    "net_contents": "750 mL",
+    "bottler": "Stolen Roots, Inc, Lompoc, CA"
+  },
+  "printed": {
+    "brand_name": "Stolen Roots",
+    "class_type": "GSM",
+    "alcohol_content": "13.9% Alc./Vol.",
+    "net_contents": "750ml",
+    "bottler": "Produced and Bottled By Stolen Roots, Inc Lompoc, CA",
+    "health_warning": "GOVERNMENT WARNING: (1) ACCORDING TO THE SURGEON GENERAL, WOMEN SHOULD NOT DRINK ALCOHOLIC BEVERAGES DURING PREGNANCY BECAUSE OF THE RISK OF BIRTH DEFECTS. (2) CONSUMPTION OF ALCOHOLIC BEVERAGES IMPAIRS YOUR ABILITY TO DRIVE A CAR OR OPERATE MACHINERY, AND MAY CAUSE HEALTH PROBLEMS.",
+    "warning_header_bold": true,
+    "warning_body_bold": false
+  },
+  "other_text": [
+    "40% Mourvedre, 30% Grenache, 30% Syrah",
+    "ALISOS CANYON THOMPSON VINEYARD",
+    "2024",
+    "9 barrels Produced",
+    "CONTAINS SULFITES"
+  ],
+  "hidden_text": [],
+  "acceptable": [
+    "Matches"
+  ],
+  "tags": [
+    "cola",
+    "wine"
+  ],
+  "cola": {
+    "ttb_id": "26259001000568",
+    "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26259001000568",
+    "label_sizes": {
+      "1-front.jpg": "3.46 inches W X 3.43 inches H",
+      "2-back.jpg": "3.46 inches W X 3.43 inches H"
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "id": "cola-26244001000244",
+  "description": "TERREPASSERI (table white wine, Italy), approved 10/09/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. The brand is printed \"TERRE PASSERI\" on this panel and \"TERREPASSERI\" on the other; the warning is hyphenated at line breaks (\"BE- CAUSE\", \"CON- SUMPTION\", \"MA- CHINERY\").",
+  "images": [
+    "1-front.jpg",
+    "2-back.jpg"
+  ],
+  "application": {
+    "beverage_type": "wine",
+    "imported": true,
+    "brand_name": "TERREPASSERI",
+    "class_type": "Chardonnay",
+    "alcohol_content": "11.5%",
+    "net_contents": "750 mL",
+    "bottler": "Il Bacco Wine Merchant Inc, Westbury NY 11590",
+    "country_of_origin": "Italy"
+  },
+  "printed": {
+    "brand_name": "TERRE PASSERI",
+    "class_type": "CHARDONNAY",
+    "alcohol_content": "ALC 11.5% BY VOL.",
+    "net_contents": "NET CONT. 750 ML",
+    "bottler": "Imported by: Il Bacco Wine Merchant Inc Westbury NY 11590",
+    "country_of_origin": "PRODUCT OF ITALY",
+    "health_warning": "GOVERNMENT WARNING: (1) ACCORDING TO THE SURGEON GENERAL, WOMEN SHOULD NOT DRINK ALCOHOLIC BEVERAGES DURING PREGNANCY BE- CAUSE OF THE RISK OF BIRTH DEFECTS. (2) CON- SUMPTION OF ALCOHOLIC BEVERAGES IMPAIRS YOUR ABILITY TO DRIVE A CAR OR OPERATE MA- CHINERY, AND MAY CAUSE HEALTH PROBLEMS.",
+    "warning_header_bold": true,
+    "warning_body_bold": false
+  },
+  "other_text": [
+    "TERREPASSERI",
+    "Vino varietale d'Italia",
+    "Italian white table wine",
+    "BOTTLED BY: CANTINE PIROVANO S.R.L. CALCO - ITALIA",
+    "CONTAINS SULFITES"
+  ],
+  "hidden_text": [],
+  "acceptable": [
+    "Matches"
+  ],
+  "tags": [
+    "cola",
+    "wine"
+  ],
+  "cola": {
+    "ttb_id": "26244001000244",
+    "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26244001000244",
+    "label_sizes": {
+      "1-front.jpg": "1.97 inches W X 3.54 inches H",
+      "2-back.jpg": "3.93 inches W X 3.94 inches H"
+    }
+  }
+}

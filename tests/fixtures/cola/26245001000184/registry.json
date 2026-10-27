@@ -1,0 +1,29 @@
+{
+  "ttb_id": "26245001000184",
+  "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26245001000184",
+  "status": "APPROVED",
+  "brand_name": "FLOS",
+  "fanciful_name": "",
+  "class_type_code": "TABLE WHITE WINE",
+  "origin_code": "SPAIN",
+  "approval_date": "10/20/2026",
+  "qualifications": "",
+  "total_bottle_capacity": "",
+  "product_type": "Wine",
+  "source": "Imported",
+  "applicant": "PUERTO RICO SUPPLIES GROUP, INC.\nNOT PROVIDED\nBAYAMON PR 00959\nEMENDIS (Used on label)",
+  "images": [
+    {
+      "filename": "Flos back 50x50.jpg",
+      "image_type": "Brand (front) or keg collar",
+      "dimensions": "19.69 inches W X 19.69 inches H",
+      "saved_as": "1-front.jpg"
+    },
+    {
+      "filename": "Screenshot 2026-09-24 160221.png",
+      "image_type": "Back",
+      "dimensions": "4.33 inches W X 3.94 inches H",
+      "saved_as": "2-back.png"
+    }
+  ]
+}

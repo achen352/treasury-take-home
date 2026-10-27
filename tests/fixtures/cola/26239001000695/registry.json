@@ -1,0 +1,35 @@
+{
+  "ttb_id": "26239001000695",
+  "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26239001000695",
+  "status": "APPROVED",
+  "brand_name": "OLD BOY BOURBON",
+  "fanciful_name": "",
+  "class_type_code": "STRAIGHT BOURBON WHISKY",
+  "origin_code": "KENTUCKY",
+  "approval_date": "10/06/2026",
+  "qualifications": "",
+  "total_bottle_capacity": "",
+  "product_type": "Distilled Spirits",
+  "source": "Domestic",
+  "applicant": "Boundary Oak Distillery, Boundary Oak Distillery LLC\n2000 BOUNDARY OAK DR\nRADCLIFF KY 40160",
+  "images": [
+    {
+      "filename": "Front-Label-2-JPG.jpg",
+      "image_type": "Brand (front) or keg collar",
+      "dimensions": "3 inches W X 1.25 inches H",
+      "saved_as": "1-front.jpg"
+    },
+    {
+      "filename": "frontlabel1.jpg",
+      "image_type": "Brand (front) or keg collar",
+      "dimensions": "3 inches W X 4.25 inches H",
+      "saved_as": "2-front.jpg"
+    },
+    {
+      "filename": "Back-Label-JPG .jpg",
+      "image_type": "Back",
+      "dimensions": "3.25 inches W X 5 inches H",
+      "saved_as": "3-back.jpg"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "ttb_id": "26271001000331",
+  "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26271001000331",
+  "status": "APPROVED",
+  "brand_name": "WORTH CELLARS",
+  "fanciful_name": "FIELD AND SPARK",
+  "class_type_code": "SPARKLING WINE/CHAMPAGNE",
+  "origin_code": "MICHIGAN",
+  "approval_date": "10/13/2026",
+  "qualifications": "",
+  "total_bottle_capacity": "",
+  "product_type": "Wine",
+  "source": "Domestic",
+  "applicant": "Aurora Cellars, Aurora Cellars (2015), LLC\n7788 E HORN RD\nLake Leelanau MI 49653\nWORTH CELLARS (Used on label)",
+  "images": [
+    {
+      "filename": "WCLabel-Sparkling Revised 2.jpg",
+      "image_type": "Brand (front) or keg collar",
+      "dimensions": "8.5 inches W X 3.5 inches H",
+      "saved_as": "1-front.jpg"
+    }
+  ]
+}

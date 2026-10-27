@@ -1,0 +1,50 @@
+{
+  "id": "cola-26247001000534",
+  "description": "ANICHE CELLARS (table white wine, Washington), approved 10/05/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. The brand name appears only in the bottler statement; the large \"Beatrix\" is the fanciful name.",
+  "images": [
+    "1-front.jpg",
+    "2-back.jpg"
+  ],
+  "application": {
+    "beverage_type": "wine",
+    "imported": false,
+    "brand_name": "ANICHE CELLARS",
+    "class_type": "Estate Chardonnay",
+    "alcohol_content": "12%",
+    "net_contents": "750 mL",
+    "bottler": "Aniche Cellars, Cook, Washington USA"
+  },
+  "printed": {
+    "brand_name": "Aniche Cellars",
+    "class_type": "Estate Chardonnay",
+    "alcohol_content": "12% ALC BY VOL",
+    "net_contents": "750ML",
+    "bottler": "Produced and bottled by Aniche Cellars in Cook, Washington USA",
+    "health_warning": "GOVERNMENT WARNING: (1) ACCORDING TO THE SURGEON GENERAL, WOMEN SHOULD NOT DRINK ALCOHOLIC BEVERAGES DURING PREGNANCY BECAUSE OF THE RISK OF BIRTH DEFECTS. (2) CONSUMPTION OF ALCOHOLIC BEVERAGES IMPAIRS YOUR ABILITY TO DRIVE A CAR OR OPERATE MACHINERY, AND MAY CAUSE HEALTH PROBLEMS.",
+    "warning_header_bold": true,
+    "warning_body_bold": false
+  },
+  "other_text": [
+    "Beatrix",
+    "Hecate's Key Vineyard",
+    "100% estate chardonnay",
+    "Columbia Gorge AVA",
+    "contains sulfites"
+  ],
+  "hidden_text": [],
+  "acceptable": [
+    "Matches"
+  ],
+  "tags": [
+    "cola",
+    "wine"
+  ],
+  "cola": {
+    "ttb_id": "26247001000534",
+    "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26247001000534",
+    "label_sizes": {
+      "1-front.jpg": "2.75 inches W X 4 inches H",
+      "2-back.jpg": "4 inches W X 4 inches H"
+    }
+  }
+}

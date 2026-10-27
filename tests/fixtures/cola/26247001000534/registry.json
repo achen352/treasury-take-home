@@ -1,0 +1,29 @@
+{
+  "ttb_id": "26247001000534",
+  "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26247001000534",
+  "status": "APPROVED",
+  "brand_name": "ANICHE CELLARS",
+  "fanciful_name": "BEATRIX",
+  "class_type_code": "TABLE WHITE WINE",
+  "origin_code": "WASHINGTON",
+  "approval_date": "10/05/2026",
+  "qualifications": "",
+  "total_bottle_capacity": "",
+  "product_type": "Wine",
+  "source": "Domestic",
+  "applicant": "ANICHE CELLARS, AniChe Cellars Washington, LLC\n3692 BUILDING B COOK UNDERWOOD RD\nCOOK WA 98605\nANICHE CELLARS (Used on label)",
+  "images": [
+    {
+      "filename": "beatrix22back.jpg",
+      "image_type": "Brand (front) or keg collar",
+      "dimensions": "2.75 inches W X 4 inches H",
+      "saved_as": "1-front.jpg"
+    },
+    {
+      "filename": "beatrix22front.jpg",
+      "image_type": "Back",
+      "dimensions": "4 inches W X 4 inches H",
+      "saved_as": "2-back.jpg"
+    }
+  ]
+}

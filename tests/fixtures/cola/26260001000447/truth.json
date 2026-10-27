@@ -1,0 +1,51 @@
+{
+  "id": "cola-26260001000447",
+  "description": "THE DALMATIAN DOG (table red wine, Croatia), approved 10/14/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. A decimal comma (\"ALC 13,5% BY VOL.\") next to a \"16°C\" serving temperature, and Croatian letters that must not be flagged as look-alikes.",
+  "images": [
+    "1-front.jpg",
+    "2-back.jpg"
+  ],
+  "application": {
+    "beverage_type": "wine",
+    "imported": true,
+    "brand_name": "THE DALMATIAN DOG",
+    "class_type": "Babić Red Wine",
+    "alcohol_content": "13.5%",
+    "net_contents": "750 mL",
+    "bottler": "Novovino Wine Co., Chicago, IL - US",
+    "country_of_origin": "Croatia"
+  },
+  "printed": {
+    "brand_name": "THE DALMATIAN DOG",
+    "class_type": "BABIĆ RED WINE",
+    "alcohol_content": "ALC 13,5% BY VOL.",
+    "net_contents": "750 ML",
+    "bottler": "Imported by: Novovino Wine Co., Chicago, IL - US",
+    "country_of_origin": "Product of Croatia.",
+    "health_warning": "GOVERNMENT WARNING: (1) ACCORDING TO THE SURGEON GENERAL, WOMEN SHOULD NOT DRINK ALCOHOLIC BEVERAGES DURING PREGNANCY BECAUSE OF THE RISK OF BIRTH DEFECTS. (2) CONSUMPTION OF ALCOHOLIC BEVERAGES IMPAIRS YOUR ABILITY TO DRIVE A CAR OR OPERATE MACHINERY, AND MAY CAUSE HEALTH PROBLEMS.",
+    "warning_header_bold": true,
+    "warning_body_bold": false
+  },
+  "other_text": [
+    "BABIĆ CRVENO VINO 2023",
+    "16°C",
+    "Protected designation of Origin North Dalmatia.",
+    "CONTAINS SULFITES"
+  ],
+  "hidden_text": [],
+  "acceptable": [
+    "Matches"
+  ],
+  "tags": [
+    "cola",
+    "wine"
+  ],
+  "cola": {
+    "ttb_id": "26260001000447",
+    "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26260001000447",
+    "label_sizes": {
+      "1-front.jpg": "3.17 inches W X 3.62 inches H",
+      "2-back.jpg": "5.18 inches W X 3.62 inches H"
+    }
+  }
+}

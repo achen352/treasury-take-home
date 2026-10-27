@@ -1,0 +1,29 @@
+{
+  "ttb_id": "26230001000491",
+  "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26230001000491",
+  "status": "APPROVED",
+  "brand_name": "ROYAL STAG",
+  "fanciful_name": "",
+  "class_type_code": "OTHER IMPORTED WHISKY FB",
+  "origin_code": "INDIA",
+  "approval_date": "10/06/2026",
+  "qualifications": "",
+  "total_bottle_capacity": "",
+  "product_type": "Distilled Spirits",
+  "source": "Imported",
+  "applicant": "EASTERN LIQUORS USA, INC.\n990 WESTBURY RD 2ND FLOOR,\nWESTBURY NY 11590",
+  "images": [
+    {
+      "filename": "23f6.jpg",
+      "image_type": "Brand (front) or keg collar",
+      "dimensions": "2.7 inches W X 6.7 inches H",
+      "saved_as": "1-front.jpg"
+    },
+    {
+      "filename": "23o.jpg",
+      "image_type": "Other",
+      "dimensions": "2.6 inches W X 6.7 inches H",
+      "saved_as": "2-other.jpg"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "ttb_id": "26246001000514",
+  "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26246001000514",
+  "status": "APPROVED",
+  "brand_name": "FOREVER ALONE",
+  "fanciful_name": "AMARILLO",
+  "class_type_code": "ALE",
+  "origin_code": "NORTH CAROLINA",
+  "approval_date": "10/07/2026",
+  "qualifications": "",
+  "total_bottle_capacity": "",
+  "product_type": "Malt Beverage",
+  "source": "Domestic",
+  "applicant": "Resident Culture Brewing Company, LLC\n2101 CENTRAL AVE\nCharlotte NC 28205",
+  "images": [
+    {
+      "filename": "FA_Amarillo.png",
+      "image_type": "Brand (front) or keg collar",
+      "dimensions": "8.25 inches W X 5 inches H",
+      "saved_as": "1-front.png"
+    }
+  ]
+}

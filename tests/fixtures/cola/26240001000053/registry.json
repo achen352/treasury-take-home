@@ -1,0 +1,35 @@
+{
+  "ttb_id": "26240001000053",
+  "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26240001000053",
+  "status": "APPROVED",
+  "brand_name": "SAVANNAH",
+  "fanciful_name": "",
+  "class_type_code": "VODKA 80-89 PROOF",
+  "origin_code": "FLORIDA",
+  "approval_date": "10/16/2026",
+  "qualifications": "",
+  "total_bottle_capacity": "",
+  "product_type": "Distilled Spirits",
+  "source": "Domestic",
+  "applicant": "The Little River Co, THE LITTLE RIVER COMPANY LLC\n73 NW 71 ST\nMiami FL 33150",
+  "images": [
+    {
+      "filename": "front.png",
+      "image_type": "Brand (front) or keg collar",
+      "dimensions": "4.21 inches W X 6.11 inches H",
+      "saved_as": "1-front.png"
+    },
+    {
+      "filename": "neck .png",
+      "image_type": "Neck",
+      "dimensions": "6.08 inches W X 1.2 inches H",
+      "saved_as": "2-neck.png"
+    },
+    {
+      "filename": "label_brew_theory.png",
+      "image_type": "Back",
+      "dimensions": "4.27 inches W X 2 inches H",
+      "saved_as": "3-back.png"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "id": "cola-26216001000692",
+  "description": "NUMA (other gin fb, Italy), approved 10/15/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. Deviation: stray periods after \"defects.\" and \"problems.\" in the warning (punctuation only), so the right result is Needs review.",
+  "images": [
+    "1-front.png",
+    "2-back.png"
+  ],
+  "application": {
+    "beverage_type": "spirits",
+    "imported": true,
+    "brand_name": "NUMA",
+    "class_type": "Gin",
+    "alcohol_content": "45%",
+    "net_contents": "700 mL",
+    "bottler": "Hollywood Distributors LLC, Pasadena, CA",
+    "country_of_origin": "Italy"
+  },
+  "printed": {
+    "brand_name": "NUMA",
+    "class_type": "Gin",
+    "alcohol_content": "45% alc. / vol.",
+    "net_contents": "700 ml",
+    "bottler": "Imported by Hollywood Distributors LLC; Pasadena, CA",
+    "country_of_origin": "Country of origin: Italy",
+    "health_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. . (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems. .",
+    "warning_header_bold": true,
+    "warning_body_bold": false
+  },
+  "other_text": [
+    "ROMAE GIN",
+    "Product type: Gin",
+    "Distilled from grain",
+    "PRODOTTO IN ITALIA PRODUCT OF ITALY",
+    "BARCODE"
+  ],
+  "hidden_text": [],
+  "acceptable": [
+    "Needs review"
+  ],
+  "tags": [
+    "cola",
+    "deviation",
+    "spirits"
+  ],
+  "cola": {
+    "ttb_id": "26216001000692",
+    "url": "https://ttbonline.gov/colasonline/viewColaDetails.do?action=publicDisplaySearchBasic&ttbid=26216001000692",
+    "label_sizes": {
+      "1-front.png": "2.91 inches W X 4.21 inches H",
+      "2-back.png": "2.91 inches W X 4.29 inches H"
+    }
+  }
+}
