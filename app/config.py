@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     # Kimi thinks by default, which takes over a minute per label. Azure OpenAI rejects the
     # parameter, so it is sent only when this is on.
     llm_disable_thinking: bool = True
+    # Read the warning in its own call, alongside one for the other fields: shorter replies
+    # finish sooner. Off unless the evaluation shows it pays.
+    llm_split_warning: bool = False
     enable_docs: bool = False
     port: int = 8000
     forwarded_allow_ips: str = "127.0.0.1"

@@ -13,6 +13,7 @@ import asyncio
 import base64
 import json
 import logging
+from enum import StrEnum
 from typing import Annotated, Any
 
 import httpx2
@@ -20,7 +21,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from app.config import Settings
 from app.domain.models import MAX_BOTTLER, MAX_NAME, MAX_SHORT, MAX_WARNING, ExtractedLabel
-from app.readers.extractor import ImageReading, ReaderUnavailable
+from app.readers.extractor import Extractor, ImageReading, ReaderUnavailable
 from app.readers.uploads import LabelImage, png_bytes
 
 logger = logging.getLogger(__name__)
@@ -96,23 +97,59 @@ REPLY_SCHEMA: dict[str, Any] = {
 }
 
 
+class Part(StrEnum):
+    """What one call asks for. The evaluation compares one call per image with two."""
+
+    ALL = "all"
+    FIELDS = "fields"  # everything but the warning
+    WARNING = "warning"  # the warning, its bold judgments and any instructions
+
+
+_WARNING_KEYS = ("warning", "header_bold", "body_bold")
+_KEYS: dict[Part, tuple[str, ...]] = {
+    Part.ALL: tuple(REPLY_SCHEMA["required"]),
+    Part.FIELDS: tuple(key for key in REPLY_SCHEMA["required"] if key not in _WARNING_KEYS),
+    Part.WARNING: (*_WARNING_KEYS, "instructions"),
+}
+_PART_PROMPTS = {
+    Part.ALL: PROMPT,
+    Part.FIELDS: PROMPT
+    + '\nIn this reply, give every key except "warning", "header_bold" and "body_bold".',
+    Part.WARNING: PROMPT
+    + '\nIn this reply, give only "warning", "header_bold", "body_bold" and "instructions".',
+}
+
+
+def _schema(part: Part) -> dict[str, Any]:
+    keys = _KEYS[part]
+    return {
+        "type": "object",
+        "properties": {key: REPLY_SCHEMA["properties"][key] for key in keys},
+        "required": list(keys),
+        "additionalProperties": False,
+    }
+
+
 class _Reply(BaseModel):
-    """The reply, validated again here: the provider's schema enforcement isn't trusted."""
+    """The reply, validated again here: the provider's schema enforcement isn't trusted.
+
+    Every key has a default so one model serves each part; `_parse` then checks that exactly
+    the part's keys were given."""
 
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
-    brand: str | None = Field(max_length=MAX_NAME)
-    fanciful: str | None = Field(max_length=MAX_NAME)
-    class_type: str | None = Field(max_length=MAX_NAME)
-    abv: str | None = Field(max_length=MAX_SHORT)
-    net: str | None = Field(max_length=MAX_SHORT)
-    bottler: str | None = Field(max_length=MAX_BOTTLER)
-    country: str | None = Field(max_length=MAX_SHORT)
-    warning: str | None = Field(max_length=MAX_WARNING)
-    header_bold: bool | None
-    body_bold: bool | None
+    brand: str | None = Field(default=None, max_length=MAX_NAME)
+    fanciful: str | None = Field(default=None, max_length=MAX_NAME)
+    class_type: str | None = Field(default=None, max_length=MAX_NAME)
+    abv: str | None = Field(default=None, max_length=MAX_SHORT)
+    net: str | None = Field(default=None, max_length=MAX_SHORT)
+    bottler: str | None = Field(default=None, max_length=MAX_BOTTLER)
+    country: str | None = Field(default=None, max_length=MAX_SHORT)
+    warning: str | None = Field(default=None, max_length=MAX_WARNING)
+    header_bold: bool | None = None
+    body_bold: bool | None = None
     instructions: list[Annotated[str, Field(max_length=MAX_INSTRUCTION_LENGTH)]] = Field(
-        max_length=MAX_INSTRUCTIONS
+        default_factory=list, max_length=MAX_INSTRUCTIONS
     )
 
 
@@ -124,10 +161,20 @@ _DONE = _Done()
 _IGNORED_SSE_FIELDS = ("event:", "id:", "retry:")
 
 
+def make_extractor(settings: Settings, client: httpx2.AsyncClient) -> Extractor:
+    """The configured AI reader: one call per image, or two with the warning on its own."""
+    if settings.llm_split_warning:
+        return SplitVisionExtractor(settings, client)
+    return OpenAICompatibleVisionExtractor(settings, client)
+
+
 class OpenAICompatibleVisionExtractor:
-    def __init__(self, settings: Settings, client: httpx2.AsyncClient) -> None:
+    def __init__(
+        self, settings: Settings, client: httpx2.AsyncClient, *, part: Part = Part.ALL
+    ) -> None:
         self._settings = settings
         self._client = client
+        self._part = part
 
     async def read(self, image: LabelImage) -> ImageReading:
         try:
@@ -135,7 +182,7 @@ class OpenAICompatibleVisionExtractor:
             if key is None:
                 raise ReaderUnavailable("no_key")
             text = await self._stream_reply(self._request_body(image), key.get_secret_value())
-            return _parse(text)
+            return _parse(text, self._part)
         except ReaderUnavailable as failure:
             logger.warning("AI reader unavailable: %s", failure.reason)
             raise
@@ -149,10 +196,14 @@ class OpenAICompatibleVisionExtractor:
             "max_completion_tokens": MAX_COMPLETION_TOKENS,
             "response_format": {
                 "type": "json_schema",
-                "json_schema": {"name": "label_reading", "strict": True, "schema": REPLY_SCHEMA},
+                "json_schema": {
+                    "name": "label_reading",
+                    "strict": True,
+                    "schema": _schema(self._part),
+                },
             },
             "messages": [
-                {"role": "system", "content": PROMPT},
+                {"role": "system", "content": _PART_PROMPTS[self._part]},
                 {
                     "role": "user",
                     "content": [
@@ -249,11 +300,13 @@ def _choice(event: dict[str, Any]) -> tuple[str, bool, str | None]:
     return text, bool(text or reasoning), finished if isinstance(finished, str) else None
 
 
-def _parse(text: str) -> ImageReading:
+def _parse(text: str, part: Part) -> ImageReading:
     try:
         reply = _Reply.model_validate_json(text)
     except ValidationError:
         raise ReaderUnavailable("invalid_reply") from None
+    if reply.model_fields_set != set(_KEYS[part]):  # a key missing, or one from the other part
+        raise ReaderUnavailable("invalid_reply")
     label = ExtractedLabel(
         brand_name=reply.brand,
         fanciful_name=reply.fanciful,
@@ -267,3 +320,29 @@ def _parse(text: str) -> ImageReading:
         warning_body_bold=reply.body_bold,
     )
     return ImageReading(label=label, instructions_seen=tuple(reply.instructions))
+
+
+class SplitVisionExtractor:
+    """Reads the warning in its own call, alongside a call for the other fields."""
+
+    def __init__(self, settings: Settings, client: httpx2.AsyncClient) -> None:
+        self._fields = OpenAICompatibleVisionExtractor(settings, client, part=Part.FIELDS)
+        self._warning = OpenAICompatibleVisionExtractor(settings, client, part=Part.WARNING)
+
+    async def read(self, image: LabelImage) -> ImageReading:
+        try:
+            async with asyncio.TaskGroup() as group:  # one failing cancels the other
+                fields_call = group.create_task(self._fields.read(image))
+                warning_call = group.create_task(self._warning.read(image))
+        except* ReaderUnavailable as failures:
+            raise failures.exceptions[0] from None
+        fields, warning = fields_call.result(), warning_call.result()
+        label = fields.label.model_copy(
+            update={
+                "health_warning": warning.label.health_warning,
+                "warning_header_bold": warning.label.warning_header_bold,
+                "warning_body_bold": warning.label.warning_body_bold,
+            }
+        )
+        seen = tuple(dict.fromkeys((*fields.instructions_seen, *warning.instructions_seen)))
+        return ImageReading(label=label, instructions_seen=seen)
