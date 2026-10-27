@@ -53,7 +53,9 @@ M, R, D = Verdict.MATCHES, Verdict.NEEDS_REVIEW, Verdict.DOES_NOT_MATCH
 
 @functools.cache
 def font(name: str, size: int) -> ImageFont.FreeTypeFont:
-    return ImageFont.truetype(FONTS[name], size)
+    # Pin the basic layout engine: Linux builds of Pillow default to Raqm, which spaces glyphs
+    # differently, and the committed fixtures must be reproducible on any platform.
+    return ImageFont.truetype(FONTS[name], size, layout_engine=ImageFont.Layout.BASIC)
 
 
 # ---- drawing a label ----
