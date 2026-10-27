@@ -136,6 +136,7 @@ def _zip_polyglot() -> bytes:
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
         info = zipfile.ZipInfo("payload.txt", date_time=(1980, 1, 1, 0, 0, 0))
+        info.create_system = 0  # zipfile records the OS otherwise, so output would vary by OS
         archive.writestr(info, "This text was hidden inside a PNG file. It is harmless.")
     return _png() + buffer.getvalue()
 
