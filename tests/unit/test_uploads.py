@@ -385,3 +385,10 @@ def test_checking_uploads_writes_nothing_to_disk() -> None:
         check_all()
 
     assert writes == []
+
+
+def test_large_images_are_scaled_down_so_six_fit_in_memory() -> None:
+    # A 512 MB server must hold six images at once; 4,000 px is plenty for reading a label.
+    big = Image.new("L", (6000, 3000), 255)
+
+    assert _only(_encode(big, "PNG")).size == (4000, 2000)
