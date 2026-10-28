@@ -201,5 +201,8 @@ def test_a_post_from_another_site_is_refused() -> None:
     with make_client() as client:
         assert check(client, origin="https://evil.example") == 403
         assert check(client, **{"sec-fetch-site": "cross-site"}) == 403
+        assert check(client, **{"sec-fetch-site": "same-site"}) == 403
         assert check(client, origin="https://testserver") == 200
         assert check(client) == 200  # tools that send no Origin can't be cross-site requests
+        # With Referrer-Policy: no-referrer, browsers send "Origin: null" on their own forms.
+        assert check(client, origin="null", **{"sec-fetch-site": "same-origin"}) == 200
