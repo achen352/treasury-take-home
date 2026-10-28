@@ -206,3 +206,24 @@ def test_a_post_from_another_site_is_refused() -> None:
         assert check(client) == 200  # tools that send no Origin can't be cross-site requests
         # With Referrer-Policy: no-referrer, browsers send "Origin: null" on their own forms.
         assert check(client, origin="null", **{"sec-fetch-site": "same-origin"}) == 200
+
+
+def test_behind_fly_the_limiter_counts_the_fly_client_ip_not_forwarded_for() -> None:
+    # Fly's proxy sets Fly-Client-IP itself; X-Forwarded-For can carry addresses a client made up.
+    with make_client(client_ip_header="fly-client-ip", rate_limit_per_minute=2) as client:
+        statuses = [
+            check(client, **{"fly-client-ip": "198.51.100.7", "x-forwarded-for": f"203.0.113.{n}"})
+            for n in range(3)
+        ]
+        other = check(client, **{"fly-client-ip": "198.51.100.8"})
+
+    assert statuses == [200, 200, 429]
+    assert other == 200
+
+
+def test_production_refuses_to_start_without_an_access_code() -> None:
+    # Fails closed: a deploy that forgot the hash stays down instead of serving an open site.
+    with pytest.raises(ValueError, match="ACCESS_CODE_SHA256"):
+        Settings(_env_file=None, require_access_code=True)  # type: ignore[call-arg]
+
+    Settings(_env_file=None, require_access_code=True, access_code_sha256=CODE_HASH)  # type: ignore[call-arg]

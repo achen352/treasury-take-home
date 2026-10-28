@@ -5,6 +5,7 @@ The app runs with scripted readers (tests/fakes.py), so no test reaches OpenAI o
 
 import html
 import io
+import logging
 import os
 import re
 from collections.abc import Iterator
@@ -436,3 +437,19 @@ def test_the_page_runs_without_a_key_and_says_the_label_was_read_offline() -> No
         page = post(client)
 
     assert 'class="banner banner-offline"' in page
+
+
+def test_a_check_reports_its_timing_but_no_content(
+    client: TestClient, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO)
+    response = client.post("/check", data=OLD_TOM_FORM, files=[("images", ("l.png", OLD_TOM_PNG))])
+    timing = response.headers["server-timing"]
+
+    for part in ("total", "ai", "ocr"):
+        assert re.search(rf"\b{part};dur=\d+(\.\d+)?", timing)
+    assert "OLD TOM" not in timing
+    assert re.search(r"check took \d+\.\d+ s", caplog.text)
+    assert "OLD TOM" not in "\n".join(
+        r.getMessage() for r in caplog.records if r.name.startswith("app")
+    )
