@@ -4,11 +4,11 @@ This file carries the project context between machines. Claude Code reads it aut
 the README explains the project itself. To resume, open the repo in Claude Code and say "resume
 from CLAUDE.md".
 
-## Where things stand (end of M4, 2026-10-28)
+## Where things stand (end of M5, 2026-10-28)
 
 - M0 to M4 are done: the skeleton, the checking engine, the test data, the label readers and
   the single-label page. 1,039 tests pass, browser tests included. The README is current.
-- **M5 in progress (2026-10-28): the demo runs on Fly.io**, at https://cola-label-verifier.fly.dev
+- **M5 done (2026-10-28): the demo runs on Fly.io**, at https://cola-label-verifier.fly.dev
   (the user's `personal` org; app `cola-label-verifier`, one `shared-cpu-1x` machine with 512 MB
   in `iad`, which suspends when idle). CI deploys from main after the tests and container checks
   pass, using the GitHub secret `FLY_API_TOKEN` (a deploy token, 90 days, made 2026-10-28). The
@@ -19,9 +19,13 @@ from CLAUDE.md".
     `docker --cpus=0.1`); AI-only mode to avoid OCR gave 3 false Matches (warning-typo,
     injection-header-bold-claim, NUMA); the user preferred Fly to Render Starter on price.
     Hugging Face's free tier looked generous but 2026 reports say Docker Spaces need a paid plan.
-  - Still to do: run `python -m scripts.smoke` signed in (`SMOKE_ACCESS_CODE` in `.env` must be
-    the code, not the hash), measure the 11 samples live (p50/p95, OCR time, wake from
-    suspend), and finish the README's M5 numbers.
+  - Measured live: median 3.3 s over the 11 samples (drawn 1.8 to 4.7 s, real two-image labels
+    5 to 10 s); OCR about 1 s on the bursting CPU; wakes from suspend in 0.5 s after about 3
+    idle minutes. Live limits are 30 a minute and 500 a day (10 a minute stopped a reviewer
+    clicking through the samples). `python -m scripts.smoke` passes signed in.
+  - The access code: the user keeps the code in `.env` as `SMOKE_ACCESS_CODE` (the code, not the
+    hash) and in the submission link; Fly holds the hash.
+- **Next: M6, batch.** Start by proposing its test list.
 - Checked live on 2026-10-28 through the page, with OpenAI and Tesseract: OLD TOM matched in 2.6 s
   with every field outlined in the right place; Belle Isle came out Needs review in 3.6 s.
 - Live URL: <https://cola-label-verifier.fly.dev> (locked; the code is in the submission link).

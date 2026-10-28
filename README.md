@@ -5,8 +5,8 @@ it was submitted with. It answers the take-home exercise in
 [treasurytakehome-rgb/instructions](https://github.com/treasurytakehome-rgb/instructions).
 
 > **Status: work in progress.** The checking engine, the test data, the label readers and the
-> single-label page are built, tested and evaluated. The deployment and batch upload are next
-> (see [Progress](#progress)). Live URL: <https://cola-label-verifier.fly.dev> (the access code
+> single-label page are built, tested, evaluated and deployed. Batch upload is next (see
+> [Progress](#progress)). Live URL: <https://cola-label-verifier.fly.dev> (the access code
 > is in the submission link).
 
 ## The brief, and how this project answers it
@@ -18,7 +18,7 @@ Each row is a requirement from the brief, with the stakeholder who raised it.
 | Check that the label matches the application: brand, class/type, alcohol content, net contents, bottler, country of origin, government warning (*Technical requirements; Sarah Chen*) | A rules engine checks each field and cites the regulation it applies (27 CFR parts 4, 5, 7 and 16). | Built |
 | The warning must be word for word, with "GOVERNMENT WARNING:" in capitals and bold (*Jenny Park*) | Exact wording and a capitalized header are enforced; Jenny's title-case example is one of the tests. Bold can only be judged by the AI, which is unreliable at it, so a bold problem goes to a person. | Built |
 | "STONE'S THROW" vs "Stone's Throw" needs judgment (*Dave Morrison*) | Three outcomes: **Matches**, **Needs review**, **Does not match**. Cosmetic differences pass with a note, and near misses go to a person. The tool never approves a label. | Built |
-| Results in about 5 seconds, because the last vendor took 30 to 40 (*Sarah Chen*) | The AI reads each image while OCR reads it too, and the checks are plain code that runs in milliseconds. On the 58 test labels a result took 2.2 s at the median and 5.4 s at the 95th percentile. | Built; measured live in M5 |
+| Results in about 5 seconds, because the last vendor took 30 to 40 (*Sarah Chen*) | The AI reads each image while OCR reads it too, and the checks are plain code that runs in milliseconds. On the live site the drawn samples take 1.8 to 4.7 s and real two-image labels 5 to 10 s (median 3.3 s). | Built and measured live |
 | Simple enough for agents over 50: "clean, obvious, no hunting for buttons" (*Sarah Chen*) | One page with one main button and 18 px text. Results are shown with an icon and words, never color alone, and each finding is outlined on the label image. axe-core, run in a real browser, finds no accessibility violations (Section 508). | Built |
 | Batch uploads of 200 to 300 labels at once (*Sarah Chen, for Janet*) | A batch upload takes a spreadsheet of application data, and failures are listed first. | Planned (M6) |
 | The agency runs on Azure under FedRAMP (*Marcus Williams*) | Not used here, for cost: the prototype runs on a small Fly.io machine and reads labels with OpenAI's commercial API (see [Limitations](#assumptions-and-limitations)). The Docker image and the AI adapter move to Azure App Service and Azure OpenAI by configuration alone. | Documented path |
@@ -27,7 +27,7 @@ Each row is a requirement from the brief, with the stakeholder who raised it.
 | Store nothing sensitive (*Marcus Williams*) | No database, images are processed in memory (tests prove nothing is written to disk, through the page too), metadata such as GPS location is stripped, and logs hold no label content. | Built |
 | Handle labels photographed at angles, in bad light or with glare (*Jenny Park*) | 12 badly photographed test labels. Photos are turned upright, sideways text is read in a rotated pass, and unreadable fields go to a person instead of being guessed. All 12 came out right in the evaluation. | Built |
 | Create or source test labels; AI image generation suggested (*Additional context*) | 39 labels drawn by code (three on AI-generated photo backgrounds), 19 real approved labels from the public COLA registry, and 12 hostile files. | Built |
-| A repo with a README, and a deployed URL (*Deliverables*) | This repository and the Fly.io URL above; the access code is in the submission. | In progress |
+| A repo with a README, and a deployed URL (*Deliverables*) | This repository and the Fly.io URL above; the access code is in the submission. | Done |
 
 ## What COLA is
 
@@ -190,6 +190,39 @@ What the numbers say:
   Stag's label leads with "SEAGRAM'S"), a name is printed in another script, or the AI couldn't
   tell whether the warning's body is bold.
 
+## On the live site
+
+The demo runs on one small Fly.io machine (a shared CPU that bursts for each check, 512 MB) in
+Virginia, deployed by CI after the tests pass. These are the 11 sample labels checked through
+the live page on 2026-10-28:
+
+| Sample | Images | Result | Time | AI | OCR |
+|---|---|---|---|---|---|
+| OLD TOM | 1 | Matches | 1.8 s | 1.6 s | 0.9 s |
+| Title-case warning header | 1 | Does not match | 1.9 s | 1.6 s | 1.0 s |
+| A printed instruction to the AI | 1 | Does not match | 2.1 s | 1.9 s | 1.0 s |
+| A brand that is almost right | 1 | Needs review | 2.3 s | 2.1 s | 1.0 s |
+| OLD TOM on a front and a back label | 2 | Matches | 2.7 s | 2.4 s | 1.5 s |
+| A warning printed sideways | 1 | Matches | 3.3 s | 1.6 s | 2.9 s |
+| A tilted photo | 1 | Needs review | 4.7 s | 2.0 s | 4.3 s |
+| Forever Alone (real) | 1 | Does not match | 5.2 s | 4.7 s | 3.6 s |
+| REA 25, Korean and English (real) | 2 | Needs review | 5.3 s | 4.9 s | 4.8 s |
+| Belle Isle (real) | 2 | Does not match | 6.3 s | 3.9 s | 3.7 s |
+| FLOS, words missing from its warning (real) | 2 | Does not match | 9.6 s | 6.1 s | 4.5 s |
+
+- **Speed.** The median is 3.3 s. The drawn samples take under 5 s; real labels with two images
+  take 5 to 10 s, mostly the AI reading both. OCR runs alongside the AI and takes about 1 s for
+  a plain label, more when it has to try sideways passes.
+- **Waking up.** The machine suspends after about 3 idle minutes and wakes on the next visit in
+  about half a second.
+- **Cost.** About $0.006 of OpenAI per label, and a few dollars a month for the machine at most.
+- **Results match the evaluation**: no sample matched that shouldn't, and the real labels mostly
+  go to a person (Belle Isle and Forever Alone came out stricter than expected, on judgment
+  calls the AI read differently).
+
+`python -m scripts.smoke` checks the live site: the health check, the lock, the security
+headers, signing in through the link, and the OLD TOM sample matching within 10 seconds.
+
 ## Security
 
 - **Uploads:**
@@ -214,8 +247,10 @@ What the numbers say:
   - HSTS, nosniff and no-store headers, and no framing
   - an access code from the submission link (only its hash is configured), kept in an
     `HttpOnly`, `Secure`, `SameSite=Strict` cookie
-  - per-address rate limits (10 checks a minute, 200 a day), at most two checks at once, and a
-    30 MB request cap enforced before the body is read
+  - per-address rate limits (30 checks a minute and 500 a day on the live site, behind the
+    access code), at most two checks at once, and a 30 MB request cap enforced before the body is
+    read; behind Fly the client's address comes from `Fly-Client-IP`, which clients can't forge
+  - the live site refuses to start without the access code (`REQUIRE_ACCESS_CODE`)
   - uploads kept in memory (Starlette's own disk spool is raised to the 10 MB file cap) and file
     names never used
   - posts from other sites refused (`Sec-Fetch-Site`)
@@ -411,14 +446,14 @@ tests/
 | M2 | Test data: drawn labels, real COLA labels, hostile files; fixes found by real labels; other scripts | Done |
 | M3 | Label readers: upload checks, AI reader, OCR reader, merging images, evaluation script | Done |
 | M4 | Single-label page, with each field outlined on the label image | Done |
-| M5 | Demo deployment: Fly.io deployed by CI, live latency, smoke test, fail-closed access code | In progress |
-| M6 | Batch upload | |
+| M5 | Demo deployment: Fly.io deployed by CI, live latency, smoke test, fail-closed access code | Done |
+| M6 | Batch upload | Next |
 | M7 | Final README: evaluation results, tools, trade-offs | |
 
 ## Test cases
 
-1,039 test cases (457 test functions, many run over several inputs) cover the checking engine,
-the test data, the label readers and the page, in a real browser too. All of them run in CI on every push. Each group below was agreed
+1,054 test cases (472 test functions, many run over several inputs) cover the checking engine,
+the test data, the label readers, the page (in a real browser too) and the deploy. All of them run in CI on every push. Each group below was agreed
 in plain English before its code was written.
 
 | Area | File | What it proves |
@@ -446,6 +481,7 @@ in plain English before its code was written.
 | The page | `tests/integration/test_page.py`, `tests/unit/test_samples.py` | The form, checking a label or a sample, errors, results, outlines, escaping, uploads kept off disk |
 | Guards | `tests/security/test_access.py` | The access code, rate limits, two checks at once, cross-site posts, logs without codes |
 | In a browser | `tests/e2e/test_browser.py` | axe-core finds no violations; zoom, sideways text, rotation, keyboard, quick checks, samples |
+| Deploy | `tests/unit/test_deploy_config.py`, `tests/unit/test_smoke.py` | Fly config and the CI deploy gate; the smoke test's checks and its handling of the code |
 
 <details>
 <summary><b>M0: skeleton and security baseline</b></summary>
@@ -781,5 +817,27 @@ in plain English before its code was written.
 18. A result zooms to its spot, sideways text is turned upright, images turn a quarter at a
     time, every control works by keyboard, too many files are caught before uploading, and a
     sample fills the form.
+
+</details>
+
+
+<details>
+<summary><b>M5: the deploy</b></summary>
+
+1. `fly.toml` runs our Dockerfile in Virginia on one shared-CPU machine with 512 MB that suspends
+   when idle, in full mode with OpenAI, with no secrets in the file (they're set with
+   `fly secrets set`).
+2. CI deploys to Fly only from `main`, and only after the tests and the container checks pass.
+3. In production the app refuses to start without the access code's hash, so a deploy that
+   forgot it stays down instead of serving an open site.
+4. Behind Fly, the rate limiter counts the address in `Fly-Client-IP`, which Fly's proxy sets,
+   never `X-Forwarded-For`, which clients can add to.
+5. The live limits are 30 checks a minute and 500 a day per address.
+6. Each check sends its timing (`Server-Timing`: total, AI and OCR) and logs it, with no label
+   content.
+7. `python -m scripts.smoke` checks the live site, signing in with `SMOKE_ACCESS_CODE` when it's
+   set and never printing it; it's tested against a faked site.
+8. `render.yaml` is gone: on Render's free 0.1 CPU an OCR pass took 16 to 23 s, and running
+   without OCR let 3 labels through as false Matches.
 
 </details>
