@@ -18,6 +18,7 @@ from app.domain.merge import merge_readings
 from app.domain.models import (
     ApplicationData,
     ExtractedLabel,
+    LabelField,
     Reader,
     Report,
     Status,
@@ -89,20 +90,31 @@ async def check_label(
     if readings is not None:
         merged = merge_readings([reading.label for reading in readings])
         seen = tuple(dict.fromkeys(text for r in readings for text in r.instructions_seen))
+        # The front image's most prominent name is the brand; any other image's is one more name.
+        brands = [r.label.brand_name for r in readings if r.label.brand_name is not None]
+        names = [*brands[1:], *(name for r in readings for name in r.names)]
+        classes = [r.label.class_type for r in readings if r.label.class_type is not None]
         chosen = choose_names(
             merged.reading,
-            names=tuple(dict.fromkeys(name for r in readings for name in r.names)),
+            names=tuple(dict.fromkeys(names)),
             statements=tuple(dict.fromkeys(text for r in readings for text in r.statements)),
+            class_types=tuple(dict.fromkeys(classes)),
             application=application,
         )
+        conflicts: dict[LabelField, tuple[str, ...]] = {
+            field: values
+            for field, values in merged.conflicts.items()
+            if field not in (LabelField.BRAND, LabelField.CLASS_TYPE)  # resolved by choosing
+        }
 
         def run_checks() -> Report:
             return verify(
                 application,
-                chosen,
+                chosen.reading,
                 read_by=Reader.AI,
                 ocr_text=ocr.text if ocr is not None else None,
-                conflicts=merged.conflicts,
+                conflicts=conflicts,
+                doubts=chosen.doubts,
                 instructions_seen=seen,
             )
 

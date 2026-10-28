@@ -10,7 +10,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
 from app.domain.models import ExtractedLabel, LabelField
-from app.domain.normalize import normalize_text
+from app.domain.normalize import normalize_text, parse_alcohol, parse_net_contents
 
 
 @dataclass(frozen=True)
@@ -29,7 +29,7 @@ def merge_readings(readings: Sequence[ExtractedLabel]) -> MergedReading:
         if field is LabelField.HEALTH_WARNING:
             continue
         found = [value for reading in readings if (value := reading.value(field)) is not None]
-        distinct = _distinct(found, key=lambda value: normalize_text(value) or value)
+        distinct = _distinct(found, key=_KEYS.get(field, _text_key))
         if distinct:
             values[field.value] = distinct[0]
         if len(distinct) > 1:
@@ -53,6 +53,33 @@ def merge_readings(readings: Sequence[ExtractedLabel]) -> MergedReading:
             conflicts[LabelField.HEALTH_WARNING] = tuple(bolds)
 
     return MergedReading(reading=ExtractedLabel.model_validate(values), conflicts=conflicts)
+
+
+def _text_key(value: str) -> str:
+    return normalize_text(value) or value
+
+
+def _alcohol_key(value: str) -> str:
+    """The same ABV however it's written: "Alc. 50% By Vol." and "50%vol". Proof isn't part of
+    it, because one image often adds the proof; the checks test it on the value used."""
+    alcohol = parse_alcohol(value)
+    if alcohol.problem or alcohol.abv is None:
+        return _text_key(value)
+    return f"abv {alcohol.abv.normalize()} {alcohol.abv_high}"
+
+
+def _volume_key(value: str) -> str:
+    """The same volume in any unit: "750 mL" and "75 cL"."""
+    contents = parse_net_contents(value)
+    if contents.problem or contents.volume is None:
+        return _text_key(value)
+    return f"ml {contents.volume.ml.normalize()}"
+
+
+_KEYS: dict[LabelField, Callable[[str], str]] = {
+    LabelField.ALCOHOL: _alcohol_key,
+    LabelField.NET_CONTENTS: _volume_key,
+}
 
 
 def _distinct(values: Sequence[str], key: Callable[[str], str]) -> list[str]:

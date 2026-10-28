@@ -61,6 +61,7 @@ def verify(
     read_by: Reader = Reader.AI,
     ocr_text: str | None = None,
     conflicts: Mapping[LabelField, Sequence[str]] | None = None,
+    doubts: Mapping[LabelField, str] | None = None,
     instructions_seen: Sequence[str] = (),
 ) -> Report:
     """Check a label reading against its application.
@@ -68,8 +69,9 @@ def verify(
     `read_by` says which reader produced `reading`. With the AI reader, `ocr_text` (if given)
     is the independent OCR reading used to confirm it. With the OCR reader alone, the offline
     policy applies and the label can't come out as "Matches". `conflicts` lists fields on which
-    the label's images disagree, and `instructions_seen` is text the reader reported as
-    addressing an AI. Both can only send the label toward a person.
+    the label's images disagree, `doubts` gives fields a person must check and why, and
+    `instructions_seen` is text the reader reported as addressing an AI. All of them can only
+    send the label toward a person.
     """
     beverage = application.beverage_type
     ocr = ocr_text[:MAX_OCR_TEXT] if ocr_text is not None else None
@@ -155,6 +157,13 @@ def verify(
                 ),
             )
             if result.field in conflicts
+            else result
+            for result in results
+        ]
+    if doubts:
+        results = [
+            result.at_least(Status.REVIEW, doubts[result.field])
+            if result.field in doubts
             else result
             for result in results
         ]

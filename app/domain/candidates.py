@@ -8,12 +8,28 @@ the same checks the verifier then runs. The choice is always text printed on the
 
 import re
 from collections.abc import Callable, Iterable, Sequence
+from dataclasses import dataclass
 
 from rapidfuzz import fuzz
 
-from app.domain.models import ApplicationData, ExtractedLabel, FieldResult, LabelField
+from app.domain.models import ApplicationData, ExtractedLabel, FieldResult, LabelField, Status
 from app.domain.normalize import normalize_text
 from app.domain.rules.names import check_bottler, check_name
+
+BRAND_ELSEWHERE = (
+    'The application\'s brand, "{expected}", is printed on the label, but the most prominent '
+    'name is "{main}". A person should check which is the brand.'
+)
+BRAND_UNMARKED = (
+    "The application's brand, \"{expected}\", is printed on the label, but the AI reader didn't "
+    "pick out any name as the brand. A person should check it."
+)
+
+
+@dataclass(frozen=True)
+class Chosen:
+    reading: ExtractedLabel
+    doubts: dict[LabelField, str]  # field -> why it must go to a person
 
 
 def choose_names(
@@ -22,10 +38,15 @@ def choose_names(
     names: Sequence[str],
     statements: Sequence[str],
     application: ApplicationData,
-) -> ExtractedLabel:
-    """The reading with its brand, fanciful name and bottler taken from the label's candidates.
+    class_types: Sequence[str] = (),
+) -> Chosen:
+    """The reading with its brand, fanciful name, bottler and class/type taken from what the
+    label prints, and doubts for any field a person must check.
 
-    A name the reader already put in a field is one more candidate, preferred on a tie.
+    The brand is the most prominent name, as the reader judged it. If that doesn't match, the
+    application's brand may still be among the other names, but then it goes to a person: a
+    name found elsewhere, such as in the bottler line under a sticker, never passes on its own.
+    Statements, the fanciful name and the class/type may come from anywhere on the label.
     """
 
     def check_brand(candidate: str) -> FieldResult:
@@ -34,8 +55,24 @@ def choose_names(
     def check_statement(candidate: str) -> FieldResult:
         return check_bottler(application.bottler, candidate, cfr="")
 
-    brand = _best(application.brand_name, _with(reading.brand_name, names), check_brand)
+    def check_class(candidate: str) -> FieldResult:
+        return check_name(LabelField.CLASS_TYPE, application.class_type, candidate, cfr="")
+
+    doubts: dict[LabelField, str] = {}
+    brand = reading.brand_name
+    if brand is None or check_brand(brand).status is Status.FAIL:
+        other = _best(application.brand_name, _with(None, names), check_brand)
+        if other is not None and (brand is None or check_brand(other).status is not Status.FAIL):
+            if brand is not None:
+                doubts[LabelField.BRAND] = BRAND_ELSEWHERE.format(
+                    expected=application.brand_name, main=brand
+                )
+            elif check_brand(other).status is not Status.FAIL:
+                doubts[LabelField.BRAND] = BRAND_UNMARKED.format(expected=application.brand_name)
+            brand = other
+
     bottler = _best(application.bottler, _with(reading.bottler, statements), check_statement)
+    class_type = _best(application.class_type, _with(reading.class_type, class_types), check_class)
 
     fanciful = reading.fanciful_name
     if application.fanciful_name:
@@ -46,12 +83,18 @@ def choose_names(
 
         # Real labels often print the fanciful name inside another line, such as "BOURBON" in
         # "STRAIGHT BOURBON WHISKEY", so the words themselves are candidates too.
-        inside = _within(expected, [*names, reading.class_type, reading.brand_name])
+        inside = _within(expected, [*names, reading.class_type, *class_types, brand])
         fanciful = _best(expected, _with(reading.fanciful_name, [*names, *inside]), check_fanciful)
 
-    return reading.model_copy(
-        update={"brand_name": brand, "fanciful_name": fanciful, "bottler": bottler}
+    updated = reading.model_copy(
+        update={
+            "brand_name": brand,
+            "fanciful_name": fanciful,
+            "bottler": bottler,
+            "class_type": class_type,
+        }
     )
+    return Chosen(reading=updated, doubts=doubts)
 
 
 def _with(own: str | None, candidates: Iterable[str]) -> list[str]:
