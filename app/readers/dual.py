@@ -12,6 +12,7 @@ import logging
 from collections.abc import Callable, Sequence
 
 from app.config import ExtractorMode, Settings
+from app.domain.candidates import choose_names
 from app.domain.crosscheck import NOT_FOUND, WARNING_DIFFERS
 from app.domain.merge import merge_readings
 from app.domain.models import (
@@ -88,11 +89,17 @@ async def check_label(
     if readings is not None:
         merged = merge_readings([reading.label for reading in readings])
         seen = tuple(dict.fromkeys(text for r in readings for text in r.instructions_seen))
+        chosen = choose_names(
+            merged.reading,
+            names=tuple(dict.fromkeys(name for r in readings for name in r.names)),
+            statements=tuple(dict.fromkeys(text for r in readings for text in r.statements)),
+            application=application,
+        )
 
         def run_checks() -> Report:
             return verify(
                 application,
-                merged.reading,
+                chosen,
                 read_by=Reader.AI,
                 ocr_text=ocr.text if ocr is not None else None,
                 conflicts=merged.conflicts,

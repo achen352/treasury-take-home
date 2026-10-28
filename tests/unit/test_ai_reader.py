@@ -346,9 +346,7 @@ def test_a_normal_reply_streamed_one_token_per_event_is_accepted() -> None:
     chunks = sse(*events, {**envelope, **finish()}, "[DONE]")
 
     assert sum(len(chunk) for chunk in chunks) > 64 * 1024
-    assert read(FakeProvider(chunks=chunks), llm_total_timeout=5).label.brand_name == (
-        "OLD TOM DISTILLERY"
-    )
+    assert read(FakeProvider(chunks=chunks), llm_total_timeout=5).names == ("OLD TOM DISTILLERY",)
 
 
 def test_reasoning_that_never_ends_is_cut_off_at_the_stream_cap() -> None:
@@ -533,12 +531,19 @@ def test_a_part_reply_with_keys_from_the_other_part_is_rejected() -> None:
         asyncio.run(go())
 
 
-def test_one_call_per_image_is_the_default() -> None:
-    provider = FakeProvider()
+def test_two_calls_per_image_are_the_default_and_one_when_switched_off() -> None:
+    async def answer(request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(200, content=_stream(streamed_reply(_part_reply(request))))
 
-    async def go() -> ImageReading:
-        async with httpx2.AsyncClient(transport=httpx2.MockTransport(provider)) as client:
-            return await make_extractor(settings(), client).read(OLD_TOM)
+    def calls(**overrides: object) -> int:
+        provider = FakeProvider(answer)
 
-    asyncio.run(go())
-    assert len(provider.requests) == 1
+        async def go() -> ImageReading:
+            async with httpx2.AsyncClient(transport=httpx2.MockTransport(provider)) as client:
+                return await make_extractor(settings(**overrides), client).read(OLD_TOM)
+
+        asyncio.run(go())
+        return len(provider.requests)
+
+    assert calls() == 2
+    assert calls(llm_split_warning=False) == 1

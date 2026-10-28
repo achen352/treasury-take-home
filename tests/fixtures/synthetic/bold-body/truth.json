@@ -26,7 +26,8 @@
   "other_text": [],
   "hidden_text": [],
   "acceptable": [
-    "Does not match"
+    "Does not match",
+    "Needs review"
   ],
   "tags": [
     "known-answer"

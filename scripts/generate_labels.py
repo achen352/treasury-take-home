@@ -539,16 +539,15 @@ class Options(TypedDict, total=False):
 def _known(
     id: str,
     description: str,
-    acceptable: Verdict,
+    acceptable: Verdict | tuple[Verdict, ...],
     printed: ExtractedLabel,
     *,
     application: ApplicationData = OLD_TOM_APPLICATION,
     tags: tuple[str, ...] = (),
     **options: Unpack[Options],
 ) -> Spec:
-    return Spec(
-        id, description, (acceptable,), ("known-answer", *tags), printed, application, **options
-    )
+    verdicts = acceptable if isinstance(acceptable, tuple) else (acceptable,)
+    return Spec(id, description, verdicts, ("known-answer", *tags), printed, application, **options)
 
 
 def _adversarial(
@@ -608,13 +607,13 @@ SPECS: tuple[Spec, ...] = (
     _known(
         "header-not-bold",
         "GOVERNMENT WARNING is printed in regular type, not bold.",
-        D,
+        (R, D),  # bold is judged only by the AI, so a person decides
         _old_tom(warning_header_bold=False),
     ),
     _known(
         "bold-body",
         "The rest of the warning is in bold, which 16.22 forbids.",
-        D,
+        (R, D),
         _old_tom(warning_body_bold=True),
     ),
     _known(

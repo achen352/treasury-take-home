@@ -5,7 +5,9 @@ count: spacing (tight justification runs words together or splits them), hyphens
 breaks, the capitalization of the body (often all capitals), and "(I)" or "(l)" for "(1)" in
 typefaces that draw them alike. A difference in punctuation alone, such as a missing comma or a
 stray period, goes to a person. The header must be exactly "GOVERNMENT WARNING:" and bold, and
-the rest of the statement must not be bold.
+the rest of the statement must not be bold. Only the AI reader can judge bold, and on real
+approved labels it was wrong 8 times in 18, so a bold problem sends the warning to a person
+instead of failing it.
 """
 
 import re
@@ -21,6 +23,14 @@ _TOKEN = re.compile(r"\w+|[^\w\s]")
 _HYPHENS = re.compile("[-\N{HYPHEN}\N{NON-BREAKING HYPHEN}]")  # the standard text has none
 _NUMBERING = re.compile(r"\(\s*[Il|i]\s*\)")
 _WHITESPACE = re.compile(r"\s+")
+NOT_BOLD = (
+    'The AI reader judged "GOVERNMENT WARNING" not to be in bold, which 27 CFR 16.22 requires. '
+    "Bold is hard to judge from an image, so a person should check it."
+)
+BODY_BOLD = (
+    "The AI reader judged the rest of the warning to be in bold, which 27 CFR 16.22 forbids. "
+    "Bold is hard to judge from an image, so a person should check it."
+)
 _DIFF_OPS = {
     "equal": DiffOp.SAME,
     "replace": DiffOp.CHANGED,
@@ -128,13 +138,13 @@ def check_health_warning(
             )
 
     if header_bold is False:
-        result = result.at_least(Status.FAIL, 'The words "GOVERNMENT WARNING" must be in bold.')
+        result = result.at_least(Status.REVIEW, NOT_BOLD)
     elif header_bold is None:
         result = result.at_least(
             Status.REVIEW, 'Couldn\'t tell whether "GOVERNMENT WARNING" is bold.'
         )
     if body_bold is True:
-        result = result.at_least(Status.FAIL, "The rest of the warning must not be in bold.")
+        result = result.at_least(Status.REVIEW, BODY_BOLD)
     elif body_bold is None:
         result = result.at_least(
             Status.REVIEW, "Couldn't tell whether the rest of the warning is in bold."

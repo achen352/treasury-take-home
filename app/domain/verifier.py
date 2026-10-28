@@ -29,6 +29,10 @@ HIDDEN_CHARACTERS = (
     "Hidden characters (such as zero-width spaces or text-direction controls) were removed "
     "from this reading; a person should check it."
 )
+FANCIFUL_NOT_SEEN = (
+    "The application's fanciful name wasn't found among the names printed on the label; a person "
+    "should check it."
+)
 IMAGES_DISAGREE = (
     "The label's images disagree on this field ({readings}); a person should check it."
 )
@@ -92,14 +96,17 @@ def verify(
         ),
     ]
     if application.fanciful_name is not None:
-        results.append(
-            check_name(
-                LabelField.FANCIFUL,
-                application.fanciful_name,
-                label(LabelField.FANCIFUL),
-                cfr=cfr(LabelField.FANCIFUL),
-            )
+        fanciful = check_name(
+            LabelField.FANCIFUL,
+            application.fanciful_name,
+            label(LabelField.FANCIFUL),
+            cfr=cfr(LabelField.FANCIFUL),
         )
+        if reading.fanciful_name is None:  # often printed as part of another line, or small
+            fanciful = fanciful.model_copy(
+                update={"status": Status.REVIEW, "notes": (FANCIFUL_NOT_SEEN,)}
+            )
+        results.append(fanciful)
     results += [
         check_name(
             LabelField.CLASS_TYPE,

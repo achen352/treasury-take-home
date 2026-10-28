@@ -25,14 +25,14 @@ class Settings(BaseSettings):
     # A call with no output by the first deadline is stuck in the provider's queue, and one
     # still running at the second is too slow; either way OCR reads the label instead.
     llm_first_token_timeout: float = Field(default=4.5, gt=0)
-    llm_total_timeout: float = Field(default=7.5, gt=0)
+    llm_total_timeout: float = Field(default=10.0, gt=0)
     llm_image_max_side: int = Field(default=1100, ge=256, le=4096)
     # Kimi thinks by default, which takes over a minute per label. Azure OpenAI rejects the
     # parameter, so it is sent only when this is on.
     llm_disable_thinking: bool = True
-    # Read the warning in its own call, alongside one for the other fields: shorter replies
-    # finish sooner. Off unless the evaluation shows it pays.
-    llm_split_warning: bool = False
+    # Read the warning in its own call, alongside one for the other fields. Shorter replies
+    # finish sooner: on real labels this cut the median from 7.8 s to 6.1 s.
+    llm_split_warning: bool = True
     enable_docs: bool = False
     port: int = 8000
     forwarded_allow_ips: str = "127.0.0.1"

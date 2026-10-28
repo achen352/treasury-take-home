@@ -9,10 +9,14 @@ from app.readers.uploads import LabelImage
 
 @dataclass(frozen=True)
 class ImageReading:
-    """What a reader transcribed from one image, and any text it saw addressing an AI."""
+    """What a reader transcribed from one image: the label's fields, every prominent name and
+    every name-and-address statement it prints (code picks the brand and bottler from these),
+    and any text it saw addressing an AI."""
 
     label: ExtractedLabel
     instructions_seen: tuple[str, ...] = ()
+    names: tuple[str, ...] = ()
+    statements: tuple[str, ...] = ()
 
 
 class ReaderUnavailable(Exception):
