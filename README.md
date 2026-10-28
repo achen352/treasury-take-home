@@ -6,8 +6,8 @@ it was submitted with. It answers the take-home exercise in
 
 > **Status: work in progress.** The checking engine, the test data, the label readers and the
 > single-label page are built, tested and evaluated. The deployment and batch upload are next
-> (see [Progress](#progress)). Live URL: <https://treasury-take-home-1uz2.onrender.com> (only
-> `/healthz` responds so far).
+> (see [Progress](#progress)). Live URL: <https://cola-label-verifier.fly.dev> (the access code
+> is in the submission link).
 
 ## The brief, and how this project answers it
 
@@ -18,16 +18,16 @@ Each row is a requirement from the brief, with the stakeholder who raised it.
 | Check that the label matches the application: brand, class/type, alcohol content, net contents, bottler, country of origin, government warning (*Technical requirements; Sarah Chen*) | A rules engine checks each field and cites the regulation it applies (27 CFR parts 4, 5, 7 and 16). | Built |
 | The warning must be word for word, with "GOVERNMENT WARNING:" in capitals and bold (*Jenny Park*) | Exact wording and a capitalized header are enforced; Jenny's title-case example is one of the tests. Bold can only be judged by the AI, which is unreliable at it, so a bold problem goes to a person. | Built |
 | "STONE'S THROW" vs "Stone's Throw" needs judgment (*Dave Morrison*) | Three outcomes: **Matches**, **Needs review**, **Does not match**. Cosmetic differences pass with a note, and near misses go to a person. The tool never approves a label. | Built |
-| Results in about 5 seconds, because the last vendor took 30 to 40 (*Sarah Chen*) | The AI reads each image while OCR reads it too, and the checks are plain code that runs in milliseconds. On the 58 test labels a result took 2.2 s at the median and 5.4 s at the 95th percentile. | Built; measured on Render in M5 |
+| Results in about 5 seconds, because the last vendor took 30 to 40 (*Sarah Chen*) | The AI reads each image while OCR reads it too, and the checks are plain code that runs in milliseconds. On the 58 test labels a result took 2.2 s at the median and 5.4 s at the 95th percentile. | Built; measured live in M5 |
 | Simple enough for agents over 50: "clean, obvious, no hunting for buttons" (*Sarah Chen*) | One page with one main button and 18 px text. Results are shown with an icon and words, never color alone, and each finding is outlined on the label image. axe-core, run in a real browser, finds no accessibility violations (Section 508). | Built |
 | Batch uploads of 200 to 300 labels at once (*Sarah Chen, for Janet*) | A batch upload takes a spreadsheet of application data, and failures are listed first. | Planned (M6) |
-| The agency runs on Azure under FedRAMP (*Marcus Williams*) | Not used here, for cost: the prototype runs on Render's free tier and reads labels with OpenAI's commercial API (see [Limitations](#assumptions-and-limitations)). The Docker image and the AI adapter move to Azure App Service and Azure OpenAI by configuration alone. | Documented path |
+| The agency runs on Azure under FedRAMP (*Marcus Williams*) | Not used here, for cost: the prototype runs on a small Fly.io machine and reads labels with OpenAI's commercial API (see [Limitations](#assumptions-and-limitations)). The Docker image and the AI adapter move to Azure App Service and Azure OpenAI by configuration alone. | Documented path |
 | The firewall blocks many outbound ML endpoints (*Marcus Williams*) | A local OCR reader (Tesseract) keeps working when the AI service can't be reached, and the result is marked as read offline. | Built |
 | A standalone proof of concept, not integrated with COLA (*Marcus Williams*) | Standalone. The public COLA registry is used only offline, as a source of real test labels. | By design |
 | Store nothing sensitive (*Marcus Williams*) | No database, images are processed in memory (tests prove nothing is written to disk, through the page too), metadata such as GPS location is stripped, and logs hold no label content. | Built |
 | Handle labels photographed at angles, in bad light or with glare (*Jenny Park*) | 12 badly photographed test labels. Photos are turned upright, sideways text is read in a rotated pass, and unreadable fields go to a person instead of being guessed. All 12 came out right in the evaluation. | Built |
 | Create or source test labels; AI image generation suggested (*Additional context*) | 39 labels drawn by code (three on AI-generated photo backgrounds), 19 real approved labels from the public COLA registry, and 12 hostile files. | Built |
-| A repo with a README, and a deployed URL (*Deliverables*) | This repository and the Render URL above. | In progress |
+| A repo with a README, and a deployed URL (*Deliverables*) | This repository and the Fly.io URL above; the access code is in the submission. | In progress |
 
 ## What COLA is
 
@@ -127,7 +127,7 @@ as the work goes on.
 | **Bold problems go to a person.** | Only the AI can judge bold, and it was wrong on 8 of 18 approved labels. A "not bold" call that fails the label would be wrong too often. |
 | **An answer within a deadline, or OCR alone.** | The AI's reply is streamed. No first token within 15 s, or no complete reply within 25 s, means OCR reads alone and the label goes to a person. A label normally takes 2 to 5 s, so these only catch a stuck provider. |
 | **The warning is read in its own call.** | The AI reads each image twice at once: once for the warning and once for everything else. Shorter replies finish sooner (on Kimi this cut real labels' median from 7.8 s to 6.1 s). |
-| **Render's free tier, with Azure as the path.** | Render gives a live URL at no cost with the least setup. The same Docker image is what Azure App Service would run. |
+| **A small Fly.io machine, with Azure as the path.** | Fly runs the same Docker image on a shared CPU that bursts to a full core for a check's OCR and suspends between visits, so it costs a few dollars a month at most. Render's free tier was tried first: its 0.1 CPU took 16 to 23 s per OCR pass, and turning OCR off to fit let 3 labels through as false Matches. The same image runs on Azure App Service. |
 | **Python, FastAPI, server-rendered pages.** | The page is plain HTML from the server and one small self-hosted script (zoom, rotation, quick upload checks), so there is no frontend build or framework, and it works without the script. pytest makes test-first work easy, and Python has strong libraries for images and fuzzy matching. |
 | **Show where each finding is.** | OCR returns a box for every word, so each field is outlined on the label image with an icon and its name, and so is a differing word in the warning. A result's button zooms to its spot and turns sideways text upright. A field OCR couldn't find says so instead of showing a box. |
 | **A link with an access code, not accounts.** | The demo spends real AI credit, so it's locked behind a code given only in the submission link. The server holds only the code's SHA-256; the link's code is kept in a secure cookie and removed from the address bar; logs never record query strings. Accounts and single sign-on are what production would use. |
@@ -285,10 +285,10 @@ deployment should do:
   samples in this repository. For agency use, point the adapter at Azure OpenAI in Treasury's
   tenant (the same API), or run the OCR-only mode (`EXTRACTOR_MODE=ocr`), which sends nothing off
   the server.
-- **Render's free tier hosts the demo.** It isn't FedRAMP-authorized or on Azure, where the
-  agency runs. It has 0.1 CPU and 512 MB of memory, and it sleeps when idle, so the first request
-  after a quiet spell is slow. OCR is roughly ten times slower there than on a laptop; M5 measures
-  it. The same Docker image runs on Azure App Service.
+- **A small Fly.io machine hosts the demo.** It isn't FedRAMP-authorized or on Azure, where the
+  agency runs. Its shared CPU bursts to a full core for a check but is throttled under sustained
+  load, and it suspends when idle, waking on the next visit. One machine runs, so the rate limits
+  and the two-checks-at-once cap are per site. The same Docker image runs on Azure App Service.
 
 What the readers can't do yet:
 
@@ -342,7 +342,9 @@ PLAYWRIGHT_BROWSERS_PATH=.venv/ms-playwright python -m playwright install chromi
 The access code for a deployment:
 
 ```bash
-python -m scripts.access_code             # prints a code (for the link) and its SHA-256 (for Render)
+python -m scripts.access_code             # prints a code (for the link) and its SHA-256 (for Fly)
+fly secrets set ACCESS_CODE_SHA256=<hash>   # the app won't start in production without it
+python -m scripts.smoke                   # checks the live site; signs in with SMOKE_ACCESS_CODE
 ```
 
 Test data:
@@ -409,7 +411,7 @@ tests/
 | M2 | Test data: drawn labels, real COLA labels, hostile files; fixes found by real labels; other scripts | Done |
 | M3 | Label readers: upload checks, AI reader, OCR reader, merging images, evaluation script | Done |
 | M4 | Single-label page, with each field outlined on the label image | Done |
-| M5 | Demo deployment: OpenAI on Render, latency and OCR timing on Render, keep-warm, usage limits | Next |
+| M5 | Demo deployment: Fly.io deployed by CI, live latency, smoke test, fail-closed access code | In progress |
 | M6 | Batch upload | |
 | M7 | Final README: evaluation results, tools, trade-offs | |
 

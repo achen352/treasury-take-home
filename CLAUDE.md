@@ -8,12 +8,23 @@ from CLAUDE.md".
 
 - M0 to M4 are done: the skeleton, the checking engine, the test data, the label readers and
   the single-label page. 1,039 tests pass, browser tests included. The README is current.
-- **Next: M5, the deploy.** Generate the access code (`python -m scripts.access_code`), put the
-  hash and the OpenAI key in Render's dashboard, time OCR on Render's 0.1 CPU, and add a
-  keep-warm job and a smoke test of the live URL.
+- **M5 in progress (2026-10-28): the demo runs on Fly.io**, at https://cola-label-verifier.fly.dev
+  (the user's `personal` org; app `cola-label-verifier`, one `shared-cpu-1x` machine with 512 MB
+  in `iad`, which suspends when idle). CI deploys from main after the tests and container checks
+  pass, using the GitHub secret `FLY_API_TOKEN` (a deploy token, 90 days, made 2026-10-28). The
+  Fly secrets are `LLM_API_KEY` (OpenAI) and `ACCESS_CODE_SHA256`; `REQUIRE_ACCESS_CODE=true`
+  keeps the app from starting without the hash. `fly deploy` creates 2 machines by default;
+  it was scaled to 1 (`fly scale count 1`), because the rate limits live in memory.
+  - Why Fly: Render's free 0.1 CPU took 16 to 23 s per OCR pass (measured under
+    `docker --cpus=0.1`); AI-only mode to avoid OCR gave 3 false Matches (warning-typo,
+    injection-header-bold-claim, NUMA); the user preferred Fly to Render Starter on price.
+    Hugging Face's free tier looked generous but 2026 reports say Docker Spaces need a paid plan.
+  - Still to do: run `python -m scripts.smoke` signed in (`SMOKE_ACCESS_CODE` in `.env` must be
+    the code, not the hash), measure the 11 samples live (p50/p95, OCR time, wake from
+    suspend), and finish the README's M5 numbers.
 - Checked live on 2026-10-28 through the page, with OpenAI and Tesseract: OLD TOM matched in 2.6 s
   with every field outlined in the right place; Belle Isle came out Needs review in 3.6 s.
-- Live URL: <https://treasury-take-home-1uz2.onrender.com> (only `/healthz`).
+- Live URL: <https://cola-label-verifier.fly.dev> (locked; the code is in the submission link).
 - **M4 test list approved on 2026-10-28.** The page uses a plain form post, a server-rendered
   results page and one small self-hosted script (no HTMX; the instructions allow any stack).
   Playwright and axe run in Chromium, downloaded to `.venv/ms-playwright` (set
@@ -67,7 +78,8 @@ from CLAUDE.md".
 - **Security first** (the user is a cybersecurity major, and the audience is federal), but keep
   it proportionate.
 - **Cost-conscious.** No paid services beyond the AI reader. The user's OpenAI key pays for it
-  (Kimi credits before), and Render's free tier hosts the demo. Keep evaluation runs deliberate.
+  (Kimi credits before), and a small Fly.io machine hosts the demo (a few dollars a month at
+  most). Keep evaluation runs deliberate.
 - **Keep it proportionate.** It's a take-home: when tuning starts to sprawl, the user prefers a
   simple choice plus an honest README limitation over more experiments.
 - **Python lives only in the project `.venv`.** Use pip with pip-tools hash-locked files; no
@@ -91,7 +103,7 @@ from CLAUDE.md".
   differs between images goes to Review.
 - **Provider: OpenAI `gpt-5.4-mini`** since 2026-10-28; it was Kimi before that. The README lists two
   cost-driven limitations: OpenAI's commercial API, which isn't FedRAMP, reads the uploads, so
-  only public or test labels should be uploaded; and Render's free tier is used instead of
+  only public or test labels should be uploaded; and a small Fly.io machine is used instead of
   Azure. The agency path is Azure OpenAI or OCR-only mode.
 - **Warning:** exact words; header in capitals; spacing, line-break hyphens and body case
   ignored; "(I)" read as "(1)"; punctuation-only differences → Review. Bold problems → Review
@@ -109,13 +121,8 @@ Results carry `Location` boxes from OCR for the outlines M4 draws.
 ## Later milestones
 
 - **M4, the single-label page:** done; see the README's M4 test list.
-- **M5, the demo deploy:**
-  - OpenAI on Render; `render.yaml` already sets the URL, model and effort, and the key goes in
-    Render's dashboard
-  - time OCR on Render's 0.1 CPU (or under `docker --cpus=0.1`) against the budget
-  - protect the personal credits with per-IP rate limits and an optional `ACCESS_CODE`
-  - keep-warm cron every 10 minutes; a smoke test of the live URL; latency from Render to
-    OpenAI against 5 seconds
+- **M5, the demo deploy:** on Fly.io; see "Where things stand". Keep-warm isn't needed (the
+  machine suspends and wakes on the next visit).
 - **M6, batch:**
   - a CSV plus multiple images, about 8 in parallel, with a cap of 300
   - failures listed first
@@ -199,4 +206,5 @@ with Valorant's anti-cheat.
     thinking on.
   - A bare prompt once dropped "GOVERNMENT WARNING:" from the warning and "Distilled and
     bottled by" from the bottler; an explicit prompt fixed both.
-  - Tesseract reads the OLD TOM label in 0.44 s of CPU here, so roughly 4 s on Render's 0.1 CPU.
+  - Tesseract reads the OLD TOM label in 0.44 s of CPU on the Mac. Under `docker --cpus=0.1` one
+    pass took 16 to 23 s (worse than linear); at 0.5 CPU, 1.1 to 1.9 s; at 1 CPU, about 0.8 s.
