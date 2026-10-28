@@ -164,6 +164,15 @@ def test_thinking_off_is_sent_only_when_configured() -> None:
     assert "thinking" not in azure.body
 
 
+def test_a_reasoning_effort_replaces_the_thinking_switch() -> None:
+    # Kimi's k3 models always think and refuse "thinking off"; they take reasoning_effort.
+    provider = FakeProvider()
+    read(provider, llm_reasoning_effort="low")
+
+    assert provider.body["reasoning_effort"] == "low"
+    assert "thinking" not in provider.body
+
+
 def test_the_reply_must_follow_a_strict_schema_with_no_place_for_a_verdict() -> None:
     provider = FakeProvider()
     read(provider)

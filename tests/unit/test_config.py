@@ -118,3 +118,16 @@ def test_ai_reader_settings_load_from_the_environment(monkeypatch: pytest.Monkey
 def test_bad_ai_reader_settings_fail_fast(overrides: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
         make_settings(**overrides)
+
+
+def test_a_reasoning_effort_can_be_set_for_models_that_always_think(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    assert make_settings().llm_reasoning_effort is None
+
+    monkeypatch.setenv("LLM_REASONING_EFFORT", "low")
+    assert make_settings().llm_reasoning_effort == "low"
+
+    monkeypatch.setenv("LLM_REASONING_EFFORT", "extreme")
+    with pytest.raises(ValidationError):
+        make_settings()
