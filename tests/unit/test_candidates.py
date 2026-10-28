@@ -192,3 +192,47 @@ def test_the_class_type_that_matches_the_application_is_used_when_images_differ(
     )
 
     assert chosen.reading.class_type == "CHARDONNAY"
+
+
+def test_a_fanciful_name_the_reader_took_for_the_brand_is_found_there() -> None:
+    application = OLD_TOM_APPLICATION.model_copy(
+        update={"brand_name": "ADK FOX BREWING", "fanciful_name": "COOKED AT 70"}
+    )
+
+    chosen = choose_names(
+        ExtractedLabel(brand_name="Cooked at 70"),
+        names=("ADK FOX BREWING",),
+        statements=(),
+        application=application,
+    )
+
+    assert chosen.reading.fanciful_name == "Cooked at 70"
+    assert chosen.reading.brand_name == "ADK FOX BREWING"
+
+
+def test_a_country_named_only_in_an_address_is_found_there() -> None:
+    application = OLD_TOM_APPLICATION.model_copy(
+        update={"imported": True, "country_of_origin": "Republic of Armenia"}
+    )
+    statement = "Produced by: OHANYAN BRANDY COMPANY LLC Yerevan, Republic of Armenia, 0085"
+
+    chosen = choose_names(
+        ExtractedLabel(), names=(), statements=(statement,), application=application
+    )
+
+    assert chosen.reading.country_of_origin == "Republic of Armenia"
+
+
+def test_a_country_already_read_is_kept() -> None:
+    application = OLD_TOM_APPLICATION.model_copy(
+        update={"imported": True, "country_of_origin": "Italy"}
+    )
+
+    chosen = choose_names(
+        ExtractedLabel(country_of_origin="Product of Italy"),
+        names=(),
+        statements=("Bottled by Cantine Pirovano, Calco, Italia",),
+        application=application,
+    )
+
+    assert chosen.reading.country_of_origin == "Product of Italy"
