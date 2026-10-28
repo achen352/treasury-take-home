@@ -4,13 +4,32 @@ A prototype that helps TTB label specialists check alcohol label artwork against
 it was submitted with. It answers the take-home exercise in
 [treasurytakehome-rgb/instructions](https://github.com/treasurytakehome-rgb/instructions).
 
-> **Status: work in progress.** The checking engine, the test data, the label readers and the
-> single-label page and batch checking are built, tested, evaluated and deployed. The final
-> README pass is next (see [Progress](#progress)). Live URL: <https://cola-label-verifier.fly.dev> (the access code
-> is in the submission link).
+**Live demo:** <https://cola-label-verifier.fly.dev>. Open it with the link from the submission,
+which carries the access key.
+
+## Try it
+
+1. **Open the link from the submission.** It signs you in, and the key drops out of the address
+   bar.
+2. **Check a label that fails.** Under "Or try an example label", choose *Warning header in title
+   case ("Government Warning")* and press **Check label**. In about 2 seconds the result is **Does
+   not match**, because the warning's header must be in capitals. The header is outlined on the
+   label, and **Show on the label** zooms to it.
+3. **Try a label that talks to the AI.** *A label that tries to instruct the AI* prints
+   instructions aimed at the AI and rewords its warning. The AI isn't fooled: the result is
+   **Does not match**, under a "Possible prompt injection" banner.
+4. **Check a batch.** Follow **Check many labels at once** and press **Or run the example batch**.
+   The 11 sample labels are checked in about a minute, with failures listed first, and the results
+   download as a spreadsheet.
+5. **Try your own.** Upload a label image (PNG, JPEG, WebP or PDF) and type or paste its
+   application. Upload only public or test labels, because images are sent to OpenAI.
+
+In numbers: no false Matches on any of the 58 test labels, 3.3 s per label at the median on the
+live site, and over 1,100 automated tests (see [Test cases](#test-cases)).
 
 ## Contents
 
+- [Try it](#try-it)
 - [The brief, and how this project answers it](#the-brief-and-how-this-project-answers-it)
 - [What COLA is](#what-cola-is)
 - [How it works](#how-it-works)
@@ -21,13 +40,17 @@ it was submitted with. It answers the take-home exercise in
   - [Numbers: alcohol content and net contents](#numbers-alcohol-content-and-net-contents)
   - [Always to a person](#always-to-a-person)
 - [Design decisions](#design-decisions)
+- [Trade-offs](#trade-offs)
 - [What real labels taught us](#what-real-labels-taught-us)
 - [How well it reads](#how-well-it-reads)
 - [On the live site](#on-the-live-site)
 - [Checking many labels](#checking-many-labels)
+- [Where the data goes](#where-the-data-goes)
 - [Security](#security)
-- [Dependencies](#dependencies)
-- [Assumptions and limitations](#assumptions-and-limitations)
+- [Tools used](#tools-used)
+  - [Dependencies](#dependencies)
+- [Assumptions](#assumptions)
+- [Limitations](#limitations)
 - [Run it](#run-it)
 - [Project layout](#project-layout)
 - [Progress](#progress)
@@ -45,11 +68,11 @@ Each row is a requirement from the brief, with the stakeholder who raised it.
 | Results in about 5 seconds, because the last vendor took 30 to 40 (*Sarah Chen*) | The AI reads each image while OCR reads it too, and the checks are plain code that runs in milliseconds. On the live site the drawn samples take 1.8 to 4.7 s and real two-image labels 5 to 10 s (median 3.3 s). | Built and measured live |
 | Simple enough for agents over 50: "clean, obvious, no hunting for buttons" (*Sarah Chen*) | One page in three numbered steps with one main button, 18 px text, a large drop zone for images, an example under every field, red asterisks on required ones, and a box to paste the application from COLAs Online or an email. Results open with a plain summary ("5 of 6 items match") and what to do next. Results are shown with an icon and words, never color alone, and each finding is outlined on the label image. axe-core, run in a real browser, finds no accessibility violations (Section 508). | Built |
 | Batch uploads of 200 to 300 labels at once (*Sarah Chen, for Janet*) | A batch page takes a spreadsheet of up to 300 labels and their images, checks them two at a time and lists failures first, with a CSV export. It runs in the browser, so nothing is stored on the server. | Built; long batches slow down on the demo's small CPU |
-| The agency runs on Azure under FedRAMP (*Marcus Williams*) | Not used here, for cost: the prototype runs on a small Fly.io machine and reads labels with OpenAI's commercial API (see [Limitations](#assumptions-and-limitations)). The Docker image and the AI adapter move to Azure App Service and Azure OpenAI by configuration alone. | Documented path |
+| The agency runs on Azure under FedRAMP (*Marcus Williams*) | Not used here, for cost: the prototype runs on a small Fly.io machine and reads labels with OpenAI's commercial API (see [Limitations](#limitations)). The Docker image and the AI adapter move to Azure App Service and Azure OpenAI by configuration alone. | Documented path |
 | The firewall blocks many outbound ML endpoints (*Marcus Williams*) | A local OCR reader (Tesseract) keeps working when the AI service can't be reached, and the result is marked as read offline. | Built |
 | A standalone proof of concept, not integrated with COLA (*Marcus Williams*) | Standalone. The public COLA registry is used only offline, as a source of real test labels. | By design |
 | Store nothing sensitive (*Marcus Williams*) | No database, images are processed in memory (tests prove nothing is written to disk, through the page too), metadata such as GPS location is stripped, and logs hold no label content. | Built |
-| Handle labels photographed at angles, in bad light or with glare (*Jenny Park*) | 12 badly photographed test labels. Photos are turned upright, sideways text is read in a rotated pass, and unreadable fields go to a person instead of being guessed. All 12 came out right in the evaluation. | Built |
+| Handle labels photographed at angles, in bad light or with glare (*Jenny Park*) | 12 badly photographed test labels. Photos are turned upright, sideways text is read in a rotated pass, and unreadable fields go to a person instead of being guessed. 11 of 12 came out right in the final evaluation; on the other, the AI misread a word of the warning. | Built |
 | Create or source test labels; AI image generation suggested (*Additional context*) | 39 labels drawn by code (three on AI-generated photo backgrounds), 19 real approved labels from the public COLA registry, and 12 hostile files. | Built |
 | A repo with a README, and a deployed URL (*Deliverables*) | This repository and the Fly.io URL above; the access code is in the submission. | Done |
 
@@ -208,6 +231,36 @@ as the work goes on.
 | **Test labels drawn from their own ground truth.** | Each label is drawn from its truth file, so the right answer is known exactly. AI image generation is used only for photo backgrounds, because AI-generated label text is garbled. Real approved labels come from the public registry. |
 | **Import for hard problems, write small rules.** | Well-maintained libraries handle image decoding, OCR, fuzzy matching and the web framework. The label rules are short, readable code. All dependencies are hash-pinned. |
 
+## Trade-offs
+
+The brief asks for trade-offs to be documented. These are the main ones, each explained further
+in [Design decisions](#design-decisions) or [Limitations](#limitations):
+
+- **Cost over FedRAMP, for the demo.** OpenAI's commercial API and a small Fly.io machine cost
+  about $0.006 a label and a few dollars a month. Neither is authorized for agency data. The code
+  depends on neither: the AI adapter speaks the OpenAI-compatible API that Azure OpenAI offers,
+  and the Docker image runs on Azure App Service.
+- **Caution over automation.** The OCR cross-check can only send a field to a person, and
+  anything uncertain goes to review. No test label came out Matches when it shouldn't have, but
+  few real approved labels come out Matches either: OCR often can't confirm a reading on a poor
+  scan. For a tool that advises agents, a false Match is the costly mistake; an extra look costs
+  a minute.
+- **Speed over a bigger model.** `gpt-5.4-mini` with low reasoning answers in about 2 s. A larger
+  model might judge bold type and poor scans better, but `gpt-5.5` costs about 7 times as much and
+  is slower, against Sarah's 5-second budget.
+- **A server that keeps nothing, over server-side batch jobs.** The browser runs the batch, so
+  no label data is stored and one small machine is enough. The agent keeps the tab open while it
+  runs, and 300 labels take at least half an hour on the demo machine.
+- **A small machine over throughput.** Its shared CPU bursts for single checks but is throttled
+  after about 15 labels in a row. A dedicated CPU, at a higher monthly price, removes that.
+- **An access code over accounts.** One code in the submission link protects the AI credit
+  without sign-up. An agency would use single sign-on and an audit log instead.
+- **Server-rendered pages over a JavaScript app.** No build step, a strict Content-Security-Policy
+  and a page that works without its script. Each check loads a new results page.
+- **A simple scope over more tuning.** A comparison with a second OCR engine (RapidOCR) and a
+  pixel-based bold check were planned and dropped to keep the scope proportionate. Both are listed
+  as limitations.
+
 ## What real labels taught us
 
 The 19 approved labels in [tests/fixtures/cola](tests/fixtures/cola/README.md) changed the
@@ -232,40 +285,60 @@ Four approved labels differ from the regulation's text, and the tool reports the
 
 ## How well it reads
 
-`scripts/eval.py` runs both readers over every fixture, one at a time, and scores the results.
-These are the numbers for the demo's setup (OpenAI `gpt-5.4-mini` with Tesseract) on 2026-10-28,
-over 58 labels: 39 drawn by code and 19 real.
+`scripts/eval.py` runs the readers over every fixture, one at a time, and scores the results.
+These are the final numbers, on 2026-10-28, for the demo's setup: OpenAI `gpt-5.4-mini` with
+Tesseract, the warning read in its own call. There are 58 labels: 39 drawn by code and 19 real.
 
-| Fixtures | Count | Correct result | False Matches | False Review | Read by OCR alone | p50 | p95 |
-|---|---|---|---|---|---|---|---|
-| all | 58 | 71% | 0 | 9 (41%) | 0 | 2.2 s | 5.4 s |
-| adversarial | 8 | 100% | 0 | 0 | 0 | 1.8 s | 3.5 s |
-| hard to read | 12 | 100% | 0 | 0 | 0 | 2.0 s | 3.8 s |
-| real (COLA) | 19 | 21% | 0 | 8 (53%) | 0 | 4.2 s | 7.6 s |
-| other scripts | 5 | 20% | 0 | 3 (75%) | 0 | 3.8 s | 7.5 s |
-| deviation | 4 | 100% | 0 | 0 | 0 | 3.5 s | 5.0 s |
-| sideways text | 5 | 60% | 0 | 1 (50%) | 0 | 3.6 s | 5.0 s |
+| Fixtures | Count | Correct result | False Matches | False Review | p50 | p95 |
+|---|---|---|---|---|---|---|
+| all | 58 | 69% | 0 | 6 (27%) | 2.6 s | 7.2 s |
+| adversarial | 8 | 100% | 0 | 0 | 2.5 s | 3.6 s |
+| hard to read | 12 | 92% | 0 | 0 | 2.0 s | 3.2 s |
+| real (COLA) | 19 | 21% | 0 | 5 (33%) | 3.8 s | 8.5 s |
+| other scripts | 5 | 20% | 0 | 1 (25%) | 3.0 s | 8.5 s |
+| deviation | 4 | 100% | 0 | 0 | 3.1 s | 4.5 s |
+| sideways text | 5 | 60% | 0 | 1 (50%) | 3.6 s | 5.4 s |
+
+The same labels read by **OCR alone**, as when the AI can't be reached:
+
+| Fixtures | Count | Correct result | False Matches | False Review | p50 | p95 |
+|---|---|---|---|---|---|---|
+| all | 58 | 47% | 0 | 22 (100%) | 0.5 s | 2.4 s |
 
 A result is correct when it's one the fixture accepts. A false Match is "Matches" on a label that
-must not match; there were none, and any would fail the run. A false Review is "Needs review" on a
-label that should simply match, as a share of those labels.
+must not match; there were none in either mode, and any would fail the run. A false Review is
+"Needs review" on a label that should simply match, as a share of those labels.
 
-Fields read as printed: class/type 97%, net contents 93%, bottler 90%, alcohol 88%, brand 88%,
-warning 88%, fanciful name 82%, country 77%.
+Fields read as printed, with the AI: net contents 91%, alcohol 90%, bottler 90%, class/type 90%,
+brand 88%, warning 88%, fanciful name 82%, country 77%.
 
 What the numbers say:
 
-- **Every drawn label comes out right**, including the adversarial and badly photographed ones.
-- **Real labels mostly go to a person**: 4 of 19 match as they should. Most of these reviews come
-  from OCR, which couldn't confirm 23 field readings on the registry's scans. That's the price of
-  the one-way cross-check: a reading OCR can't find is never passed on the AI's word alone.
-- **The rest are judgment calls left to an agent**: the most prominent name isn't the brand (Royal
-  Stag's label leads with "SEAGRAM'S"), a name is printed in another script, or the AI couldn't
-  tell whether the warning's body is bold.
+- **No false Matches.** In neither mode did a label that must not match come out Matches.
+- **Drawn labels come out right, with two misses.** On a photo of a label on a bar counter, the AI
+  misread a word of the warning, so the result was Does not match. On the label with a typo in
+  its warning, the AI silently corrected the typo as it read. OCR read the typo, and the
+  disagreement sent the label to review instead of letting it match. That is the cross-check
+  doing its job, though the fixture expects Does not match.
+- **Real approved labels rarely come out Matches.** The 4 that differ from the regulation's text
+  (FLOS, NUMA, Ohanyan, Forever Alone) give the expected result. Of the other 15, 5 go to review,
+  mostly because OCR couldn't confirm a reading on the registry's scans. The other 10 come out
+  Does not match because the AI read a different line as the class/type or brand from the one
+  the application names. Examples: "Junmai" for a sake the application calls "Sake", "100%
+  Estate Chardonnay" for "Estate Chardonnay", and "SEAGRAM'S" for Royal Stag.
+- **The AI's readings vary between runs.** Re-reading five of those ten, three came out Needs
+  review instead. An earlier run the same day, with the warning in the same call, scored 71% and
+  had 8 approved labels come out Does not match.
+- **Without the AI, nothing matches**, by design: every label that should match goes to review.
+  OCR alone still catches the drawn labels that must fail.
+
+On real labels, then, the tool is a first pass for an agent rather than a verdict. Every result
+goes to an agent anyway, with the differing field shown side by side, so a "Does not match" on
+an approved label costs the agent a look at one field.
 
 ## On the live site
 
-The demo runs on one small Fly.io machine (a shared CPU that bursts for each check, 512 MB) in
+The demo runs on one small Fly.io machine (a shared CPU that bursts for each check, 1 GB of memory) in
 Virginia, deployed by CI after the tests pass. These are the 11 sample labels checked through
 the live page on 2026-10-28:
 
@@ -289,9 +362,9 @@ the live page on 2026-10-28:
 - **Waking up.** The machine suspends after about 3 idle minutes and wakes on the next visit in
   about half a second.
 - **Cost.** About $0.006 of OpenAI per label, and a few dollars a month for the machine at most.
-- **Results match the evaluation**: no sample matched that shouldn't, and the real labels mostly
-  go to a person (Belle Isle and Forever Alone came out stricter than expected, on judgment
-  calls the AI read differently).
+- **Results match the evaluation**: no sample matched that shouldn't, and the real labels didn't
+  come out Matches (Belle Isle and Forever Alone came out Does not match, on fields the AI read
+  differently).
 
 `python -m scripts.smoke` checks the live site: the health check, the lock, the security
 headers, signing in through the link, and the OLD TOM sample matching within 10 seconds.
@@ -319,6 +392,41 @@ runs out of burst credit and is throttled: text recognition slows from about 2 t
 to 15 to 26 s, and a few labels go to Needs review because the second check couldn't finish in
 time. A deployment for real batches would use a dedicated CPU. The first run also showed 512 MB
 of memory was too little for two large labels at once, so the machine now has 1 GB.
+
+## Where the data goes
+
+The prototype is built to keep nothing. When a label is checked:
+
+1. The browser sends the images and the application over HTTPS to the Fly.io machine.
+2. The server checks each file and rebuilds each image from its pixels, in memory, dropping
+   metadata such as GPS location. Nothing is written to disk, which a test checks with Python's
+   audit hooks.
+3. Each image goes to OpenAI over HTTPS, scaled to 1,100 px and without the application.
+   Tesseract reads the same image on the server.
+4. The results page goes back to the browser, marked `no-store` so it isn't cached, with the
+   images inside it. The server then drops everything.
+
+The batch page keeps the spreadsheet, the images and the results in the browser, and sends the
+server one label at a time, as above. The CSV export is built from results the browser sends
+back, and isn't kept.
+
+What remains afterwards:
+
+- **Logs.** Each request's method, path, status, request ID and timing, and any error. Never label
+  text, application values, file names or query strings (where the access key travels).
+- **One cookie**, holding the access code: `HttpOnly`, `Secure`, `SameSite=Strict`, for 30 days.
+- **Rate-limit counters**: client addresses and times, in memory only, for up to a day, and gone
+  when the machine restarts or suspends.
+- **At OpenAI.** Under OpenAI's [API data policy](https://developers.openai.com/api/docs/guides/your-data),
+  API data isn't used to train its models unless the customer opts in, but OpenAI keeps
+  abuse-monitoring logs, which can include the images and replies, for up to 30 days. The app
+  doesn't ask OpenAI to store its requests. This is why the demo is for public or test labels
+  only.
+
+For agency use, the AI reader would point at Azure OpenAI in Treasury's own tenant, under the
+agency's agreements, or the OCR-only mode (`EXTRACTOR_MODE=ocr`) would send nothing off the
+server. Production would add the audit log and records retention the agency requires (see
+[Security](#security)).
 
 ## Security
 
@@ -369,14 +477,29 @@ of memory was too little for two large labels at once, so the machine now has 1 
 - **Container.** A multi-stage build, a base image pinned by digest, a non-root user, and no
   pip in the runtime image. CI checks that Tesseract reads a label inside the image.
 - **What production would still need:**
-  - a FedRAMP-authorized model provider and host (see [Limitations](#assumptions-and-limitations))
+  - a FedRAMP-authorized model provider and host (see [Limitations](#limitations))
   - FedRAMP authorization and an ATO
   - single sign-on
   - an audit log of who checked what
   - records retention
   - a Section 508 audit
 
-## Dependencies
+## Tools used
+
+| Tool | What it does here |
+|---|---|
+| Python 3.13, FastAPI, Jinja2 | The app and its server-rendered pages |
+| OpenAI `gpt-5.4-mini` | Reads the label images |
+| Tesseract OCR 5 | Reads the same images on the server, to confirm the AI's readings, and alone when the AI can't be reached |
+| Fly.io | Hosts the demo |
+| GitHub Actions | Runs the tests, security scans and container checks on every push, then deploys |
+| pytest, Hypothesis, Playwright, axe-core | Unit, property-based, browser and accessibility tests |
+| Ruff, mypy, Bandit, pip-audit, gitleaks, Trivy, CycloneDX, Dependabot | Code quality and supply-chain security (see [Security](#security)) |
+| TTB's public COLA registry | The 19 real approved labels used as test data |
+| ForgeGUI image generation | The three photo backgrounds behind some test labels ([provenance](tests/fixtures/backgrounds/PROVENANCE.md)) |
+| Claude Code (Anthropic) | The AI coding assistant that wrote the code, tests and documentation. Each milestone began with a plain-English test list that the author reviewed and approved before any code was written, and design choices were the author's. [CLAUDE.md](CLAUDE.md) holds the assistant's working notes between sessions. |
+
+### Dependencies
 
 The app imports few libraries, all open source under permissive licenses. Every package,
 including the ones these pull in, is pinned to an exact version and checked against a hash on
@@ -410,7 +533,25 @@ Keeping them safe:
   or a CI action has a newer version. It never changes anything by itself. Each update is
   reviewed, tested by CI and merged by hand.
 
-## Assumptions and limitations
+## Assumptions
+
+- **The agent enters the application.** The tool isn't connected to COLAs Online (the brief asks
+  for a standalone proof of concept), so the application's details are typed or pasted into the
+  form, or listed in a spreadsheet.
+- **The images are the label artwork.** Photos of bottles work too, but the tool checks what the
+  images show, not whether they're the artwork on file.
+- **One application per check.** All the images uploaded together belong to one label: the
+  front, the back, the neck.
+- **The warning is the text in 27 CFR 16.21**, the same for every beverage, required word for
+  word.
+- **The fields checked are the ones the brief lists:** brand, fanciful name, class/type, alcohol
+  content, net contents, bottler or importer, country of origin for imports, and the warning.
+  Other mandatory statements, such as sulfites or age statements, aren't checked.
+- **Mandatory text is in English**, apart from names, which may be printed in another script.
+- **The tool advises; an agent decides.** No result approves or rejects an application.
+- **Agents use a current browser**, such as Edge or Chrome.
+
+## Limitations
 
 Two limitations come from keeping the prototype cheap to run. Neither is what an agency
 deployment should do:
@@ -432,13 +573,16 @@ deployment should do:
 
 What the readers can't do yet:
 
-- **OCR often can't confirm readings on real scans**, so most real labels come out Needs review
+- **OCR often can't confirm readings on real scans**, so many real labels come out Needs review
   (see [How well it reads](#how-well-it-reads)). Image clean-up before OCR, or a stronger OCR
   engine such as RapidOCR, could reduce that; neither was tried.
 - **Bold is judged by the AI alone, and not reliably**, so any bold problem goes to a person. A
   pixel-based check (comparing stroke thickness of the header and the body) could back it up;
   it wasn't built.
 - **Heavily tilted photos give OCR no text**, so their fields go to review.
+- **Approved real labels often come out Does not match**, when the AI reads a different line as
+  the class/type or brand ("Junmai" for "Sake", "100% Estate Chardonnay" for "Estate
+  Chardonnay"). The agent sees both side by side. The readings also vary between runs.
 
 The rest are scope limits:
 
@@ -455,16 +599,27 @@ The rest are scope limits:
 
 ## Run it
 
-Requires Python 3.13.
+Requires Python 3.13 and Tesseract OCR 5:
 
 ```bash
-python -m venv .venv
-.venv/Scripts/activate            # Windows (Git Bash); use .venv/bin/activate on macOS/Linux
+brew install python@3.13 tesseract                 # macOS
+sudo apt-get install tesseract-ocr                 # Debian or Ubuntu, with Python 3.13
+# Windows: Python from python.org, and Tesseract from the UB Mannheim installer, on the PATH
+```
+
+Then:
+
+```bash
+python3.13 -m venv .venv
+source .venv/bin/activate         # Windows (Git Bash): source .venv/Scripts/activate
 pip install --require-hashes -r requirements-dev.txt
-cp .env.example .env              # then fill in your keys; .env is gitignored
+cp .env.example .env              # add LLM_API_KEY (an OpenAI key); .env is gitignored
 pytest                            # run the test suite
 python -m app.server              # http://127.0.0.1:8000/
 ```
+
+Without an AI key, set `EXTRACTOR_MODE=ocr` in `.env`: Tesseract reads alone, nothing leaves the
+machine, and results are marked as read offline (never Matches).
 
 Or with Docker:
 
@@ -529,7 +684,10 @@ app/
     dual.py          runs both readers, merges, cross-checks, falls back to OCR
   web/               the page and everything in front of it
     pages.py         the form and POST /check
-    forms.py         reading and checking the application form
+    batch_pages.py   the batch page and its endpoints
+    batch.py         reading the batch spreadsheet, and the CSV export
+    forms.py         reading and tidying the application form
+    paste.py         reading a pasted application (labeled lines or JSON)
     view.py          what the results page shows, outlines included
     guards.py        the access code, rate limits and request size
     middleware.py    request IDs, security headers, the request log
@@ -553,11 +711,11 @@ tests/
 | M4 | Single-label page, with each field outlined on the label image | Done |
 | M5 | Demo deployment: Fly.io deployed by CI, live latency, smoke test, fail-closed access code | Done |
 | M6 | Batch upload: a spreadsheet of up to 300 labels, failures first, CSV export; misformatted data handled | Done |
-| M7 | Final README: evaluation results, tools, trade-offs | Next |
+| M7 | Final README: a tour, tools used, assumptions, trade-offs, where the data goes, the final evaluation | Done |
 
 ## Test cases
 
-1,159 test cases (531 test functions, many run over several inputs) cover the checking engine,
+1,163 test cases (535 test functions, many run over several inputs) cover the checking engine,
 the test data, the label readers, the page (in a real browser too) and the deploy. All of them run in CI on every push. Each group below was agreed
 in plain English before its code was written.
 
@@ -588,6 +746,7 @@ in plain English before its code was written.
 | In a browser | `tests/e2e/test_browser.py` | axe-core finds no violations; zoom, sideways text, rotation, keyboard, quick checks, samples |
 | Batch and messy data | `tests/unit/test_batch.py`, `tests/unit/test_forms.py`, `tests/integration/test_batch_page.py` | Reading spreadsheets however they were saved, tidying form input, the batch endpoints, the export |
 | Deploy | `tests/unit/test_deploy_config.py`, `tests/unit/test_smoke.py` | Fly config and the CI deploy gate; the smoke test's checks and its handling of the code |
+| README | `tests/unit/test_readme.py` | The sections the brief asks for, a complete contents list, and no broken links |
 
 <details>
 <summary><b>M0: skeleton and security baseline</b></summary>
@@ -943,7 +1102,7 @@ in plain English before its code was written.
 <details>
 <summary><b>M5: the deploy</b></summary>
 
-1. `fly.toml` runs our Dockerfile in Virginia on one shared-CPU machine with 512 MB that suspends
+1. `fly.toml` runs our Dockerfile in Virginia on one shared-CPU machine with 512 MB (raised to 1 GB in M6) that suspends
    when idle, in full mode with OpenAI, with no secrets in the file (they're set with
    `fly secrets set`).
 2. CI deploys to Fly only from `main`, and only after the tests and the container checks pass.
@@ -990,5 +1149,21 @@ in plain English before its code was written.
    contents without a unit, get a message with an example.
 10. Excel quirks: a byte-order mark, Windows-1252, semicolons or tabs, quoted line breaks, blank
     rows, extra or missing cells, and image lists split by `;`, `,` or `|`.
+
+</details>
+
+<details>
+<summary><b>M7: the final README</b></summary>
+
+1. A short tour at the top: what to click, what to expect, and the headline numbers.
+2. Tools used, including the AI coding assistant and the AI image generator for test backgrounds.
+3. The assumptions made, the main trade-offs, and where the data goes (including what OpenAI
+   keeps).
+4. The final evaluation, with the AI and with OCR alone, and what the numbers say about real
+   labels.
+5. Out-of-date details fixed: 1 GB of memory, the project layout, and setup with Tesseract.
+6. A test: the README has the sections the brief asks for (setup and run, approach, tools,
+   assumptions, trade-offs, limitations), its contents list every section, and every link
+   points to a heading or a file that exists.
 
 </details>
