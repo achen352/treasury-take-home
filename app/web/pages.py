@@ -42,9 +42,7 @@ def page(request: Request, sample: str | None = None) -> Response:
 
 @router.post("/check", response_class=HTMLResponse)
 async def check(request: Request) -> Response:
-    origin = request.headers.get("origin")
-    cross_site = request.headers.get("sec-fetch-site") == "cross-site"
-    if cross_site or (origin and urlsplit(origin).netloc != request.headers.get("host")):
+    if _from_another_site(request):
         return _error(request, 403, "Labels can only be checked from this site's own page.")
     if not request.app.state.limiter.allow(client_address(request.scope)):
         return too_many_response()
@@ -97,6 +95,18 @@ async def check(request: Request) -> Response:
     finally:
         slots.release()
     return _render(request, values=values, sample=sample_id, results=build_results(report, images))
+
+
+def _from_another_site(request: Request) -> bool:
+    """Whether a post came from another site's page. Browsers say so in Sec-Fetch-Site; with
+    Referrer-Policy: no-referrer they send "Origin: null" even for this site's own forms."""
+    site = request.headers.get("sec-fetch-site")
+    if site is not None:
+        return site in ("cross-site", "same-site")
+    origin = request.headers.get("origin")
+    return (
+        bool(origin) and origin != "null" and urlsplit(origin).netloc != request.headers.get("host")
+    )
 
 
 def _render(

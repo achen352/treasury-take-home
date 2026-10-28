@@ -1,6 +1,7 @@
 import os
 import shutil
 from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
 from fastapi import FastAPI
@@ -27,10 +28,16 @@ def client(app: FastAPI) -> Iterator[TestClient]:
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    """Skip OCR tests on a machine without Tesseract, but never in CI, where they must run."""
-    if shutil.which("tesseract") or os.environ.get("CI") == "true":
+    """Skip OCR and browser tests on a machine without Tesseract or Chromium, but never in CI,
+    where they must run."""
+    if os.environ.get("CI") == "true":
         return
-    skip = pytest.mark.skip(reason="Tesseract isn't installed (brew install tesseract)")
+    browsers = Path(__file__).resolve().parent.parent / ".venv" / "ms-playwright"
+    missing = {
+        "ocr": None if shutil.which("tesseract") else "Tesseract isn't installed",
+        "e2e": None if browsers.is_dir() else "Chromium isn't installed (see CLAUDE.md)",
+    }
     for item in items:
-        if "ocr" in item.keywords:
-            item.add_marker(skip)
+        for marker, reason in missing.items():
+            if reason and marker in item.keywords:
+                item.add_marker(pytest.mark.skip(reason=reason))
