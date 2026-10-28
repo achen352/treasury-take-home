@@ -11,15 +11,35 @@ from CLAUDE.md".
   workflow are green.
 - Fixtures: 39 synthetic labels, 19 real COLA labels and 12 hostile files.
 - Live URL: <https://treasury-take-home-1uz2.onrender.com> (only `/healthz`).
-- **M3 in progress (2026-10-27).** The user approved the test list, adding PDF support. HEIC
+- **M3 in progress (2026-10-28).** The user approved the test list, adding PDF support. HEIC
   isn't decoded on the server: iPhones send JPEG, and a HEIC file gets a message. Done and
-  pushed, each as a test/feat pair: upload checks (`app/readers/uploads.py`, PDF via pypdfium2);
-  the domain additions (fanciful name cited to Form 5100.31 item 7, `merge.py`, `Location`, and
-  `conflicts`/`instructions_seen` passed to `verify`); the AI reader (`ai.py`, checked live
-  against Kimi); the OCR reader (`ocr.py`); and the dual reader (`dual.py`).
-- **M3 still to do:** `scripts/eval.py`, including the two-call split; Tesseract in the
-  Dockerfile and a container OCR check; timing under `docker --cpus=0.1`; the RapidOCR
-  comparison; the pixel bold check; and the README test-case list for M3.
+  pushed, each as a test/feat (or fix) pair:
+  - upload checks (`app/readers/uploads.py`, PDF via pypdfium2)
+  - the domain additions: fanciful name cited to Form 5100.31 item 7, `merge.py`, `Location`,
+    `candidates.py`, and `conflicts`/`doubts`/`instructions_seen` passed to `verify`
+  - the AI reader (`ai.py`, with a split mode that reads the warning in its own call)
+  - the OCR reader (`ocr.py`) and the dual reader (`dual.py`)
+  - `scripts/eval.py` (it runs the real readers; results go to the scratchpad, not the repo)
+- **Decided on 2026-10-28, from the first evaluation on the 19 real labels:**
+  - The AI names the most prominent name as `brand` and lists the other prominent names and
+    every name-and-address statement. Code (`candidates.py`) picks the bottler, fanciful name
+    and class/type the application describes. A brand found only among the other names goes
+    to **review**, never passes (the gate caught `sticker-over-brand` passing on the bottler
+    line's name). A fanciful name not seen goes to review.
+  - A bold problem goes to review, not fail: only the AI judges bold, and it was wrong on 8 of
+    18 approved labels.
+  - The AI deadline is 10 s, and the split reader is on by default.
+  - The same ABV or volume written two ways isn't a disagreement between images.
+- **In progress: a model comparison** that the user asked for. `kimi-k2.6` (thinking off)
+  against `kimi-k3`, `kimi-k3.1-pro` and `kimi-k3.1-pro-highspeed` at `LLM_REASONING_EFFORT=low`.
+  The k3 models refuse "thinking off"; they honor `reasoning_effort` ("low" cut reasoning from
+  150 tokens to 5) and ignore `thinking.effort`. `k3.1-pro-highspeed` returned 429
+  "engine overloaded" on 2026-10-28. The comparison uses generous deadlines (20 s and 45 s) and
+  records the cost of each run from the balance endpoint.
+- **M3 still to do:** pick the model; commit the Dockerfile change, which adds Tesseract and is
+  built and checked locally but not yet committed; add a container OCR check to CI; time OCR
+  under `docker --cpus=0.1`; the RapidOCR comparison; the pixel bold check; the README (M3 test
+  cases, the evaluation table, the decisions above).
 - The Mac now has Tesseract 5.5.3 (Homebrew) and Docker; the `.venv` is set up and `.env` holds
   the Kimi key.
 
@@ -60,8 +80,9 @@ from CLAUDE.md".
   README lists two cost-driven limitations: a China-based provider reads the uploads, so only
   public or test labels should be uploaded; and Render's free tier is used instead of Azure. The
   agency path is Azure OpenAI or OCR-only mode.
-- **Warning:** exact words; header in capitals and bold; spacing, line-break hyphens and body
-  case ignored; "(I)" read as "(1)"; punctuation-only differences → Review.
+- **Warning:** exact words; header in capitals; spacing, line-break hyphens and body case
+  ignored; "(I)" read as "(1)"; punctuation-only differences → Review. Bold problems → Review
+  (since 2026-10-28).
 - **Other scripts:** a name in a different script from the application → Review; a name printed
   in both scripts is compared in the application's script.
 
@@ -81,9 +102,10 @@ from CLAUDE.md".
     keys, still validated by Pydantic. Thinking off (`"thinking": {"type": "disabled"}`, sent
     only when configured, so Azure works too). Send the AI a copy scaled to about 1100 px on the
     long side (OCR keeps full size). Stream the reply: no first token by about 4.5 s, or no
-    finish by about 7.5 s, means fall back to OCR. One call per image, run concurrently.
-  - Splitting the warning into its own concurrent call is measured in the eval and adopted
-    only if it lowers p50 by 0.5 s or more without losing accuracy.
+    finish by about 10 s (raised from 7.5 s on 2026-10-28), means fall back to OCR.
+  - The split (the warning in its own concurrent call) was adopted on 2026-10-28. On real
+    labels it cut p50 from 7.8 s to 6.1 s. Stalls come in bursts that hit both calls together,
+    so it doesn't double the number of labels falling back to OCR.
   - The model sees only the images, never the application data. A contract test asserts that the
     outbound request carries none.
   - Prompt rules:
