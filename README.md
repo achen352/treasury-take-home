@@ -4,8 +4,8 @@ A prototype that helps TTB label specialists check alcohol label artwork against
 it was submitted with. It answers the take-home exercise in
 [treasurytakehome-rgb/instructions](https://github.com/treasurytakehome-rgb/instructions).
 
-> **Status: work in progress.** The checking engine and the test data are built and tested. The
-> label readers, the web page, batch upload and the final deployment are next (see
+> **Status: work in progress.** The checking engine, the test data and the label readers are
+> built, tested and evaluated. The web page, batch upload and the final deployment are next (see
 > [Progress](#progress)). Live URL: <https://treasury-take-home-1uz2.onrender.com> (only
 > `/healthz` responds so far).
 
@@ -16,16 +16,16 @@ Each row is a requirement from the brief, with the stakeholder who raised it.
 | The brief asks for | How this prototype answers | Status |
 |---|---|---|
 | Check that the label matches the application: brand, class/type, alcohol content, net contents, bottler, country of origin, government warning (*Technical requirements; Sarah Chen*) | A rules engine checks each field and cites the regulation it applies (27 CFR parts 4, 5, 7 and 16). | Built |
-| The warning must be word for word, with "GOVERNMENT WARNING:" in capitals and bold (*Jenny Park*) | Exact wording, a capitalized header and bold type are all enforced. Jenny's title-case example is one of the tests. | Built |
+| The warning must be word for word, with "GOVERNMENT WARNING:" in capitals and bold (*Jenny Park*) | Exact wording and a capitalized header are enforced; Jenny's title-case example is one of the tests. Bold can only be judged by the AI, which is unreliable at it, so a bold problem goes to a person. | Built |
 | "STONE'S THROW" vs "Stone's Throw" needs judgment (*Dave Morrison*) | Three outcomes: **Matches**, **Needs review**, **Does not match**. Cosmetic differences pass with a note, and near misses go to a person. The tool never approves a label. | Built |
-| Results in about 5 seconds, because the last vendor took 30 to 40 (*Sarah Chen*) | The AI model makes one call to read the label, and the checks themselves are plain code that runs in milliseconds. Latency is measured against 5 seconds. | Planned (M3, M5) |
+| Results in about 5 seconds, because the last vendor took 30 to 40 (*Sarah Chen*) | The AI reads each image while OCR reads it too, and the checks are plain code that runs in milliseconds. On the 58 test labels a result took 2.2 s at the median and 5.4 s at the 95th percentile. | Built; measured on Render in M5 |
 | Simple enough for agents over 50: "clean, obvious, no hunting for buttons" (*Sarah Chen*) | One page with one main button and large text. Results are shown with an icon and words, never color alone, and an automated accessibility scan checks the page (Section 508). | Planned (M4) |
 | Batch uploads of 200 to 300 labels at once (*Sarah Chen, for Janet*) | A batch upload takes a spreadsheet of application data, and failures are listed first. | Planned (M6) |
-| The agency runs on Azure under FedRAMP (*Marcus Williams*) | Not used here, for cost: the prototype runs on Render's free tier and reads labels with Kimi (see [Limitations](#assumptions-and-limitations)). The Docker image and the AI adapter move to Azure App Service and Azure OpenAI by configuration alone. | Documented path |
-| The firewall blocks many outbound ML endpoints (*Marcus Williams*) | A local OCR reader (Tesseract) keeps working when the AI service can't be reached, and the result is marked as read offline. | Planned (M3) |
+| The agency runs on Azure under FedRAMP (*Marcus Williams*) | Not used here, for cost: the prototype runs on Render's free tier and reads labels with OpenAI's commercial API (see [Limitations](#assumptions-and-limitations)). The Docker image and the AI adapter move to Azure App Service and Azure OpenAI by configuration alone. | Documented path |
+| The firewall blocks many outbound ML endpoints (*Marcus Williams*) | A local OCR reader (Tesseract) keeps working when the AI service can't be reached, and the result is marked as read offline. | Built |
 | A standalone proof of concept, not integrated with COLA (*Marcus Williams*) | Standalone. The public COLA registry is used only offline, as a source of real test labels. | By design |
-| Store nothing sensitive (*Marcus Williams*) | No database, images are processed in memory, and logs hold no label content. | By design (enforced as uploads arrive in M3 and M4) |
-| Handle labels photographed at angles, in bad light or with glare (*Jenny Park*) | 12 badly photographed test labels. Photos are turned upright, sideways text is read in a rotated pass, and unreadable fields go to a person instead of being guessed. | Test labels built; readers in M3 |
+| Store nothing sensitive (*Marcus Williams*) | No database, images are processed in memory (a test proves nothing is written to disk), metadata such as GPS location is stripped, and logs hold no label content. | Built; the page follows in M4 |
+| Handle labels photographed at angles, in bad light or with glare (*Jenny Park*) | 12 badly photographed test labels. Photos are turned upright, sideways text is read in a rotated pass, and unreadable fields go to a person instead of being guessed. All 12 came out right in the evaluation. | Built |
 | Create or source test labels; AI image generation suggested (*Additional context*) | 39 labels drawn by code (three on AI-generated photo backgrounds), 19 real approved labels from the public COLA registry, and 12 hostile files. | Built |
 | A repo with a README, and a deployed URL (*Deliverables*) | This repository and the Render URL above. | In progress |
 
@@ -70,6 +70,11 @@ application data ----------------------------------------------------+         |
   Otherwise the result is "Matches".
 - **The OCR reader can only move a field toward a person.** If it can't confirm what the AI read,
   the field goes to review. It can never turn a review or a fail into a pass.
+- **The AI never sees the application.** It gets the images and fixed instructions, and lists what
+  the label prints: the most prominent name, the other names, every name-and-address statement.
+  Code picks the one the application describes.
+- **There's always an answer.** If the AI reader fails or runs out of time, OCR reads alone and the
+  label is marked as read offline. It can't come out "Matches" that way.
 
 ## How a result is decided
 
@@ -81,7 +86,7 @@ application data ----------------------------------------------------+         |
 | Bottler (name and address) | The same words in any order, ignoring "bottled by" wording | A more forgiving score of 85 or more ("KY" vs "Kentucky") | Below 85 |
 | Country of origin | Same after removing wording like "Product of" | Score of 90 or more | Below 90 ("New Mexico" vs "Mexico") |
 | Alcohol, proof, net contents | The same number; up to 0.5% apart only when converting between metric and US units | Unreadable, ambiguous (two ABVs) or impossible values; a range that doesn't match the application | A clearly different number; proof that isn't twice the ABV |
-| Government warning | The exact words, with "GOVERNMENT WARNING:" in capitals and bold | A punctuation-only difference; bold that can't be judged | Any word changed, missing or added; header not in capitals or not bold; a bold body |
+| Government warning | The exact words, with "GOVERNMENT WARNING:" in capitals and bold | A punctuation-only difference; any bold problem, since only the AI judges bold | Any word changed, missing or added; header not in capitals |
 
 Some situations always go to review, whatever the score:
 
@@ -89,6 +94,8 @@ Some situations always go to review, whatever the score:
 - letters from another alphabet disguised as Latin ones
 - a name in a different script from the application
 - an application field with nothing to compare
+- the application's brand found on the label only away from its most prominent name
+- the application's fanciful name not found among the names on the label
 - the label's images disagreeing on a field (such as two different ABVs on the front and back)
 - the OCR reader failing to confirm what the AI read
 - text that seems to address an AI, whether the tripwire finds it or the AI reader reports it
@@ -96,9 +103,9 @@ Some situations always go to review, whatever the score:
 The overall result is **Does not match** if any field fails, otherwise **Needs review** if any
 field needs review, otherwise **Matches**.
 
-The thresholds (90, 85 and 0.5%) were set before any real labels were tested. The evaluation in
-M3 measures how often each one sends a harmless difference to review, or fails a near miss, and
-they'll be adjusted on that evidence.
+The thresholds (90, 85 and 0.5%) were set before any real labels were tested. In the M3
+evaluation most misses came from OCR and from judgment calls rather than from these thresholds,
+so they're unchanged for now.
 
 ## Design decisions
 
@@ -114,7 +121,12 @@ as the work goes on.
 | **Warning rules settled against real labels.** | Exact wording and header capitals are required. Spacing, hyphens at line breaks and the body's capitalization don't count. A difference in punctuation alone goes to review instead of failing, because 3 of 19 approved labels have one. |
 | **Forgiving names, strict judgments.** | Differences in case, punctuation, spacing or common abbreviations ("Co." and "Company") pass with a note, and near misses go to review. A name printed in another script, such as a Hangul brand against a romanized application, goes to review, because 27 CFR 5.55 and 7.55 allow non-English brand names. |
 | **Careful numbers.** | A percentage counts as the ABV only when the words around it say alcohol, so "100% Blue Agave" isn't an ABV. Proof must equal twice the ABV. Volumes must match exactly within metric or US units and within 0.5% across them (750 mL = 25.4 fl oz). Pints, quarts and wine ABV ranges are supported. |
-| **Kimi reads the labels, through one swappable adapter.** | The vision reader speaks the OpenAI-compatible API, so the provider is configuration, not code. This prototype uses Moonshot AI's Kimi model in development and in the demo, because the author already has credits for it and the exercise has no budget. In an agency, the same adapter would point at Azure OpenAI in Treasury's own tenant. The trade-off is listed under [Limitations](#assumptions-and-limitations). |
+| **OpenAI reads the labels, through one swappable adapter.** | The vision reader speaks the OpenAI-compatible API, so the provider is configuration, not code. The demo uses `gpt-5.4-mini`, the fastest of the three OpenAI models tried; in the evaluation it answered for every label, in about 2 s at the median. It started on Moonshot AI's Kimi, for cost, but Kimi was too slow and unreliable from the US: about 5 to 6 s per call, queue stalls of 9 to 16 s on a quarter to half of all calls, and its fast model overloaded for hours, so about half the labels fell back to OCR. Kimi still works by configuration. In an agency, the same adapter would point at Azure OpenAI in Treasury's own tenant. |
+| **The model never sees the application.** | It gets only the label images and fixed instructions, so nothing can steer it toward the expected answer. A test inspects the outbound request for the application's values. |
+| **Code picks the brand from what the label prints.** | Real labels show several names: a house brand, a brewery, a vineyard. The AI names the most prominent one as the brand and lists the others and every name-and-address statement; code picks the importer's statement, the fanciful name and the class/type the application describes. A brand found only away from the main name goes to review, because the evaluation caught a sticker over the brand passing on the name in the bottler line. |
+| **Bold problems go to a person.** | Only the AI can judge bold, and it was wrong on 8 of 18 approved labels. A "not bold" call that fails the label would be wrong too often. |
+| **An answer within a deadline, or OCR alone.** | The AI's reply is streamed. No first token within 15 s, or no complete reply within 25 s, means OCR reads alone and the label goes to a person. A label normally takes 2 to 5 s, so these only catch a stuck provider. |
+| **The warning is read in its own call.** | The AI reads each image twice at once: once for the warning and once for everything else. Shorter replies finish sooner (on Kimi this cut real labels' median from 7.8 s to 6.1 s). |
 | **Render's free tier, with Azure as the path.** | Render gives a live URL at no cost with the least setup. The same Docker image is what Azure App Service would run. |
 | **Python, FastAPI, server-rendered pages.** | The pages are plain HTML from the server, made interactive with HTMX, so there is no frontend build. pytest makes test-first work easy, and Python has strong libraries for images and fuzzy matching. |
 | **Test-driven, with approved test lists.** | Each milestone starts with a plain-English list of test cases agreed before coding. Commits come in `test:` and `feat:` pairs, so `git log` shows each test failing before the code that makes it pass. |
@@ -143,6 +155,39 @@ Four approved labels differ from the regulation's text, and the tool reports the
 - **NUMA, Ohanyan and Forever Alone** differ only in punctuation, so the result is **Needs
   review**.
 
+## How well it reads
+
+`scripts/eval.py` runs both readers over every fixture, one at a time, and scores the results.
+These are the numbers for the demo's setup (OpenAI `gpt-5.4-mini` with Tesseract) on 2026-10-28,
+over 58 labels: 39 drawn by code and 19 real.
+
+| Fixtures | Count | Correct result | False Matches | False Review | Read by OCR alone | p50 | p95 |
+|---|---|---|---|---|---|---|---|
+| all | 58 | 71% | 0 | 9 (41%) | 0 | 2.2 s | 5.4 s |
+| adversarial | 8 | 100% | 0 | 0 | 0 | 1.8 s | 3.5 s |
+| hard to read | 12 | 100% | 0 | 0 | 0 | 2.0 s | 3.8 s |
+| real (COLA) | 19 | 21% | 0 | 8 (53%) | 0 | 4.2 s | 7.6 s |
+| other scripts | 5 | 20% | 0 | 3 (75%) | 0 | 3.8 s | 7.5 s |
+| deviation | 4 | 100% | 0 | 0 | 0 | 3.5 s | 5.0 s |
+| sideways text | 5 | 60% | 0 | 1 (50%) | 0 | 3.6 s | 5.0 s |
+
+A result is correct when it's one the fixture accepts. A false Match is "Matches" on a label that
+must not match; there were none, and any would fail the run. A false Review is "Needs review" on a
+label that should simply match, as a share of those labels.
+
+Fields read as printed: class/type 97%, net contents 93%, bottler 90%, alcohol 88%, brand 88%,
+warning 88%, fanciful name 82%, country 77%.
+
+What the numbers say:
+
+- **Every drawn label comes out right**, including the adversarial and badly photographed ones.
+- **Real labels mostly go to a person**: 4 of 19 match as they should. Most of these reviews come
+  from OCR, which couldn't confirm 23 field readings on the registry's scans. That's the price of
+  the one-way cross-check: a reading OCR can't find is never passed on the AI's word alone.
+- **The rest are judgment calls left to an agent**: the most prominent name isn't the brand (Royal
+  Stag's label leads with "SEAGRAM'S"), a name is printed in another script, or the AI couldn't
+  tell whether the warning's body is bold.
+
 ## Security
 
 - **Uploads:**
@@ -160,15 +205,16 @@ Four approved labels differ from the regulation's text, and the tool reports the
 - **Prompt injection.** Text printed on a label to steer the AI can at most make one reading
   wrong, because the model only transcribes, has no tools, and never decides. The OCR
   cross-check catches a reading that drifts from what's printed. A tripwire, which works in
-  several languages, sends any label that addresses an AI to a person. Hidden and look-alike
-  characters are stripped or flagged.
+  several languages, and the AI reader's own report of such text, send any label that addresses
+  an AI to a person. Hidden and look-alike characters are stripped or flagged.
 - **Web:**
   - a strict Content-Security-Policy
   - HSTS, nosniff and no-store headers, and no framing
   - generic error pages that carry only a request ID
   - API docs switched off
 - **Secrets.** `.env` is ignored by git, and `.env.example` documents the variables. gitleaks
-  scans every commit and the full history in CI. Keys are never logged.
+  scans every commit and the full history in CI. Keys are never logged, the AI provider's error
+  text is never logged or shown, and Tesseract runs with an environment that holds no secrets.
 - **Supply chain:**
   - hash-locked dependencies
   - pip-audit, Bandit and a Trivy image scan
@@ -176,7 +222,7 @@ Four approved labels differ from the regulation's text, and the tool reports the
   - Dependabot
   - GitHub Actions pinned by commit SHA
 - **Container.** A multi-stage build, a base image pinned by digest, a non-root user, and no
-  pip in the runtime image.
+  pip in the runtime image. CI checks that Tesseract reads a label inside the image.
 - **What production would still need:**
   - a FedRAMP-authorized model provider and host (see [Limitations](#assumptions-and-limitations))
   - FedRAMP authorization and an ATO
@@ -201,8 +247,8 @@ install. That comes to 22 runtime packages in all.
 | httpx2, httpcore2, truststore | Calling the AI reader over HTTPS, with the operating system's certificate store | BSD-3-Clause, BSD-3-Clause, MIT |
 | DejaVu fonts (bundled, test labels only) | Drawing test labels identically on every OS | Bitstream Vera (permissive) |
 
-Planned for M3: the Tesseract OCR engine (Apache-2.0), installed in the container image and
-run directly, so no Python wrapper is needed. Test and lint tools
+The container also installs the Tesseract OCR engine (Apache-2.0), which the app runs directly,
+so no Python wrapper is needed. Test and lint tools
 (pytest, Hypothesis, Ruff, mypy) are development-only and never ship.
 
 Keeping them safe:
@@ -218,23 +264,28 @@ Keeping them safe:
 
 ## Assumptions and limitations
 
-Two limitations come from keeping the prototype free to run. Neither is what an agency
+Two limitations come from keeping the prototype cheap to run. Neither is what an agency
 deployment should do:
 
-- **Kimi, a China-based AI provider, reads the labels.** Images uploaded to the demo are sent to
-  Moonshot AI's API. Upload only public or test labels, such as the samples in this repository.
-  For agency use, point the adapter at a FedRAMP-authorized model, such as Azure OpenAI in
-  Treasury's tenant. Alternatively, run the OCR-only mode (`EXTRACTOR_MODE=ocr`), which sends
-  nothing outside the server.
-- **Kimi is slower than a US-hosted model would be.** From the US, reading a label takes about
-  5 seconds: about 0.7 s is the round trip to Moonshot's servers in Asia, and the model writes
-  about 55 tokens a second. In one evening's testing, about 1 call in 4 also waited 9 to 16
-  seconds in Kimi's queue. An agency deployment on Azure OpenAI in a US region removes the round
-  trip and can reserve capacity so requests don't queue. Its speed and accuracy on these labels
-  haven't been measured here.
+- **OpenAI's commercial API reads the labels.** Images uploaded to the demo are sent to OpenAI,
+  which isn't FedRAMP-authorized for this use. Upload only public or test labels, such as the
+  samples in this repository. For agency use, point the adapter at Azure OpenAI in Treasury's
+  tenant (the same API), or run the OCR-only mode (`EXTRACTOR_MODE=ocr`), which sends nothing off
+  the server.
 - **Render's free tier hosts the demo.** It isn't FedRAMP-authorized or on Azure, where the
   agency runs. It has 0.1 CPU and 512 MB of memory, and it sleeps when idle, so the first request
-  after a quiet spell is slow. The same Docker image runs on Azure App Service.
+  after a quiet spell is slow. OCR is roughly ten times slower there than on a laptop; M5 measures
+  it. The same Docker image runs on Azure App Service.
+
+What the readers can't do yet:
+
+- **OCR often can't confirm readings on real scans**, so most real labels come out Needs review
+  (see [How well it reads](#how-well-it-reads)). Image clean-up before OCR, or a stronger OCR
+  engine such as RapidOCR, could reduce that; neither was tried.
+- **Bold is judged by the AI alone, and not reliably**, so any bold problem goes to a person. A
+  pixel-based check (comparing stroke thickness of the header and the body) could back it up;
+  it wasn't built.
+- **Heavily tilted photos give OCR no text**, so their fields go to review.
 
 The rest are scope limits:
 
@@ -277,6 +328,14 @@ python -m scripts.hostile_files           # rewrite the harmless hostile upload 
 python -m scripts.fetch_cola <TTB ID>     # fetch an approved label from the public registry
 ```
 
+Evaluation (uses the configured AI provider, so it costs a few cents a run):
+
+```bash
+python -m scripts.eval                    # both readers over every fixture
+python -m scripts.eval --mode ocr         # OCR alone, as when offline
+python -m scripts.eval --tags cola --output results.json
+```
+
 Lock files are generated from `pyproject.toml` with hashes:
 
 ```bash
@@ -292,10 +351,17 @@ app/
   domain/            the checking engine: pure Python, no I/O
     rules/           one module per kind of check (names, alcohol, net contents, warning)
     crosscheck.py    the one-way policy for when the two readers disagree
+    merge.py         combines the readings of a label's images
+    candidates.py    picks the brand, bottler and fanciful name from what the label prints
     injection.py     the tripwire for text addressed to an AI
     verifier.py      runs every rule and combines the results
+  readers/           everything that reads a label
+    uploads.py       upload checks: type, size, rebuilt pixels, PDF pages
+    ai.py            the AI reader (any OpenAI-compatible vision model)
+    ocr.py           the OCR reader (Tesseract), word boxes, sideways passes
+    dual.py          runs both readers, merges, cross-checks, falls back to OCR
   web/               routes and security middleware
-scripts/             test-label generator, hostile files, COLA downloader, fonts
+scripts/             test-label generator, hostile files, COLA downloader, evaluation, fonts
 tests/
   unit/ integration/ security/
   fixtures/          synthetic/, cola/, hostile/, backgrounds/
@@ -308,16 +374,16 @@ tests/
 | M0 | Project skeleton, CI and security scans, container, security headers, first deploy | Done |
 | M1 | Checking engine: every rule, the cross-check policy and the verifier | Done |
 | M2 | Test data: drawn labels, real COLA labels, hostile files; fixes found by real labels; other scripts | Done |
-| M3 | Label readers: upload checks, AI reader (Kimi), OCR reader, merging images, evaluation script | Next |
-| M4 | Single-label page, with each field outlined on the label image | |
-| M5 | Demo deployment: Kimi on Render, latency check, keep-warm, usage limits | |
+| M3 | Label readers: upload checks, AI reader, OCR reader, merging images, evaluation script | Done |
+| M4 | Single-label page, with each field outlined on the label image | Next |
+| M5 | Demo deployment: OpenAI on Render, latency and OCR timing on Render, keep-warm, usage limits | |
 | M6 | Batch upload | |
 | M7 | Final README: evaluation results, tools, trade-offs | |
 
 ## Test cases
 
-693 test cases (228 test functions, many run over several inputs) cover the checking engine, the
-test data and the web skeleton. All of them run in CI on every push. Each group below was agreed
+954 test cases (393 test functions, many run over several inputs) cover the checking engine, the
+test data, the label readers and the web skeleton. All of them run in CI on every push. Each group below was agreed
 in plain English before its code was written.
 
 | Area | File | What it proves |
@@ -335,6 +401,13 @@ in plain English before its code was written.
 | Cross-check | `tests/unit/test_crosscheck.py` | Disagreement never improves a result |
 | Verifier | `tests/unit/test_verifier.py` | The whole report, required fields, fuzzing |
 | Test data | `tests/unit/test_label_fixtures.py`, `test_generate_labels.py`, `test_cola_fixtures.py`, `test_hostile_files.py`, `test_fetch_cola.py` | Every fixture agrees with the engine and is what it claims to be |
+| Merging images | `tests/unit/test_merge.py` | Fields from several images combine; real disagreements go to review |
+| Picking names | `tests/unit/test_candidates.py` | Brand, bottler, fanciful name and class/type chosen from what the label prints |
+| Upload checks | `tests/unit/test_uploads.py` | Hostile files rejected or rebuilt, PDFs rendered safely, nothing written to disk |
+| AI reader | `tests/unit/test_ai_reader.py` | The request contract, reply validation, deadlines, failures, keys never leaked |
+| OCR reader | `tests/unit/test_ocr.py` | Tesseract run safely, word boxes, sideways passes, fields found and located |
+| Dual reader | `tests/unit/test_dual_reader.py` | Both readers together, fallbacks, sideways passes, the model never sees the application |
+| Evaluation | `tests/unit/test_eval.py` | Scoring, summaries and the gate on false Matches |
 
 <details>
 <summary><b>M0: skeleton and security baseline</b></summary>
@@ -404,7 +477,8 @@ in plain English before its code was written.
 20. A missing warning fails.
 21. A reworded word or a typo fails, with a word-by-word diff.
 22. A title-case header (`Government Warning:`) fails (Jenny's example).
-23. A header not in bold fails, and so does a bold body.
+23. A header not in bold fails, and so does a bold body. (Since M3 these go to review: only the
+    AI judges bold, and it proved unreliable on real labels.)
 24. Unknown boldness goes to review.
 
 **When the readers disagree**
@@ -532,5 +606,86 @@ in plain English before its code was written.
 - The tripwire catches common phrasings in Spanish, Chinese, Korean and Japanese.
 - Real Korean, Chinese and Japanese labels, plus synthetic Cyrillic ones.
 - Alcohol ranges, "produced and bottled in" as a country statement, and a repeated importer name.
+
+</details>
+
+<details>
+<summary><b>M3: label readers</b></summary>
+
+**Upload checks**
+
+1. Every hostile file gets the handling its manifest lists: rejected, rebuilt or accepted.
+2. File type is judged by the first bytes: PNG, JPEG, WebP and PDF are accepted; HTML, SVG, TIFF,
+   GIF, BMP, EPS and anything else are rejected with a plain message, and Pillow may open only
+   the format the bytes claim.
+3. An iPhone HEIC photo gets a message explaining how to send a JPEG.
+4. Files over 10 MB, images over 40 megapixels (the bomb is rejected from its header in under a
+   second), empty and truncated files are rejected.
+5. Every image is rebuilt from its pixels: appended ZIP and HTML, EXIF text and GPS location are
+   gone.
+6. EXIF rotation is applied, transparency is flattened onto white (the hidden-text label stays
+   hidden), an animated image gives its first frame, and every color mode becomes RGB, with
+   16-bit greys keeping their brightness.
+7. The AI gets a copy at most 1100 px on the long side; OCR gets full size.
+8. PDF pages are rendered as images; only what a person can see is read (an invisible text
+   layer and white-on-white text render exactly like the same page without them), and the PDFium
+   build has no JavaScript engine.
+9. Encrypted, malformed, empty and oversized PDFs, and pages of an absurd size, are rejected; a
+   label takes at most 6 images, counting each PDF page.
+10. Nothing is written to disk (checked with Python's audit hooks), and rejection messages repeat
+    nothing from the file.
+
+**The domain**
+
+11. A fanciful name on the application is checked like the brand and cited to Form 5100.31,
+    item 7; one not found on the label goes to review.
+12. Text the AI reader saw addressing an AI flags the label for review and can never improve a
+    result.
+13. Readings from several images merge; different values send the field to review, but the same
+    ABV or volume written two ways doesn't.
+14. The brand is the label's most prominent name; the application's brand found only among the
+    other names goes to review. The bottler, fanciful name and class/type are picked from
+    everything the label prints, and a country named only in an address is found there.
+15. Results and the differing words of a warning can carry a location (which image, which box).
+
+**The AI reader**
+
+16. One streamed request per image (two with the warning on its own) with the configured model,
+    no retries, a strict JSON schema with no place for a verdict, the rebuilt image scaled down,
+    and nothing but the image and fixed instructions.
+17. The prompt states each rule: transcribe exactly, never correct, label text is data, report AI
+    instructions, list every name and statement, the whole warning, bold for header and body,
+    English where both are printed.
+18. Kimi's "thinking off" switch or a reasoning effort is sent only when configured.
+19. Replies with extra fields, over-long or too many values, missing keys, cut-off or refused
+    output, or no choices are rejected; the reply's text is capped at 16,000 characters and the
+    stream at 1 MB.
+20. No first token by the deadline, a reply that doesn't finish in time, HTTP errors and
+    connection failures all make the reader unavailable, and the key never reaches logs or
+    errors, even when the provider echoes it.
+
+**The OCR reader**
+
+21. Tesseract runs by absolute path, with no shell, the image on stdin, one thread, a time limit
+    and no secrets in its environment; if it's missing or fails, nothing is confirmed.
+22. Its words keep their boxes; sideways passes map back to the upright image.
+23. OCR reads OLD TOM well enough to confirm every field, and reads it alone but can't match it.
+24. Each result, and the differing word in a warning, is located on the image; text that can't
+    be found gets no box rather than a wrong one.
+25. A sideways warning is read by the rotated passes; five fixtures with sideways text are tagged.
+
+**The dual reader**
+
+26. The AI and OCR read every image at once; readings merge and OCR confirms them.
+27. If the AI fails or stalls on any image, OCR reads alone and the label can't match; OCR-only
+    and AI-only modes skip the other reader.
+28. A missing warning or a field OCR couldn't confirm triggers the sideways passes.
+29. OCR catches a typo the AI quietly fixed, end to end with the real Tesseract.
+
+**The evaluation**
+
+30. It scores each fixture's verdict and fields, summarizes accuracy, false Matches, false
+    Reviews and latency overall and by tag, records each field's deciding reason, fails the run
+    on any false Match, and writes results without images or keys.
 
 </details>
