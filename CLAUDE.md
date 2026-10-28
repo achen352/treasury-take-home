@@ -9,7 +9,20 @@ from CLAUDE.md".
 - M0 to M3 are done: the skeleton, the checking engine, the test data and the label readers.
   954 tests pass. The README has the evaluation table and the M3 test list.
 - Live URL: <https://treasury-take-home-1uz2.onrender.com> (only `/healthz`).
-- **Next: M4, the single-label page.** Start by proposing its test list (see Later milestones).
+- **M4 test list approved on 2026-10-28.** The page uses a plain form post, a server-rendered
+  results page and one small self-hosted script (no HTMX; the instructions allow any stack).
+  Playwright and axe run in Chromium, downloaded to `.venv/ms-playwright` (set
+  `PLAYWRIGHT_BROWSERS_PATH`). About 10 curated samples ship in `app/samples`. Limits per IP:
+  10 checks a minute and 200 a day, at most 2 checks at once, and a 30 MB request cap. Large images
+  are scaled to 4,000 px. Uploads stay in memory (Starlette's 1 MB spool is raised to 10 MB).
+  POSTs from other origins are refused.
+  - **Access code (the user's idea):** `ACCESS_CODE_SHA256` holds only the hash. The submission
+    link carries `?key=<code>` once; the server sets an `HttpOnly`/`Secure`/`SameSite=Strict`
+    cookie and redirects without the query. `/healthz` and `/static` stay open; query strings
+    are kept out of the logs; wrong codes count against the rate limit; with no hash set, the
+    site is open. `python -m scripts.access_code` makes a code and its hash.
+  - New dependencies: Jinja2 and python-multipart (runtime); Playwright and
+    axe-playwright-python (dev).
 - **Provider changed on 2026-10-28: OpenAI `gpt-5.4-mini` reads the labels** (reasoning effort
   "low", deadlines 15 s for the first token and 25 s in all, the split reader on). The user added
   an OpenAI key after Kimi proved too slow and unreliable: queue stalls on a quarter to half of
