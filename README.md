@@ -452,7 +452,7 @@ tests/
 
 ## Test cases
 
-1,054 test cases (472 test functions, many run over several inputs) cover the checking engine,
+1,091 test cases (490 test functions, many run over several inputs) cover the checking engine,
 the test data, the label readers, the page (in a real browser too) and the deploy. All of them run in CI on every push. Each group below was agreed
 in plain English before its code was written.
 
