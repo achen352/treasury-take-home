@@ -22,8 +22,9 @@ EXPECTED: dict[str, set[Verdict]] = {
     "old-tom": {M},
     "old-tom-front-back": {M},
     "title-case-header": {D},
-    "header-not-bold": {D},
-    "bold-body": {D},
+    # bold is judged only by the AI, so a bold problem goes to a person
+    "header-not-bold": {R, D},
+    "bold-body": {R, D},
     "reworded-warning": {D},
     "missing-warning": {D},
     "warning-typo": {D},

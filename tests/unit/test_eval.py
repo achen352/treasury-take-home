@@ -190,10 +190,19 @@ def test_the_results_file_holds_scores_but_no_images_or_keys(
     assert len(text) < 50_000
 
 
-def test_each_fixture_records_every_field_result_with_its_first_reason() -> None:
+def test_each_fixture_records_every_field_result_with_its_deciding_reason() -> None:
     misread = OLD_TOM.printed.model_copy(update={"alcohol_content": "40% Alc./Vol. (80 Proof)"})
 
     scored = score(OLD_TOM, verify(OLD_TOM.application, misread), latency=1.0)
 
     assert scored.findings["brand_name"] == "pass"
     assert scored.findings["alcohol_content"].startswith("fail: ")
+
+
+def test_the_recorded_reason_is_the_one_that_decided_the_status() -> None:
+    # OCR found nothing, so a field the rules passed ends in review for that reason.
+    report = verify(OLD_TOM.application, OLD_TOM.printed, ocr_text="")
+
+    scored = score(OLD_TOM, report, latency=1.0)
+
+    assert "second reader (OCR) found no text" in scored.findings["brand_name"]

@@ -293,7 +293,7 @@ def test_a_fanciful_name_on_the_application_is_checked_like_the_brand() -> None:
 
     assert matching.verdict is Verdict.MATCHES
     assert status_of(matching.results, LabelField.FANCIFUL) is Status.PASS
-    assert status_of(missing.results, LabelField.FANCIFUL) is Status.FAIL
+    assert status_of(missing.results, LabelField.FANCIFUL) is Status.REVIEW  # not seen
     fanciful = next(r for r in matching.results if r.field is LabelField.FANCIFUL)
     assert fanciful.cfr == "TTB Form 5100.31, item 7 (fanciful name)"
 

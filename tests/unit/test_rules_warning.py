@@ -79,12 +79,19 @@ def test_title_case_header_fails_and_says_why() -> None:
     assert any("capital letters" in note for note in result.notes)
 
 
-def test_header_that_is_not_bold_fails() -> None:
-    assert warning(HEALTH_WARNING, header_bold=False).status is Status.FAIL
+def test_header_judged_not_bold_goes_to_review() -> None:
+    # Only the AI judges bold, and on real labels it was wrong 8 times in 18, so a person decides.
+    result = warning(HEALTH_WARNING, header_bold=False)
+
+    assert result.status is Status.REVIEW
+    assert any("not to be in bold" in note for note in result.notes)
 
 
-def test_bold_body_fails() -> None:
-    assert warning(HEALTH_WARNING, body_bold=True).status is Status.FAIL
+def test_body_judged_bold_goes_to_review() -> None:
+    result = warning(HEALTH_WARNING, body_bold=True)
+
+    assert result.status is Status.REVIEW
+    assert any("rest of the warning" in note for note in result.notes)
 
 
 @pytest.mark.parametrize(("header_bold", "body_bold"), [(None, False), (True, None), (None, None)])
@@ -92,7 +99,7 @@ def test_unknown_boldness_goes_to_review(header_bold: bool | None, body_bold: bo
     assert warning(HEALTH_WARNING, header_bold, body_bold).status is Status.REVIEW
 
 
-def test_bold_failure_is_not_hidden_by_a_text_failure() -> None:
+def test_a_bold_doubt_is_reported_alongside_a_text_failure() -> None:
     result = warning(HEALTH_WARNING.replace("Surgeon", "Sergeant"), header_bold=False)
 
     assert result.status is Status.FAIL

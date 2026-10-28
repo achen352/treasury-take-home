@@ -69,10 +69,10 @@ def test_ai_reader_defaults_suit_kimi() -> None:
     assert settings.llm_base_url == "https://api.moonshot.ai/v1"
     assert settings.llm_model == "kimi-k2.6"
     assert settings.llm_first_token_timeout == 4.5
-    assert settings.llm_total_timeout == 7.5
+    assert settings.llm_total_timeout == 10
     assert settings.llm_image_max_side == 1100
     assert settings.llm_disable_thinking is True
-    assert settings.llm_split_warning is False
+    assert settings.llm_split_warning is True
 
 
 def test_ai_reader_settings_load_from_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -99,7 +99,7 @@ def test_ai_reader_settings_load_from_the_environment(monkeypatch: pytest.Monkey
         {"llm_base_url": "ftp://api.moonshot.ai/v1"},
         {"llm_first_token_timeout": 0},
         {"llm_total_timeout": -1},
-        {"llm_first_token_timeout": 8, "llm_total_timeout": 7.5},
+        {"llm_first_token_timeout": 11, "llm_total_timeout": 10},
         {"llm_image_max_side": 100},
         {"llm_image_max_side": 10_000},
         {"llm_model": ""},
