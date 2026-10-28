@@ -18,6 +18,10 @@ primary_region = "iad"  # Virginia, close to OpenAI's US servers
   FORWARDED_ALLOW_IPS = "*"
   # Fail closed: without ACCESS_CODE_SHA256 the app won't start, so the site is never open.
   REQUIRE_ACCESS_CODE = "true"
+  # Behind the access code the limits only guard against a leaked link: about $3 a day at most
+  # per address. 10 a minute stopped a reviewer clicking through the samples.
+  RATE_LIMIT_PER_MINUTE = "30"
+  RATE_LIMIT_PER_DAY = "500"
 
 [http_service]
   internal_port = 8000
