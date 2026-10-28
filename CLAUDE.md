@@ -34,6 +34,10 @@ and say "resume from CLAUDE.md".
     as the class/type or brand ("Junmai" for "Sake", "100% Estate Chardonnay" for "Estate
     Chardonnay"). Readings vary between runs; the README says so.
 
+- **Finished (2026-10-28).** The user has spent the time and money they intended. Asked how to
+  improve accuracy, they chose to keep this version and document the next steps (the README's
+  "Future improvements"), so don't propose more accuracy work unless asked.
+
 ## Open items
 
 - **OpenAI budget.** The user should set a monthly budget limit in the OpenAI dashboard.

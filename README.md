@@ -51,6 +51,7 @@ live site, and over 1,100 automated tests (see [Test cases](#test-cases)).
   - [Dependencies](#dependencies)
 - [Assumptions](#assumptions)
 - [Limitations](#limitations)
+- [Future improvements](#future-improvements)
 - [Run it](#run-it)
 - [Project layout](#project-layout)
 - [Progress](#progress)
@@ -574,8 +575,9 @@ deployment should do:
 What the readers can't do yet:
 
 - **OCR often can't confirm readings on real scans**, so many real labels come out Needs review
-  (see [How well it reads](#how-well-it-reads)). Image clean-up before OCR, or a stronger OCR
-  engine such as RapidOCR, could reduce that; neither was tried.
+  (see [How well it reads](#how-well-it-reads)). Image clean-up before OCR reduced that in a
+  test but isn't built (see [Future improvements](#future-improvements)); a stronger OCR engine
+  such as RapidOCR wasn't tried.
 - **Bold is judged by the AI alone, and not reliably**, so any bold problem goes to a person. A
   pixel-based check (comparing stroke thickness of the header and the body) could back it up;
   it wasn't built.
@@ -596,6 +598,38 @@ The rest are scope limits:
   states.
 - **OCR reads English only.** A value in another script can't be confirmed by OCR, so it goes to
   review.
+
+## Future improvements
+
+The final evaluation shows where the misses on real labels come from. Across the 15 approved
+real labels that should match, 55 fields kept a label from matching:
+
+- **31 were read correctly by the AI and still sent to review**: 25 because OCR couldn't confirm
+  them on small scans, 5 over doubts about bold type, and 1 because a different brand was the
+  most prominent name.
+- **24 were misread, or the AI picked the wrong line.** All 14 fails are among them.
+- **The checking rules never failed a field the AI read correctly.**
+
+These are the next steps, most promising first. They weren't built, to keep the prototype's scope
+proportionate.
+
+1. **A cleaned-up second OCR pass.** Many real labels' images are only 600 to 1,000 px wide, so
+   the warning's text is tiny. A test with Tesseract alone (grayscale, a contrast stretch, small
+   images upscaled, light sharpening) confirmed 85 of the 115 printed fields on the real labels
+   instead of 68, and the exact warning on 8 of 16 labels instead of 4. On the 8 drawn labels
+   that misprint the warning, it never confirmed the exact wording, so the typo safety net
+   holds. It takes about two and a half times the OCR time, so it would run only when something
+   is unconfirmed, within a time limit.
+2. **The AI lists every class/type it sees, and code picks**, as it already does for names and
+   statements. On a sake label the AI gave "Junmai" as the class/type and "SAKE" as the brand. A
+   class word printed largest shouldn't count as a rival brand, and extra words around the
+   application's class/type ("100% Estate Chardonnay" for "Estate Chardonnay") should go to
+   review instead of failing.
+3. **Larger images for the AI.** It gets images scaled to 1,100 px, a size chosen for an earlier
+   provider's speed, and small text on large labels may read better at 2,048 px. Medium
+   reasoning or the full `gpt-5.4` are other options, at some cost in time and money.
+4. **A held-out set of real labels.** Nineteen is a small sample, and the AI's readings vary
+   between runs, so improvements should be scored on new labels, over more than one run.
 
 ## Run it
 
