@@ -46,7 +46,8 @@ def choose_names(
     The brand is the most prominent name, as the reader judged it. If that doesn't match, the
     application's brand may still be among the other names, but then it goes to a person: a
     name found elsewhere, such as in the bottler line under a sticker, never passes on its own.
-    Statements, the fanciful name and the class/type may come from anywhere on the label.
+    Statements, the fanciful name and the class/type may come from anywhere on the label, and a
+    country not stated on its own may be found in an address.
     """
 
     def check_brand(candidate: str) -> FieldResult:
@@ -83,8 +84,16 @@ def choose_names(
 
         # Real labels often print the fanciful name inside another line, such as "BOURBON" in
         # "STRAIGHT BOURBON WHISKEY", so the words themselves are candidates too.
-        inside = _within(expected, [*names, reading.class_type, *class_types, brand])
-        fanciful = _best(expected, _with(reading.fanciful_name, [*names, *inside]), check_fanciful)
+        # The reader may also have taken a big fanciful name for the brand.
+        named = [*names, *([reading.brand_name] if reading.brand_name else [])]
+        inside = _within(expected, [*named, reading.class_type, *class_types])
+        fanciful = _best(expected, _with(reading.fanciful_name, [*named, *inside]), check_fanciful)
+
+    country = reading.country_of_origin
+    if country is None and application.imported and application.country_of_origin:
+        # Some labels name the country only in an address: "Yerevan, Republic of Armenia".
+        found = _within(application.country_of_origin, statements)
+        country = found[0] if found else None
 
     updated = reading.model_copy(
         update={
@@ -92,6 +101,7 @@ def choose_names(
             "fanciful_name": fanciful,
             "bottler": bottler,
             "class_type": class_type,
+            "country_of_origin": country,
         }
     )
     return Chosen(reading=updated, doubts=doubts)
