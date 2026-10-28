@@ -17,7 +17,9 @@ services:
       - key: LLM_BASE_URL
         value: https://api.moonshot.ai/v1
       - key: LLM_MODEL
-        value: kimi-k2.6
+        value: kimi-k3.1-pro-highspeed
+      - key: LLM_REASONING_EFFORT
+        value: low
       # The key is entered in the Render dashboard, never committed.
       - key: LLM_API_KEY
         sync: false

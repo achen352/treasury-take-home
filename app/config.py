@@ -21,18 +21,19 @@ class Settings(BaseSettings):
     # Any OpenAI-compatible endpoint. Kimi is the default for cost; an agency would point this
     # at Azure OpenAI in its own tenant.
     llm_base_url: str = "https://api.moonshot.ai/v1"
-    llm_model: str = Field(default="kimi-k2.6", min_length=1)
+    llm_model: str = Field(default="kimi-k3.1-pro-highspeed", min_length=1)
     # A call with no output by the first deadline is stuck in the provider's queue, and one
-    # still running at the second is too slow; either way OCR reads the label instead.
-    llm_first_token_timeout: float = Field(default=4.5, gt=0)
-    llm_total_timeout: float = Field(default=10.0, gt=0)
+    # still running at the second is too slow; either way OCR reads the label instead. Kimi's
+    # queue stalls ran 9 to 16 seconds, so these are generous; see the README's Limitations.
+    llm_first_token_timeout: float = Field(default=15.0, gt=0)
+    llm_total_timeout: float = Field(default=25.0, gt=0)
     llm_image_max_side: int = Field(default=1100, ge=256, le=4096)
     # Kimi thinks by default, which takes over a minute per label. Azure OpenAI rejects the
     # parameter, so it is sent only when this is on.
     llm_disable_thinking: bool = True
     # Models that always think (Kimi's k3) refuse "thinking off" but take a reasoning effort.
     # When set, it is sent instead of the thinking switch.
-    llm_reasoning_effort: Literal["low", "high", "max"] | None = None
+    llm_reasoning_effort: Literal["low", "high", "max"] | None = "low"
     # Read the warning in its own call, alongside one for the other fields. Shorter replies
     # finish sooner: on real labels this cut the median from 7.8 s to 6.1 s.
     llm_split_warning: bool = True
