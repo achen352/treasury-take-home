@@ -1,7 +1,7 @@
 """Runtime configuration, read from environment variables and an optional .env file."""
 
 from enum import StrEnum
-from typing import Self
+from typing import Literal, Self
 
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     # Kimi thinks by default, which takes over a minute per label. Azure OpenAI rejects the
     # parameter, so it is sent only when this is on.
     llm_disable_thinking: bool = True
+    # Models that always think (Kimi's k3) refuse "thinking off" but take a reasoning effort.
+    # When set, it is sent instead of the thinking switch.
+    llm_reasoning_effort: Literal["low", "high", "max"] | None = None
     # Read the warning in its own call, alongside one for the other fields. Shorter replies
     # finish sooner: on real labels this cut the median from 7.8 s to 6.1 s.
     llm_split_warning: bool = True

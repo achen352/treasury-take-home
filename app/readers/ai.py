@@ -224,7 +224,9 @@ class OpenAICompatibleVisionExtractor:
                 },
             ],
         }
-        if self._settings.llm_disable_thinking:
+        if self._settings.llm_reasoning_effort is not None:
+            body["reasoning_effort"] = self._settings.llm_reasoning_effort
+        elif self._settings.llm_disable_thinking:
             body["thinking"] = {"type": "disabled"}
         return body
 
