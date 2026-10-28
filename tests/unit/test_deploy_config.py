@@ -46,6 +46,9 @@ def test_fly_runs_full_mode_with_openai_and_trusts_only_its_own_client_header() 
     assert env["LLM_REASONING_EFFORT"] == "low"
     assert env["CLIENT_IP_HEADER"] == "fly-client-ip"
     assert env["REQUIRE_ACCESS_CODE"] == "true"  # the site won't start open
+    # Behind the access code the limits only guard against a leaked link, so a reviewer
+    # clicking through every sample never meets them.
+    assert (env["RATE_LIMIT_PER_MINUTE"], env["RATE_LIMIT_PER_DAY"]) == ("30", "500")
 
 
 def test_no_secret_lives_in_the_deploy_configuration() -> None:
