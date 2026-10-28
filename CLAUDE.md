@@ -4,10 +4,15 @@ This file carries the project context between machines. Claude Code reads it aut
 the README explains the project itself. To resume, open the repo in Claude Code and say "resume
 from CLAUDE.md".
 
-## Where things stand (end of M3, 2026-10-28)
+## Where things stand (end of M4, 2026-10-28)
 
-- M0 to M3 are done: the skeleton, the checking engine, the test data and the label readers.
-  954 tests pass. The README has the evaluation table and the M3 test list.
+- M0 to M4 are done: the skeleton, the checking engine, the test data, the label readers and
+  the single-label page. 1,039 tests pass, browser tests included. The README is current.
+- **Next: M5, the deploy.** Generate the access code (`python -m scripts.access_code`), put the
+  hash and the OpenAI key in Render's dashboard, time OCR on Render's 0.1 CPU, and add a
+  keep-warm job and a smoke test of the live URL.
+- Checked live on 2026-10-28 through the page, with OpenAI and Tesseract: OLD TOM matched in 2.6 s
+  with every field outlined in the right place; Belle Isle came out Needs review in 3.6 s.
 - Live URL: <https://treasury-take-home-1uz2.onrender.com> (only `/healthz`).
 - **M4 test list approved on 2026-10-28.** The page uses a plain form post, a server-rendered
   results page and one small self-hosted script (no HTMX; the instructions allow any stack).
@@ -103,19 +108,7 @@ Results carry `Location` boxes from OCR for the outlines M4 draws.
 
 ## Later milestones
 
-- **M4, the single-label page:**
-  - upload several images, an application form, and a "Sample labels" picker
-  - results shown with an icon and words, never color alone
-  - each field outlined on the label image, marked with an icon and its name (not color alone),
-    and the differing word in the warning outlined. Clicking a result zooms to its spot, and the
-    zoom turns sideways text upright. Rotate buttons on each image. A field OCR couldn't find
-    says so instead of showing an outline.
-  - the diff and both readings when they disagree
-  - text at 18px or larger, `dir="auto"` for right-to-left scripts, an offline banner
-  - a notice that images go to OpenAI, so upload only public or test labels
-  - an axe accessibility scan
-  - web tests: `<script>`, `{{ 7*7 }}`, RTL characters, `../` filenames, empty, truncated and
-    50 MB files, JSON instead of a form, rate limiting
+- **M4, the single-label page:** done; see the README's M4 test list.
 - **M5, the demo deploy:**
   - OpenAI on Render; `render.yaml` already sets the URL, model and effort, and the key goes in
     Render's dashboard

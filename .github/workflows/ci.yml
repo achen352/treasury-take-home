@@ -65,6 +65,10 @@ jobs:
           docker run -i --rm --entrypoint tesseract cola-label-verifier:ci stdin stdout --psm 3 \
             < tests/fixtures/synthetic/old-tom/label.png | tee ocr.txt
           grep -q "OLD TOM DISTILLERY" ocr.txt
+      - name: Image ships the page and its sample labels
+        run: |
+          docker run --rm --entrypoint python cola-label-verifier:ci -c \
+            "from app.web.samples import load_samples; assert len(load_samples()) >= 8"
       - name: Container serves /healthz without a Server header
         run: |
           docker run -d -p 8000:8000 --name app cola-label-verifier:ci

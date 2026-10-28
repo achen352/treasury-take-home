@@ -4,9 +4,9 @@ A prototype that helps TTB label specialists check alcohol label artwork against
 it was submitted with. It answers the take-home exercise in
 [treasurytakehome-rgb/instructions](https://github.com/treasurytakehome-rgb/instructions).
 
-> **Status: work in progress.** The checking engine, the test data and the label readers are
-> built, tested and evaluated. The web page, batch upload and the final deployment are next (see
-> [Progress](#progress)). Live URL: <https://treasury-take-home-1uz2.onrender.com> (only
+> **Status: work in progress.** The checking engine, the test data, the label readers and the
+> single-label page are built, tested and evaluated. The deployment and batch upload are next
+> (see [Progress](#progress)). Live URL: <https://treasury-take-home-1uz2.onrender.com> (only
 > `/healthz` responds so far).
 
 ## The brief, and how this project answers it
@@ -19,12 +19,12 @@ Each row is a requirement from the brief, with the stakeholder who raised it.
 | The warning must be word for word, with "GOVERNMENT WARNING:" in capitals and bold (*Jenny Park*) | Exact wording and a capitalized header are enforced; Jenny's title-case example is one of the tests. Bold can only be judged by the AI, which is unreliable at it, so a bold problem goes to a person. | Built |
 | "STONE'S THROW" vs "Stone's Throw" needs judgment (*Dave Morrison*) | Three outcomes: **Matches**, **Needs review**, **Does not match**. Cosmetic differences pass with a note, and near misses go to a person. The tool never approves a label. | Built |
 | Results in about 5 seconds, because the last vendor took 30 to 40 (*Sarah Chen*) | The AI reads each image while OCR reads it too, and the checks are plain code that runs in milliseconds. On the 58 test labels a result took 2.2 s at the median and 5.4 s at the 95th percentile. | Built; measured on Render in M5 |
-| Simple enough for agents over 50: "clean, obvious, no hunting for buttons" (*Sarah Chen*) | One page with one main button and large text. Results are shown with an icon and words, never color alone, and an automated accessibility scan checks the page (Section 508). | Planned (M4) |
+| Simple enough for agents over 50: "clean, obvious, no hunting for buttons" (*Sarah Chen*) | One page with one main button and 18 px text. Results are shown with an icon and words, never color alone, and each finding is outlined on the label image. axe-core, run in a real browser, finds no accessibility violations (Section 508). | Built |
 | Batch uploads of 200 to 300 labels at once (*Sarah Chen, for Janet*) | A batch upload takes a spreadsheet of application data, and failures are listed first. | Planned (M6) |
 | The agency runs on Azure under FedRAMP (*Marcus Williams*) | Not used here, for cost: the prototype runs on Render's free tier and reads labels with OpenAI's commercial API (see [Limitations](#assumptions-and-limitations)). The Docker image and the AI adapter move to Azure App Service and Azure OpenAI by configuration alone. | Documented path |
 | The firewall blocks many outbound ML endpoints (*Marcus Williams*) | A local OCR reader (Tesseract) keeps working when the AI service can't be reached, and the result is marked as read offline. | Built |
 | A standalone proof of concept, not integrated with COLA (*Marcus Williams*) | Standalone. The public COLA registry is used only offline, as a source of real test labels. | By design |
-| Store nothing sensitive (*Marcus Williams*) | No database, images are processed in memory (a test proves nothing is written to disk), metadata such as GPS location is stripped, and logs hold no label content. | Built; the page follows in M4 |
+| Store nothing sensitive (*Marcus Williams*) | No database, images are processed in memory (tests prove nothing is written to disk, through the page too), metadata such as GPS location is stripped, and logs hold no label content. | Built |
 | Handle labels photographed at angles, in bad light or with glare (*Jenny Park*) | 12 badly photographed test labels. Photos are turned upright, sideways text is read in a rotated pass, and unreadable fields go to a person instead of being guessed. All 12 came out right in the evaluation. | Built |
 | Create or source test labels; AI image generation suggested (*Additional context*) | 39 labels drawn by code (three on AI-generated photo backgrounds), 19 real approved labels from the public COLA registry, and 12 hostile files. | Built |
 | A repo with a README, and a deployed URL (*Deliverables*) | This repository and the Render URL above. | In progress |
@@ -128,7 +128,9 @@ as the work goes on.
 | **An answer within a deadline, or OCR alone.** | The AI's reply is streamed. No first token within 15 s, or no complete reply within 25 s, means OCR reads alone and the label goes to a person. A label normally takes 2 to 5 s, so these only catch a stuck provider. |
 | **The warning is read in its own call.** | The AI reads each image twice at once: once for the warning and once for everything else. Shorter replies finish sooner (on Kimi this cut real labels' median from 7.8 s to 6.1 s). |
 | **Render's free tier, with Azure as the path.** | Render gives a live URL at no cost with the least setup. The same Docker image is what Azure App Service would run. |
-| **Python, FastAPI, server-rendered pages.** | The pages are plain HTML from the server, made interactive with HTMX, so there is no frontend build. pytest makes test-first work easy, and Python has strong libraries for images and fuzzy matching. |
+| **Python, FastAPI, server-rendered pages.** | The page is plain HTML from the server and one small self-hosted script (zoom, rotation, quick upload checks), so there is no frontend build or framework, and it works without the script. pytest makes test-first work easy, and Python has strong libraries for images and fuzzy matching. |
+| **Show where each finding is.** | OCR returns a box for every word, so each field is outlined on the label image with an icon and its name, and so is a differing word in the warning. A result's button zooms to its spot and turns sideways text upright. A field OCR couldn't find says so instead of showing a box. |
+| **A link with an access code, not accounts.** | The demo spends real AI credit, so it's locked behind a code given only in the submission link. The server holds only the code's SHA-256; the link's code is kept in a secure cookie and removed from the address bar; logs never record query strings. Accounts and single sign-on are what production would use. |
 | **Test-driven, with approved test lists.** | Each milestone starts with a plain-English list of test cases agreed before coding. Commits come in `test:` and `feat:` pairs, so `git log` shows each test failing before the code that makes it pass. |
 | **Test labels drawn from their own ground truth.** | Each label is drawn from its truth file, so the right answer is known exactly. AI image generation is used only for photo backgrounds, because AI-generated label text is garbled. Real approved labels come from the public registry. |
 | **Import for hard problems, write small rules.** | Well-maintained libraries handle image decoding, OCR, fuzzy matching and the web framework. The label rules are short, readable code. All dependencies are hash-pinned. |
@@ -208,8 +210,16 @@ What the numbers say:
   several languages, and the AI reader's own report of such text, send any label that addresses
   an AI to a person. Hidden and look-alike characters are stripped or flagged.
 - **Web:**
-  - a strict Content-Security-Policy
+  - a strict Content-Security-Policy, with no inline script or style anywhere on the page
   - HSTS, nosniff and no-store headers, and no framing
+  - an access code from the submission link (only its hash is configured), kept in an
+    `HttpOnly`, `Secure`, `SameSite=Strict` cookie
+  - per-address rate limits (10 checks a minute, 200 a day), at most two checks at once, and a
+    30 MB request cap enforced before the body is read
+  - uploads kept in memory (Starlette's own disk spool is raised to the 10 MB file cap) and file
+    names never used
+  - posts from other sites refused (`Sec-Fetch-Site`)
+  - label text escaped by the templates, and request logs that never include query strings
   - generic error pages that carry only a request ID
   - API docs switched off
 - **Secrets.** `.env` is ignored by git, and `.env.example` documents the variables. gitleaks
@@ -235,7 +245,7 @@ What the numbers say:
 
 The app imports few libraries, all open source under permissive licenses. Every package,
 including the ones these pull in, is pinned to an exact version and checked against a hash on
-install. That comes to 22 runtime packages in all.
+install. That comes to 25 runtime packages in all.
 
 | Library | Used for | License |
 |---|---|---|
@@ -245,11 +255,14 @@ install. That comes to 22 runtime packages in all.
 | Pillow | Image decoding and re-encoding, and drawing test labels | MIT-CMU |
 | pypdfium2 (bundles PDFium, Chrome's PDF engine) | Rendering PDF label pages as images | BSD-3-Clause, Apache-2.0 |
 | httpx2, httpcore2, truststore | Calling the AI reader over HTTPS, with the operating system's certificate store | BSD-3-Clause, BSD-3-Clause, MIT |
+| Jinja2, MarkupSafe | HTML templates that escape label text automatically | BSD-3-Clause |
+| python-multipart | Reading the uploaded form | Apache-2.0 |
 | DejaVu fonts (bundled, test labels only) | Drawing test labels identically on every OS | Bitstream Vera (permissive) |
 
 The container also installs the Tesseract OCR engine (Apache-2.0), which the app runs directly,
 so no Python wrapper is needed. Test and lint tools
-(pytest, Hypothesis, Ruff, mypy) are development-only and never ship.
+(pytest, Hypothesis, Ruff, mypy, and Playwright with axe-core for the browser and accessibility
+tests) are development-only and never ship.
 
 Keeping them safe:
 
@@ -310,7 +323,7 @@ python -m venv .venv
 pip install --require-hashes -r requirements-dev.txt
 cp .env.example .env              # then fill in your keys; .env is gitignored
 pytest                            # run the test suite
-python -m app.server              # http://127.0.0.1:8000/healthz
+python -m app.server              # http://127.0.0.1:8000/
 ```
 
 Or with Docker:
@@ -318,6 +331,18 @@ Or with Docker:
 ```bash
 docker build -t cola-label-verifier .
 docker run --rm -p 8000:8000 --env-file .env cola-label-verifier
+```
+
+Browser and accessibility tests need Chromium, kept inside the project:
+
+```bash
+PLAYWRIGHT_BROWSERS_PATH=.venv/ms-playwright python -m playwright install chromium
+```
+
+The access code for a deployment:
+
+```bash
+python -m scripts.access_code             # prints a code (for the link) and its SHA-256 (for Render)
 ```
 
 Test data:
@@ -360,10 +385,18 @@ app/
     ai.py            the AI reader (any OpenAI-compatible vision model)
     ocr.py           the OCR reader (Tesseract), word boxes, sideways passes
     dual.py          runs both readers, merges, cross-checks, falls back to OCR
-  web/               routes and security middleware
-scripts/             test-label generator, hostile files, COLA downloader, evaluation, fonts
+  web/               the page and everything in front of it
+    pages.py         the form and POST /check
+    forms.py         reading and checking the application form
+    view.py          what the results page shows, outlines included
+    guards.py        the access code, rate limits and request size
+    middleware.py    request IDs, security headers, the request log
+    templates/ static/  HTML, one stylesheet and one small script
+  samples/           the sample labels offered on the page
+scripts/             test-label generator, hostile files, COLA downloader, evaluation, samples,
+                     access code, fonts
 tests/
-  unit/ integration/ security/
+  unit/ integration/ security/ e2e/  (e2e drives Chromium)
   fixtures/          synthetic/, cola/, hostile/, backgrounds/
 ```
 
@@ -375,15 +408,15 @@ tests/
 | M1 | Checking engine: every rule, the cross-check policy and the verifier | Done |
 | M2 | Test data: drawn labels, real COLA labels, hostile files; fixes found by real labels; other scripts | Done |
 | M3 | Label readers: upload checks, AI reader, OCR reader, merging images, evaluation script | Done |
-| M4 | Single-label page, with each field outlined on the label image | Next |
-| M5 | Demo deployment: OpenAI on Render, latency and OCR timing on Render, keep-warm, usage limits | |
+| M4 | Single-label page, with each field outlined on the label image | Done |
+| M5 | Demo deployment: OpenAI on Render, latency and OCR timing on Render, keep-warm, usage limits | Next |
 | M6 | Batch upload | |
 | M7 | Final README: evaluation results, tools, trade-offs | |
 
 ## Test cases
 
-954 test cases (393 test functions, many run over several inputs) cover the checking engine, the
-test data, the label readers and the web skeleton. All of them run in CI on every push. Each group below was agreed
+1,039 test cases (457 test functions, many run over several inputs) cover the checking engine,
+the test data, the label readers and the page, in a real browser too. All of them run in CI on every push. Each group below was agreed
 in plain English before its code was written.
 
 | Area | File | What it proves |
@@ -408,6 +441,9 @@ in plain English before its code was written.
 | OCR reader | `tests/unit/test_ocr.py` | Tesseract run safely, word boxes, sideways passes, fields found and located |
 | Dual reader | `tests/unit/test_dual_reader.py` | Both readers together, fallbacks, sideways passes, the model never sees the application |
 | Evaluation | `tests/unit/test_eval.py` | Scoring, summaries and the gate on false Matches |
+| The page | `tests/integration/test_page.py`, `tests/unit/test_samples.py` | The form, checking a label or a sample, errors, results, outlines, escaping, uploads kept off disk |
+| Guards | `tests/security/test_access.py` | The access code, rate limits, two checks at once, cross-site posts, logs without codes |
+| In a browser | `tests/e2e/test_browser.py` | axe-core finds no violations; zoom, sideways text, rotation, keyboard, quick checks, samples |
 
 <details>
 <summary><b>M0: skeleton and security baseline</b></summary>
@@ -687,5 +723,61 @@ in plain English before its code was written.
 30. It scores each fixture's verdict and fields, summarizes accuracy, false Matches, false
     Reviews and latency overall and by tag, records each field's deciding reason, fails the run
     on any false Match, and writes results without images or keys.
+
+</details>
+
+<details>
+<summary><b>M4: the single-label page</b></summary>
+
+**The page**
+
+1. One form: label images, the application fields, one main **Check label** button, and a sample
+   picker with 11 labels (drawn and real) copied into the app.
+2. Every application field has a label; an import asks for its country and spirits for an ABV.
+3. A notice says images go to OpenAI, so upload only public or test labels, and that nothing is
+   stored.
+4. The file picker lists JPEG first (so iPhones send JPEG), and the page checks size and count
+   before uploading, in the server's own words.
+5. Text is 18 px or larger, the page has a language, one main heading, labelled inputs and a
+   visible focus, and no inline script, style or event handler.
+
+**Checking a label**
+
+6. Posting images or a sample returns the results; a sample's application can be edited and
+   checked again, and an unknown sample is a 404.
+7. Field errors appear by the field and in a summary, keeping what was typed; rejected uploads
+   come back as a message on the form.
+8. JSON instead of a form gets a plain error page; requests over 30 MB or without a length are
+   refused before they're read.
+9. A 5 MB upload writes nothing to disk, and file names are never used or shown.
+
+**The results**
+
+10. The verdict and each field show an icon and words; each field shows both values, the note
+    and its regulation, and the warning's differences are named ("Changed", "Missing", "Added").
+11. Both readings appear when OCR read something else; banners mark an offline check and a
+    possible prompt injection.
+12. Label and form text is escaped (`<script>` and `{{ 7*7 }}` appear as typed) and flows in
+    either direction (`dir="auto"`).
+13. Images come back as data URLs rebuilt from pixels, with each located field outlined and
+    named, the differing warning word outlined, and "Couldn't find this on the image" where OCR
+    couldn't.
+
+**Guards**
+
+14. Without the access code every page but the health check and static files is locked; the
+    link's code becomes a secure cookie and leaves the address bar; wrong codes count against
+    the rate limit; the code never reaches the logs; `python -m scripts.access_code` makes one.
+15. Ten checks a minute and 200 a day per address, two at once (a third is told to try again),
+    and no posts from other sites, including the browser's own "Origin: null" form posts being
+    let through.
+16. Images over 4,000 px are scaled down so six fit in a small server's memory.
+
+**In a browser (Chromium)**
+
+17. axe-core finds no violations on the empty form, the form with errors, and a results page.
+18. A result zooms to its spot, sideways text is turned upright, images turn a quarter at a
+    time, every control works by keyboard, too many files are caught before uploading, and a
+    sample fills the form.
 
 </details>
