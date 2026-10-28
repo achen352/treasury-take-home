@@ -34,7 +34,8 @@ def test_fly_runs_one_small_shared_machine() -> None:
     (vm,) = FLY["vm"]
 
     assert vm["size"] == "shared-cpu-1x"
-    assert vm["memory"] == "512mb"
+    # Two checks at once, each with Tesseract running, overflowed 512 MB on the live site.
+    assert vm["memory"] == "1gb"
 
 
 def test_fly_runs_full_mode_with_openai_and_trusts_only_its_own_client_header() -> None:
