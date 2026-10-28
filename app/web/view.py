@@ -48,6 +48,14 @@ VERDICT_CLASSES = {
     Verdict.DOES_NOT_MATCH: "fail",
 }
 DIFF_WORDS = {DiffOp.CHANGED: "Changed", DiffOp.MISSING: "Missing", DiffOp.EXTRA: "Added"}
+NEXT_STEPS = {
+    Verdict.MATCHES: "Everything checked agrees with the application. Look over the label as you "
+    "normally would before deciding; this tool never approves a label.",
+    Verdict.NEEDS_REVIEW: "Look at each item marked Needs review below and decide whether it is "
+    "acceptable. The note under each one says why it was flagged.",
+    Verdict.DOES_NOT_MATCH: "At least one item clearly differs from the application. The items "
+    "marked Does not match say what is wrong.",
+}
 
 
 @dataclass(frozen=True)
@@ -95,6 +103,8 @@ class FieldView:
 class ResultsView:
     verdict: Verdict
     verdict_css: str
+    summary: str  # "5 of 6 items match. 1 needs your review."
+    next_step: str
     fields: list[FieldView]
     images: list[ImageView]
     offline_note: str | None
@@ -133,12 +143,27 @@ def build_results(report: Report, images: Sequence[LabelImage]) -> ResultsView:
     return ResultsView(
         verdict=report.verdict,
         verdict_css=VERDICT_CLASSES[report.verdict],
+        summary=_summary(report.results),
+        next_step=NEXT_STEPS[report.verdict],
         fields=fields,
         images=views,
         offline_note=report.notes[0] if offline and report.notes else None,
         injection_notes=injection if Flag.POSSIBLE_INJECTION in report.flags else [],
         other_notes=others,
     )
+
+
+def _summary(results: Sequence[FieldResult]) -> str:
+    def count(status: Status) -> int:
+        return sum(result.status is status for result in results)
+
+    reviews, fails = count(Status.REVIEW), count(Status.FAIL)
+    parts = [f"{count(Status.PASS)} of {len(results)} items match."]
+    if reviews:
+        parts.append(f"{reviews} {'needs' if reviews == 1 else 'need'} your review.")
+    if fails:
+        parts.append(f"{fails} {'does' if fails == 1 else 'do'} not match.")
+    return " ".join(parts)
 
 
 def _field_view(result: FieldResult) -> FieldView:

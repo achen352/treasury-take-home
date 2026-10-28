@@ -24,15 +24,21 @@ from app.domain.rules.health_warning import (
 # How closely (0-100) the AI's reading must appear somewhere in the OCR text to count as found.
 GROUNDING_SIMILARITY = 90
 
-NO_TEXT = "The second reader (OCR) found no text, so this reading couldn't be confirmed."
+NO_TEXT = (
+    "The second check (text recognition) found no text, so this reading couldn't be confirmed."
+)
 NOT_FOUND = (
-    "The second reader (OCR) couldn't find this text on the label; the reading may be wrong."
+    "The second check (text recognition) couldn't find this text on the label; the reading may "
+    "be wrong."
 )
 WARNING_DIFFERS = (
-    "The second reader (OCR) read the warning differently. Compare the two readings; the label "
+    "The second check (text recognition) read the warning differently. Compare the two "
+    "readings; the label "
     "may have a typo the AI reader corrected."
 )
-OFFLINE_MISMATCH = "Read by OCR only, which can misread labels; a person should confirm this."
+OFFLINE_MISMATCH = (
+    "Read by text recognition alone, which can misread labels; a person should confirm this."
+)
 OFFLINE_BOLD = "Bold type can't be checked without the AI reader."
 
 

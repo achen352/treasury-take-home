@@ -16,10 +16,10 @@ ACCESS_COOKIE_DAYS = 30
 OPEN_PATHS = ("/healthz", "/static/")  # the health check, and files that reveal nothing
 LOCKED_PAGE = (
     '<!doctype html><html lang="en"><head><meta charset="utf-8">'
-    "<title>Access needed | COLA Label Verifier</title>"
+    "<title>Access denied | COLA Label Verifier</title>"
     '<link rel="stylesheet" href="/static/app.css"></head><body><main>'
-    "<h1>Access needed</h1><p>This demo needs the link from the submission.</p>"
-    "</main></body></html>"
+    "<h1>Access denied</h1><p>This site needs an access key. Open it with the link from the "
+    "submission, which includes the key.</p></main></body></html>"
 )
 TOO_MANY_PAGE = (
     '<!doctype html><html lang="en"><head><meta charset="utf-8">'

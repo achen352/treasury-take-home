@@ -13,11 +13,13 @@
     {{ icon(results.verdict_css) }}
     <p class="verdict-words">{{ results.verdict.value }}</p>
   </div>
+  <p class="summary">{{ results.summary }}</p>
+  <p class="next-step"><strong>What to do next:</strong> {{ results.next_step }}</p>
 
   {% if results.offline_note %}
   <div class="banner banner-offline">
     {{ icon("review") }}
-    <p><strong>Read by OCR alone.</strong> {{ results.offline_note }}</p>
+    <p><strong>Read by text recognition alone.</strong> {{ results.offline_note }}</p>
   </div>
   {% endif %}
   {% for note in results.injection_notes %}
@@ -29,6 +31,18 @@
   {% for note in results.other_notes %}
   <p class="note">{{ note }}</p>
   {% endfor %}
+
+  <details class="key">
+    <summary>What the results mean</summary>
+    <dl class="outcome-key">
+      <dt>{{ icon("matches") }} Matches</dt>
+      <dd>The label agrees with the application.</dd>
+      <dt>{{ icon("review") }} Needs review</dt>
+      <dd>Close, unclear or a judgment call. A person should look.</dd>
+      <dt>{{ icon("fail") }} Does not match</dt>
+      <dd>The label clearly differs from the application.</dd>
+    </dl>
+  </details>
 
   <div class="results-layout">
     <ol class="fields">
@@ -42,7 +56,7 @@
           <dt>Label</dt>
           <dd dir="auto">{{ field.found if field.found is not none else "Not found" }}</dd>
           {% if field.second_reading %}
-          <dt>Second reading (OCR)</dt>
+          <dt>What the second check read</dt>
           <dd dir="auto">{{ field.second_reading }}</dd>
           {% endif %}
         </dl>
@@ -99,8 +113,24 @@
 </section>
 {% endif %}
 
+{% macro required_mark(note="required") -%}
+<span class="required" aria-hidden="true">*</span><span class="visually-hidden"> ({{ note }})</span>
+{%- endmacro %}
+
+{% macro text_field(name, is_required=false, note="required", extra_class="") -%}
+<div class="form-field{{ ' ' ~ extra_class if extra_class }}">
+  <label for="{{ name }}">{{ labels[name] }}{% if is_required %} {{ required_mark(note) }}{% else %} <span class="optional">(optional)</span>{% endif %}</label>
+  {% if hints.get(name) %}<p class="hint" id="{{ name }}-hint">{{ hints[name] }}</p>{% endif %}
+  <input type="text" name="{{ name }}" id="{{ name }}" dir="auto" value="{{ values.get(name, '') }}"
+         {% if is_required %}aria-required="true"{% endif %}
+         aria-describedby="{{ name }}-hint{% if errors.get(name) %} {{ name }}-error{% endif %}"
+         {% if errors.get(name) %}aria-invalid="true"{% endif %}>
+  {% if errors.get(name) %}<p id="{{ name }}-error" class="field-error">{{ errors[name] }}</p>{% endif %}
+</div>
+{%- endmacro %}
+
 <section class="check" aria-labelledby="form-heading">
-  <h2 id="form-heading">{% if results %}Check another label{% else %}The label and its application{% endif %}</h2>
+  <h2 id="form-heading" class="{{ '' if results else 'visually-hidden' }}">{% if results %}Check another label{% else %}Check a label{% endif %}</h2>
   <p class="notice">Label images are sent to OpenAI to be read, so upload only public or test labels.
     Nothing is stored: images are checked in memory and then discarded.</p>
 
@@ -118,56 +148,72 @@
   <form method="post" action="/check" enctype="multipart/form-data" class="check-form"
         data-max-bytes="{{ max_bytes }}" data-max-files="{{ max_files }}"
         data-too-large="{{ too_large }}" data-too-many="{{ too_many }}">
-    <fieldset>
-      <legend>Label images</legend>
-      <label for="images">Front, back and any other images of the label (PNG, JPEG, WebP or PDF; up to {{ max_files }})</label>
+
+    <h2 class="step"><span class="step-number">1</span> Add the label images</h2>
+    <div class="drop-zone">
+      <label for="images" class="drop-label">
+        <span class="drop-title">Drag the label images here, or choose them</span>
+        <span class="hint">The front, the back and any other images. PNG, JPEG, WebP or PDF; up to {{ max_files }}.</span>
+      </label>
       <input type="file" name="images" id="images" multiple accept="{{ accept }}"
              {% if errors.images %}aria-describedby="images-error" aria-invalid="true"{% endif %}>
+      <ul class="file-list" aria-live="polite"></ul>
+      <button type="button" class="clear-files">Clear the images</button>
       {% if errors.images %}<p id="images-error" class="field-error">{{ errors.images }}</p>{% endif %}
       <p class="client-error" id="images-client-error" hidden></p>
-      <label for="sample">Or try a sample label</label>
+    </div>
+    <div class="form-field">
+      <label for="sample">Or try an example label</label>
       <select name="sample" id="sample">
-        <option value="">Choose a sample</option>
+        <option value="">Choose an example</option>
         {% for item in samples %}
         <option value="{{ item.id }}"{% if item.id == sample %} selected{% endif %}>{{ item.title }}</option>
         {% endfor %}
       </select>
-    </fieldset>
+    </div>
 
-    <fieldset>
-      <legend>The application</legend>
-      {% macro text_field(name, required=false) -%}
-      <div class="form-field">
-        <label for="{{ name }}">{{ labels[name] }}{% if not required %} <span class="optional">(optional)</span>{% endif %}</label>
-        <input type="text" name="{{ name }}" id="{{ name }}" dir="auto" value="{{ values.get(name, '') }}"
-               {% if errors.get(name) %}aria-describedby="{{ name }}-error" aria-invalid="true"{% endif %}>
-        {% if errors.get(name) %}<p id="{{ name }}-error" class="field-error">{{ errors[name] }}</p>{% endif %}
-      </div>
-      {%- endmacro %}
+    <h2 class="step"><span class="step-number">2</span> Enter what the application says</h2>
+    <p class="required-note">Fields marked * are required.</p>
+    <div class="form-field paste">
+      <label for="application_text">Paste the application <span class="optional">(optional)</span></label>
+      <p class="hint" id="application_text-hint">Copy the details from COLAs Online, a printout or an email, for example "Brand Name: OLD TOM DISTILLERY" on each line, then press Fill in the fields.</p>
+      <textarea name="application_text" id="application_text" rows="5" dir="auto"
+                aria-describedby="application_text-hint{% if errors.application_text %} application_text-error{% endif %}">{{ values.get("application_text", "") }}</textarea>
+      {% if errors.application_text %}<p id="application_text-error" class="field-error">{{ errors.application_text }}</p>{% endif %}
+      <button type="button" class="fill-fields">Fill in the fields</button>
+      <p class="fill-status" aria-live="polite"></p>
+    </div>
 
-      <div class="form-field">
-        <label for="beverage_type">{{ labels.beverage_type }}</label>
-        <select name="beverage_type" id="beverage_type"
-                {% if errors.beverage_type %}aria-describedby="beverage_type-error" aria-invalid="true"{% endif %}>
-          {% for value, name in [("spirits", "Distilled spirits"), ("wine", "Wine"), ("beer", "Malt beverage (beer)")] %}
-          <option value="{{ value }}"{% if values.get("beverage_type", "spirits") == value %} selected{% endif %}>{{ name }}</option>
-          {% endfor %}
-        </select>
-        {% if errors.beverage_type %}<p id="beverage_type-error" class="field-error">{{ errors.beverage_type }}</p>{% endif %}
-      </div>
-      {{ text_field("brand_name", true) }}
-      {{ text_field("fanciful_name") }}
-      {{ text_field("class_type", true) }}
-      {{ text_field("alcohol_content") }}
-      {{ text_field("net_contents", true) }}
-      {{ text_field("bottler", true) }}
-      <div class="form-field form-check">
-        <input type="checkbox" name="imported" id="imported"{% if values.get("imported") == "on" %} checked{% endif %}>
-        <label for="imported">{{ labels.imported }}</label>
-      </div>
-      {{ text_field("country_of_origin") }}
-    </fieldset>
+    <div class="form-field">
+      <label for="beverage_type">{{ labels.beverage_type }}</label>
+      <select name="beverage_type" id="beverage_type"
+              {% if errors.beverage_type %}aria-describedby="beverage_type-error" aria-invalid="true"{% endif %}>
+        {% for value, name in [("spirits", "Distilled spirits"), ("wine", "Wine"), ("beer", "Malt beverage (beer)")] %}
+        <option value="{{ value }}"{% if values.get("beverage_type", "spirits") == value %} selected{% endif %}>{{ name }}</option>
+        {% endfor %}
+      </select>
+      {% if errors.beverage_type %}<p id="beverage_type-error" class="field-error">{{ errors.beverage_type }}</p>{% endif %}
+    </div>
+    {{ text_field("brand_name", true) }}
+    {{ text_field("fanciful_name") }}
+    {{ text_field("class_type", true) }}
+    <div class="form-field">
+      <label for="alcohol_content">{{ labels.alcohol_content }} <span class="required abv-required" aria-hidden="true">*</span><span class="visually-hidden"> (required for distilled spirits)</span></label>
+      <p class="hint" id="alcohol_content-hint">{{ hints.alcohol_content }}</p>
+      <input type="text" name="alcohol_content" id="alcohol_content" dir="auto" value="{{ values.get('alcohol_content', '') }}"
+             aria-describedby="alcohol_content-hint{% if errors.alcohol_content %} alcohol_content-error{% endif %}"
+             {% if errors.alcohol_content %}aria-invalid="true"{% endif %}>
+      {% if errors.alcohol_content %}<p id="alcohol_content-error" class="field-error">{{ errors.alcohol_content }}</p>{% endif %}
+    </div>
+    {{ text_field("net_contents", true) }}
+    {{ text_field("bottler", true) }}
+    <div class="form-field form-check">
+      <input type="checkbox" name="imported" id="imported"{% if values.get("imported") == "on" %} checked{% endif %}>
+      <label for="imported">{{ labels.imported }}</label>
+    </div>
+    {{ text_field("country_of_origin", true, "required for imports", "country-field") }}
 
+    <h2 class="step"><span class="step-number">3</span> Check the label</h2>
     <p class="submit-row">
       <button type="submit" class="primary">Check label</button>
       <span class="checking" hidden>Checking the label. This usually takes a few seconds.</span>

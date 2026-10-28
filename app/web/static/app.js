@@ -33,6 +33,80 @@
       form.querySelector(".checking").hidden = false;
     });
 
+    // The chosen images are listed, so it's clear what will be sent; they can be dropped in too.
+    const zone = form.querySelector(".drop-zone");
+    const list = form.querySelector(".file-list");
+    function listFiles() {
+      list.replaceChildren(...Array.from(input.files).map(function (file) {
+        const item = document.createElement("li");
+        item.textContent = file.name + " (" + (file.size / 1048576).toFixed(1) + " MB)";
+        return item;
+      }));
+      message.hidden = true;
+      input.removeAttribute("aria-invalid");
+    }
+    input.addEventListener("change", listFiles);
+    ["dragenter", "dragover"].forEach(function (name) {
+      zone.addEventListener(name, function (event) {
+        event.preventDefault();
+        zone.classList.add("dragging");
+      });
+    });
+    ["dragleave", "drop"].forEach(function (name) {
+      zone.addEventListener(name, function () { zone.classList.remove("dragging"); });
+    });
+    zone.addEventListener("drop", function (event) {
+      event.preventDefault();
+      if (event.dataTransfer && event.dataTransfer.files.length) {
+        input.files = event.dataTransfer.files;
+        listFiles();
+      }
+    });
+    form.querySelector(".clear-files").addEventListener("click", function () {
+      input.value = "";
+      listFiles();
+      input.focus();
+    });
+
+    // The country is asked for only for imports, and alcohol content is required for spirits.
+    const imported = form.querySelector("#imported");
+    const countryField = form.querySelector(".country-field");
+    const beverage = form.querySelector("#beverage_type");
+    const abvMark = form.querySelector(".abv-required");
+    function showWhatApplies() {
+      countryField.hidden = !imported.checked;
+      abvMark.hidden = beverage.value !== "spirits";
+      abvMark.nextElementSibling.hidden = beverage.value !== "spirits";
+    }
+    imported.addEventListener("change", showWhatApplies);
+    beverage.addEventListener("change", showWhatApplies);
+    showWhatApplies();
+
+    // Pasted application text fills in the fields, and says what it found.
+    const status = form.querySelector(".fill-status");
+    form.querySelector(".fill-fields").addEventListener("click", function () {
+      const body = new FormData();
+      body.append("text", form.querySelector("#application_text").value);
+      status.textContent = "Reading the pasted text...";
+      fetch("/application/parse", { method: "POST", body: body, credentials: "same-origin" })
+        .then(function (response) { return response.json(); })
+        .then(function (result) {
+          if (result.error) { status.textContent = result.error; return; }
+          Object.entries(result.values).forEach(function ([name, value]) {
+            const field = form.elements.namedItem(name);
+            if (!field) { return; }
+            if (field.type === "checkbox") { field.checked = value === "on"; }
+            else { field.value = value; }
+          });
+          showWhatApplies();
+          status.textContent = result.filled.length
+            ? "Filled in: " + result.filled.join(", ") + "." +
+              (result.missing.length ? " Not found in the text: " + result.missing.join(", ") + "." : "")
+            : "No application details were recognised. Try lines like \"Brand Name: OLD TOM\".";
+        })
+        .catch(function () { status.textContent = "Couldn't read the pasted text. Please try again."; });
+    });
+
     // Choosing a sample fills the form with its application.
     const sample = form.querySelector('select[name="sample"]');
     if (sample) {

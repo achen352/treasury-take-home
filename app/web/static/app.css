@@ -107,3 +107,44 @@ figcaption { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.4rem
 .zoom-view::backdrop { background: rgb(0 0 0 / 0.6); }
 .zoom-canvas { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); }
 .submit-row { display: flex; align-items: center; gap: 1rem; }
+
+/* Steps, the drop zone and help for people who don't use forms often */
+.step { display: flex; align-items: center; gap: 0.6rem; margin: 2rem 0 0.75rem; font-size: 1.35rem; }
+.step-number {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: 2.2rem; height: 2.2rem; border-radius: 50%; background: var(--accent); color: #fff;
+  font-weight: 800;
+}
+button, select, input[type="file"]::file-selector-button { min-height: 44px; }
+button.zoom, button.rotate, button.clear-files, button.fill-fields {
+  border: 2px solid var(--accent); background: #fff; color: var(--accent);
+  padding: 0.35rem 1rem; border-radius: 4px; font-weight: 600;
+}
+.drop-zone {
+  border: 3px dashed var(--accent); border-radius: 8px; background: #f5f8fc;
+  padding: 1.25rem; max-width: 40rem;
+}
+.drop-zone.dragging { background: #e1ebf7; border-style: solid; }
+.drop-label { margin-top: 0; }
+.drop-title { display: block; font-size: 1.15rem; font-weight: 700; }
+.drop-zone input[type="file"] { display: block; margin: 0.75rem 0; font-size: 1rem; }
+.drop-zone input[type="file"]::file-selector-button {
+  font: inherit; font-weight: 700; padding: 0.4rem 1.2rem; margin-right: 0.75rem;
+  border: 0; border-radius: 4px; background: var(--accent); color: #fff; cursor: pointer;
+}
+.file-list { margin: 0.25rem 0 0.75rem; padding-left: 1.25rem; }
+.file-list:empty { display: none; }
+.hint { color: var(--muted); margin: 0.1rem 0 0.35rem; font-weight: 400; }
+.drop-label .hint { display: block; }
+.required { color: var(--fail); font-weight: 800; }
+.required-note { color: var(--muted); }
+textarea { font: inherit; width: 100%; max-width: 40rem; padding: 0.4rem; border: 2px solid var(--muted); box-sizing: border-box; }
+.paste { border: 1px solid var(--line); padding: 0.25rem 1rem 1rem; max-width: 40rem; }
+.fill-status { font-weight: 600; margin: 0.4rem 0 0; }
+.fill-status:empty { display: none; }
+.summary { font-size: 1.2rem; font-weight: 700; margin: 0.25rem 0; }
+.next-step { margin: 0.25rem 0 1rem; }
+.key summary { cursor: pointer; font-weight: 600; color: var(--accent); min-height: 44px; display: flex; align-items: center; }
+.outcome-key { display: grid; grid-template-columns: max-content 1fr; gap: 0.4rem 1rem; align-items: center; }
+.outcome-key dt { display: flex; align-items: center; gap: 0.4rem; font-weight: 700; }
+.outcome-key dd { margin: 0; }

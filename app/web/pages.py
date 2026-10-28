@@ -8,7 +8,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.templating import Jinja2Templates
 from starlette.datastructures import UploadFile
 
@@ -16,8 +16,9 @@ from app.config import Settings
 from app.readers import uploads
 from app.readers.dual import check_label
 from app.readers.uploads import UploadRejected, prepare_uploads
-from app.web.forms import FIELDS, LABELS, form_values, read_application
+from app.web.forms import FIELDS, HINTS, LABELS, REQUIRED, form_values, read_application
 from app.web.guards import client_address, too_many_response
+from app.web.paste import PasteTooLong, parse_application_text
 from app.web.samples import find_sample, load_samples
 from app.web.view import build_results
 
@@ -27,8 +28,8 @@ router = APIRouter()
 
 # The form has a handful of text fields; anything beyond these bounds is not a real browser.
 MAX_FORM_FIELDS = 40
-MAX_FIELD_BYTES = 16 * 1024
 MAX_FILE_PARTS = 20  # more than MAX_IMAGES, so too many files get a message, not a crash
+MAX_PASTE_BYTES = 128 * 1024  # room for MAX_PASTE_CHARS of any script
 ACCEPT = "image/jpeg,image/png,image/webp,application/pdf"  # JPEG first: iPhones then send JPEG
 
 
@@ -56,15 +57,32 @@ async def check(request: Request) -> Response:
     if not content_type.startswith(("multipart/form-data", "application/x-www-form-urlencoded")):
         return _error(request, 415, "Send the label with the form on this page.")
     form = await request.form(
-        max_files=MAX_FILE_PARTS, max_fields=MAX_FORM_FIELDS, max_part_size=MAX_FIELD_BYTES
+        max_files=MAX_FILE_PARTS, max_fields=MAX_FORM_FIELDS, max_part_size=MAX_PASTE_BYTES
     )
     values = {name: value for name in FIELDS if isinstance(value := form.get(name), str)}
+    pasted = form.get("application_text")
+    pasted = pasted if isinstance(pasted, str) else ""
+    paste_error = ""
+    if pasted.strip():
+        # Without the page's script, pasted text fills the fields that were left empty. The
+        # product type and source come from it when given, since their controls always have one.
+        try:
+            parsed = parse_application_text(pasted)
+        except PasteTooLong as too_long:
+            paste_error = str(too_long)
+        else:
+            for name, value in parsed.values.items():
+                if name in ("beverage_type", "imported") or not values.get(name, "").strip():
+                    values[name] = value
+    values["application_text"] = pasted
     sample_id = form.get("sample")
     sample_id = sample_id if isinstance(sample_id, str) else ""
     # Browsers send an empty part when no file is chosen; file names are never read.
     files = [part for part in form.getlist("images") if isinstance(part, UploadFile) and part.size]
 
     application, errors = read_application(values)
+    if paste_error:
+        application, errors = None, {**errors, "application_text": paste_error}
     if files:
         datas = [await part.read() for part in files]
     elif sample_id:
@@ -124,6 +142,26 @@ async def check(request: Request) -> Response:
     return response
 
 
+@router.post("/application/parse")
+async def parse_application(request: Request) -> Response:
+    """Pasted application text, read into the form's fields for the page to fill in."""
+    if _from_another_site(request):
+        return JSONResponse({"error": "Only this site's own page can do that."}, status_code=403)
+    form = await request.form(max_files=0, max_fields=5, max_part_size=MAX_PASTE_BYTES)
+    text = form.get("text")
+    try:
+        parsed = parse_application_text(text if isinstance(text, str) else "")
+    except PasteTooLong as too_long:
+        return JSONResponse({"error": str(too_long)}, status_code=422)
+    return JSONResponse(
+        {
+            "values": parsed.values,
+            "filled": [LABELS[name] for name in parsed.filled],
+            "missing": [LABELS[name] for name in parsed.missing],
+        }
+    )
+
+
 def _from_another_site(request: Request) -> bool:
     """Whether a post came from another site's page. Browsers say so in Sec-Fetch-Site; with
     Referrer-Policy: no-referrer they send "Origin: null" even for this site's own forms."""
@@ -154,6 +192,8 @@ def _render(
             "samples": load_samples(),
             "errors": errors or {},
             "labels": LABELS,
+            "hints": HINTS,
+            "required": REQUIRED,
             "results": results,
             "accept": ACCEPT,
             "max_bytes": uploads.MAX_FILE_BYTES,

@@ -46,16 +46,16 @@ OcrReader = Callable[[LabelImage, int, Sequence[int]], OcrPage]
 AI_BACKSTOP = 0.5
 
 OFFLINE_NOTE = (
-    "The AI reader didn't answer in time, so this label was read by OCR alone. OCR can misread "
-    "labels and can't judge bold type, so a person should check it."
+    "The AI reader didn't answer in time, so this label was read by text recognition alone, "
+    "which can misread labels and can't judge bold type. A person should check it."
 )
 OCR_MODE_NOTE = (
-    "This server reads labels by OCR alone, without the AI reader. OCR can misread labels and "
-    "can't judge bold type, so a person should check it."
+    "This server reads labels by text recognition alone, without the AI reader. That can "
+    "misread labels and can't judge bold type, so a person should check it."
 )
 UNREAD_NOTE = (
-    "The AI reader didn't answer and OCR is switched off on this server, so the label couldn't "
-    "be read. A person should check it."
+    "The AI reader didn't answer and text recognition is switched off on this server, so the "
+    "label couldn't be read. A person should check it."
 )
 UNREAD = "This field couldn't be read."
 

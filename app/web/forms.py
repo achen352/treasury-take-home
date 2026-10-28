@@ -21,7 +21,7 @@ LABELS = {
     "beverage_type": "Beverage type",
     "imported": "Imported",
     "brand_name": "Brand name",
-    "fanciful_name": "Fanciful name (if any)",
+    "fanciful_name": "Fanciful name",
     "class_type": "Class/type",
     "alcohol_content": "Alcohol content",
     "net_contents": "Net contents",
@@ -29,6 +29,16 @@ LABELS = {
     "country_of_origin": "Country of origin",
 }
 REQUIRED = ("brand_name", "class_type", "net_contents", "bottler")
+HINTS = {
+    "brand_name": "As the application states it. For example: OLD TOM DISTILLERY",
+    "fanciful_name": "A second product name, if the application gives one. For example: Beatrix",
+    "class_type": "For example: Kentucky Straight Bourbon Whiskey",
+    "alcohol_content": "Required for distilled spirits. For example: 45% Alc./Vol. (90 Proof)",
+    "net_contents": "For example: 750 mL",
+    "bottler": "The name and address on the application. "
+    "For example: Old Tom Distillery, Louisville, Kentucky",
+    "country_of_origin": "For example: Mexico",
+}
 MISSING = "Enter the {label}."
 TOO_LONG = "The {label} is too long."
 

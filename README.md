@@ -19,7 +19,7 @@ Each row is a requirement from the brief, with the stakeholder who raised it.
 | The warning must be word for word, with "GOVERNMENT WARNING:" in capitals and bold (*Jenny Park*) | Exact wording and a capitalized header are enforced; Jenny's title-case example is one of the tests. Bold can only be judged by the AI, which is unreliable at it, so a bold problem goes to a person. | Built |
 | "STONE'S THROW" vs "Stone's Throw" needs judgment (*Dave Morrison*) | Three outcomes: **Matches**, **Needs review**, **Does not match**. Cosmetic differences pass with a note, and near misses go to a person. The tool never approves a label. | Built |
 | Results in about 5 seconds, because the last vendor took 30 to 40 (*Sarah Chen*) | The AI reads each image while OCR reads it too, and the checks are plain code that runs in milliseconds. On the live site the drawn samples take 1.8 to 4.7 s and real two-image labels 5 to 10 s (median 3.3 s). | Built and measured live |
-| Simple enough for agents over 50: "clean, obvious, no hunting for buttons" (*Sarah Chen*) | One page with one main button and 18 px text. Results are shown with an icon and words, never color alone, and each finding is outlined on the label image. axe-core, run in a real browser, finds no accessibility violations (Section 508). | Built |
+| Simple enough for agents over 50: "clean, obvious, no hunting for buttons" (*Sarah Chen*) | One page in three numbered steps with one main button, 18 px text, a large drop zone for images, an example under every field, red asterisks on required ones, and a box to paste the application from COLAs Online or an email. Results open with a plain summary ("5 of 6 items match") and what to do next. Results are shown with an icon and words, never color alone, and each finding is outlined on the label image. axe-core, run in a real browser, finds no accessibility violations (Section 508). | Built |
 | Batch uploads of 200 to 300 labels at once (*Sarah Chen, for Janet*) | A batch upload takes a spreadsheet of application data, and failures are listed first. | Planned (M6) |
 | The agency runs on Azure under FedRAMP (*Marcus Williams*) | Not used here, for cost: the prototype runs on a small Fly.io machine and reads labels with OpenAI's commercial API (see [Limitations](#assumptions-and-limitations)). The Docker image and the AI adapter move to Azure App Service and Azure OpenAI by configuration alone. | Documented path |
 | The firewall blocks many outbound ML endpoints (*Marcus Williams*) | A local OCR reader (Tesseract) keeps working when the AI service can't be reached, and the result is marked as read offline. | Built |
@@ -817,6 +817,19 @@ in plain English before its code was written.
 18. A result zooms to its spot, sideways text is turned upright, images turn a quarter at a
     time, every control works by keyboard, too many files are caught before uploading, and a
     sample fills the form.
+
+**A friendlier page (follow-up)**
+
+19. Three numbered steps; a large drop zone that lists and clears the chosen images; an example
+    label picker in step 1.
+20. Red asterisks read as "required", an example under every field, the country asked for only
+    for imports, and alcohol content marked required only for spirits.
+21. Pasting the application as labeled lines in common wordings ("Brand Name:", "Class/Type:",
+    "Name and Address:", an address on the lines below) or JSON fills the fields and says what it
+    found; without the script, the pasted text fills the empty fields on check.
+22. Results open with a plain summary and what to do next, with a key to the three outcomes;
+    "OCR" is called text recognition everywhere a user reads it; buttons are at least 44 px; the
+    lock page says "Access denied".
 
 </details>
 
