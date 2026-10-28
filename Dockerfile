@@ -12,9 +12,13 @@ RUN python -m pip --python /opt/venv/bin/python install --require-hashes --no-de
 
 # ---- runtime: no build tools, no pip, unprivileged user ----
 FROM ${PYTHON_IMAGE} AS runtime
-# pip is not needed at runtime, and its vendored libraries (urllib3, msgpack,
-# pkg_resources) are attack surface that image scanners flag.
-RUN python -m pip uninstall --yes --root-user-action=ignore pip \
+# Tesseract is the second, offline label reader (English only). pip is not needed at
+# runtime, and its vendored libraries (urllib3, msgpack, pkg_resources) are attack
+# surface that image scanners flag.
+RUN apt-get update \
+ && apt-get install --yes --no-install-recommends tesseract-ocr tesseract-ocr-eng \
+ && rm -rf /var/lib/apt/lists/* \
+ && python -m pip uninstall --yes --root-user-action=ignore pip \
  && groupadd --system --gid 10001 app \
  && useradd --system --uid 10001 --gid app --no-create-home --shell /usr/sbin/nologin app
 COPY --from=build /opt/venv /opt/venv
