@@ -15,6 +15,7 @@ from app.readers.ai import make_extractor
 from app.readers.dual import OcrReader
 from app.readers.extractor import Extractor
 from app.readers.uploads import MAX_FILE_BYTES
+from app.web.batch_pages import router as batch
 from app.web.guards import AccessCodeMiddleware, BodyLimitMiddleware, RateLimiter
 from app.web.middleware import DOCS_CSP, RequestContextMiddleware, SecurityHeadersMiddleware
 from app.web.pages import router as pages
@@ -78,4 +79,5 @@ def create_app(
     app.mount("/static", StaticFiles(directory=STATIC), name="static")
     app.include_router(router)
     app.include_router(pages)
+    app.include_router(batch)
     return app

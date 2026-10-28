@@ -153,6 +153,11 @@ def build_results(report: Report, images: Sequence[LabelImage]) -> ResultsView:
     )
 
 
+def summary_of(results: Sequence[FieldResult]) -> str:
+    """ "5 of 6 items match. 1 needs your review." for a label's results."""
+    return _summary(results)
+
+
 def _summary(results: Sequence[FieldResult]) -> str:
     def count(status: Status) -> int:
         return sum(result.status is status for result in results)

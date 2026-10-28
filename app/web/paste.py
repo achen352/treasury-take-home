@@ -10,7 +10,7 @@ import json
 import re
 from dataclasses import dataclass, field
 
-from app.web.forms import FIELDS
+from app.web.forms import FIELDS, beverage_from, yes_no
 
 MAX_PASTE_CHARS = 20_000
 
@@ -75,6 +75,11 @@ def parse_application_text(text: str) -> ParsedApplication:
     return ParsedApplication(values, filled, missing, unrecognised)
 
 
+def header_field(label: str) -> str | None:
+    """The form field a label or column header means, in any of its common wordings."""
+    return _BY_ALIAS.get(_key(label))
+
+
 def _key(label: str) -> str:
     return " ".join(re.sub(r"[^a-z0-9]+", " ", label.casefold()).split())
 
@@ -129,19 +134,8 @@ def _normalise(name: str, value: str) -> str | None:
     if not value:
         return None
     if name == "beverage_type":
-        lowered = value.casefold()
-        if "spirit" in lowered or "distilled" in lowered:
-            return "spirits"
-        if "wine" in lowered:
-            return "wine"
-        if any(word in lowered for word in ("malt", "beer", "ale", "lager")):
-            return "beer"
-        return None
+        return beverage_from(value)
     if name == "imported":
-        lowered = value.casefold()
-        if lowered in ("yes", "y", "true", "1", "imported", "import"):
-            return "on"
-        if lowered in ("no", "n", "false", "0", "domestic"):
-            return ""
-        return None
+        answer = yes_no(value)
+        return None if answer is None else ("on" if answer else "")
     return value

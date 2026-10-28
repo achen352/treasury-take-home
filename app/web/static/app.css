@@ -116,7 +116,7 @@ figcaption { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.4rem
   font-weight: 800;
 }
 button, select, input[type="file"]::file-selector-button { min-height: 44px; }
-button.zoom, button.rotate, button.clear-files, button.fill-fields {
+button.zoom, button.rotate, button.clear-files, button.fill-fields, button.run-example, button.export-results {
   border: 2px solid var(--accent); background: #fff; color: var(--accent);
   padding: 0.35rem 1rem; border-radius: 4px; font-weight: 600;
 }
@@ -148,3 +148,18 @@ textarea { font: inherit; width: 100%; max-width: 40rem; padding: 0.4rem; border
 .outcome-key { display: grid; grid-template-columns: max-content 1fr; gap: 0.4rem 1rem; align-items: center; }
 .outcome-key dt { display: flex; align-items: center; gap: 0.4rem; font-weight: 700; }
 .outcome-key dd { margin: 0; }
+
+/* The batch page */
+.other-page { margin-top: -0.5rem; }
+.batch-form p { max-width: 48rem; }
+.sheet-status p, .image-status p { margin: 0.2rem 0; font-weight: 600; }
+.batch-progress progress { width: 100%; max-width: 40rem; height: 1.25rem; }
+.batch-summary { font-size: 1.2rem; font-weight: 700; }
+.batch-results { border-collapse: collapse; width: 100%; margin-top: 0.5rem; }
+.batch-results th, .batch-results td { border: 1px solid var(--line); padding: 0.4rem 0.6rem; text-align: left; vertical-align: top; }
+.batch-results th { background: #eef3fa; }
+.verdict-cell { font-weight: 700; white-space: nowrap; }
+.verdict-cell-0 { color: var(--fail); }
+.verdict-cell-1, .verdict-cell-2 { color: var(--review); }
+.verdict-cell-3 { color: var(--pass); }
+.batch-results details summary { cursor: pointer; color: var(--accent); }

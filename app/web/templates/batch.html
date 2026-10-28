@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Check many labels | COLA Label Verifier{% endblock %}
+
+{% block main %}
+<h1>Check many labels at once</h1>
+<p class="other-page"><a href="/">Check one label</a></p>
+<p class="notice">Label images are sent to OpenAI to be read, so upload only public or test labels.
+  Nothing is stored: each label is checked in memory and discarded, and the results stay on this
+  page until you download them. Keep this page open until the batch finishes.</p>
+
+<form class="batch-form" novalidate>
+  <h2 class="step"><span class="step-number">1</span> Choose the spreadsheet</h2>
+  <p>A CSV file with one row per label, up to {{ max_rows }}: the label's image file names in an
+    <strong>images</strong> column (separate several with <strong>;</strong>) and what the
+    application says in the other columns. In Excel, choose Save As, then CSV.</p>
+  <p><a href="/batch/template.csv" download>Download the template spreadsheet</a></p>
+  <div class="form-field">
+    <label for="sheet">Spreadsheet (CSV)</label>
+    <input type="file" name="sheet" id="sheet" accept=".csv,text/csv">
+  </div>
+  <div class="sheet-status" aria-live="polite"></div>
+
+  <h2 class="step"><span class="step-number">2</span> Choose the label images</h2>
+  <p>Choose every image the spreadsheet names, all at once. Names are matched without regard to
+    capital letters.</p>
+  <div class="form-field">
+    <label for="images">Label images</label>
+    <input type="file" name="images" id="images" multiple accept="image/jpeg,image/png,image/webp,application/pdf">
+  </div>
+  <div class="image-status" aria-live="polite"></div>
+
+  <h2 class="step"><span class="step-number">3</span> Check them all</h2>
+  <p class="submit-row">
+    <button type="button" class="primary run-batch">Check all the labels</button>
+    <button type="button" class="run-example">Or run the example batch (11 sample labels)</button>
+  </p>
+</form>
+
+<section class="batch-output" aria-labelledby="batch-heading">
+  <h2 id="batch-heading" class="visually-hidden">Results</h2>
+  <div class="batch-progress" hidden>
+    <progress value="0" max="1"></progress>
+    <p class="progress-words" aria-live="polite"></p>
+  </div>
+  <p class="batch-summary" aria-live="polite"></p>
+  <table class="batch-results" hidden>
+    <caption class="visually-hidden">Results for each label, problems first</caption>
+    <thead><tr><th scope="col">Row</th><th scope="col">Brand</th><th scope="col">Result</th><th scope="col">What to look at</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <p><button type="button" class="export-results" hidden>Download the results (CSV)</button></p>
+  <form class="export-form" method="post" action="/batch/export" hidden>
+    <input type="hidden" name="results" value="">
+  </form>
+</section>
+<script src="/static/batch.js" defer></script>
+{% endblock %}

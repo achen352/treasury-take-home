@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import time
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
@@ -13,9 +14,10 @@ from fastapi.templating import Jinja2Templates
 from starlette.datastructures import UploadFile
 
 from app.config import Settings
+from app.domain.models import Report
 from app.readers import uploads
 from app.readers.dual import check_label
-from app.readers.uploads import UploadRejected, prepare_uploads
+from app.readers.uploads import LabelImage, UploadRejected, prepare_uploads
 from app.web.forms import FIELDS, HINTS, LABELS, REQUIRED, form_values, read_application
 from app.web.guards import client_address, too_many_response
 from app.web.paste import PasteTooLong, parse_application_text
@@ -44,18 +46,43 @@ def page(request: Request, sample: str | None = None) -> Response:
     return _render(request, values=values, sample=sample or "")
 
 
-@router.post("/check", response_class=HTMLResponse)
-async def check(request: Request) -> Response:
+class CheckRefused(Exception):
+    """A check that can't go ahead at all (another site, too many, busy). Safe to show."""
+
+    def __init__(self, status: int, message: str) -> None:
+        super().__init__(message)
+        self.status = status
+        self.message = message
+
+
+@dataclass
+class CheckOutcome:
+    values: dict[str, str]
+    sample_id: str
+    errors: dict[str, str] = field(default_factory=dict)  # by field; "images" for the uploads
+    report: Report | None = None
+    images: list[LabelImage] = field(default_factory=list)
+    timings: dict[str, float] = field(default_factory=dict)
+
+    def server_timing(self) -> str:
+        """How long each part took, for the browser's developer tools and the smoke test."""
+        return ", ".join(
+            f"{name};dur={seconds * 1000:.0f}" for name, seconds in self.timings.items()
+        )
+
+
+async def run_check(request: Request) -> CheckOutcome:
+    """Check the label posted in a form: the page and the batch both come through here."""
     if _from_another_site(request):
-        return _error(request, 403, "Labels can only be checked from this site's own page.")
+        raise CheckRefused(403, "Labels can only be checked from this site's own page.")
     settings: Settings = request.app.state.settings
     if not request.app.state.limiter.allow(
         client_address(request.scope, settings.client_ip_header)
     ):
-        return too_many_response()
+        raise CheckRefused(429, "That's a lot of checks in a short time. Please wait a minute.")
     content_type = request.headers.get("content-type", "")
     if not content_type.startswith(("multipart/form-data", "application/x-www-form-urlencoded")):
-        return _error(request, 415, "Send the label with the form on this page.")
+        raise CheckRefused(415, "Send the label with the form on this page.")
     form = await request.form(
         max_files=MAX_FILE_PARTS, max_fields=MAX_FORM_FIELDS, max_part_size=MAX_PASTE_BYTES
     )
@@ -77,6 +104,7 @@ async def check(request: Request) -> Response:
     values["application_text"] = pasted
     sample_id = form.get("sample")
     sample_id = sample_id if isinstance(sample_id, str) else ""
+    outcome = CheckOutcome(values=values, sample_id=sample_id)
     # Browsers send an empty part when no file is chosen; file names are never read.
     files = [part for part in form.getlist("images") if isinstance(part, UploadFile) and part.size]
 
@@ -88,19 +116,18 @@ async def check(request: Request) -> Response:
     elif sample_id:
         sample = find_sample(sample_id)
         if sample is None:
-            return _error(request, 404, "There is no sample label with that name.")
+            raise CheckRefused(404, "There is no sample label with that name.")
         datas = [path.read_bytes() for path in sample.images]
     else:
         datas = []
     if application is None:
-        return _render(request, values=values, sample=sample_id, errors=errors, status=422)
-
+        outcome.errors = errors
+        return outcome
     try:
-        images = prepare_uploads(datas)
+        outcome.images = prepare_uploads(datas)
     except UploadRejected as rejected:
-        return _render(
-            request, values=values, sample=sample_id, errors={"images": str(rejected)}, status=422
-        )
+        outcome.errors = {"images": str(rejected)}
+        return outcome
 
     extras: dict[str, Any] = {}
     if request.app.state.ocr_reader is not None:
@@ -110,12 +137,14 @@ async def check(request: Request) -> Response:
     try:
         await asyncio.wait_for(slots.acquire(), timeout=settings.check_wait_seconds)
     except TimeoutError:
-        return _error(request, 503, "The checker is busy right now. Please try again in a moment.")
+        raise CheckRefused(
+            503, "The checker is busy right now. Please try again in a moment."
+        ) from None
     timings: dict[str, float] = {}
     started = time.perf_counter()
     try:
-        report = await check_label(
-            images,
+        outcome.report = await check_label(
+            outcome.images,
             application,
             settings,
             extractor=request.app.state.extractor,
@@ -124,21 +153,40 @@ async def check(request: Request) -> Response:
         )
     finally:
         slots.release()
-    total = time.perf_counter() - started
+    outcome.timings = {"total": time.perf_counter() - started, **timings}
     logger.info(
         "check took %.2f s (ai %.2f s, ocr %.2f s, %d images)",
-        total,
+        outcome.timings["total"],
         timings.get("ai", 0.0),
         timings.get("ocr", 0.0),
-        len(images),
+        len(outcome.images),
     )
+    return outcome
+
+
+@router.post("/check", response_class=HTMLResponse)
+async def check(request: Request) -> Response:
+    try:
+        outcome = await run_check(request)
+    except CheckRefused as refused:
+        if refused.status == 429:
+            return too_many_response()
+        return _error(request, refused.status, refused.message)
+    if outcome.report is None:
+        return _render(
+            request,
+            values=outcome.values,
+            sample=outcome.sample_id,
+            errors=outcome.errors,
+            status=422,
+        )
     response = _render(
-        request, values=values, sample=sample_id, results=build_results(report, images)
+        request,
+        values=outcome.values,
+        sample=outcome.sample_id,
+        results=build_results(outcome.report, outcome.images),
     )
-    # How long each part took, for the browser's developer tools and the smoke test; no content.
-    response.headers["Server-Timing"] = ", ".join(
-        f"{name};dur={seconds * 1000:.0f}" for name, seconds in {"total": total, **timings}.items()
-    )
+    response.headers["Server-Timing"] = outcome.server_timing()
     return response
 
 
