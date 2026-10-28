@@ -5,8 +5,8 @@ it was submitted with. It answers the take-home exercise in
 [treasurytakehome-rgb/instructions](https://github.com/treasurytakehome-rgb/instructions).
 
 > **Status: work in progress.** The checking engine, the test data, the label readers and the
-> single-label page are built, tested, evaluated and deployed. Batch upload is next (see
-> [Progress](#progress)). Live URL: <https://cola-label-verifier.fly.dev> (the access code
+> single-label page and batch checking are built, tested, evaluated and deployed. The final
+> README pass is next (see [Progress](#progress)). Live URL: <https://cola-label-verifier.fly.dev> (the access code
 > is in the submission link).
 
 ## Contents
@@ -24,6 +24,7 @@ it was submitted with. It answers the take-home exercise in
 - [What real labels taught us](#what-real-labels-taught-us)
 - [How well it reads](#how-well-it-reads)
 - [On the live site](#on-the-live-site)
+- [Checking many labels](#checking-many-labels)
 - [Security](#security)
 - [Dependencies](#dependencies)
 - [Assumptions and limitations](#assumptions-and-limitations)
@@ -43,7 +44,7 @@ Each row is a requirement from the brief, with the stakeholder who raised it.
 | "STONE'S THROW" vs "Stone's Throw" needs judgment (*Dave Morrison*) | Three outcomes: **Matches**, **Needs review**, **Does not match**. Cosmetic differences pass with a note, and near misses go to a person. The tool never approves a label. | Built |
 | Results in about 5 seconds, because the last vendor took 30 to 40 (*Sarah Chen*) | The AI reads each image while OCR reads it too, and the checks are plain code that runs in milliseconds. On the live site the drawn samples take 1.8 to 4.7 s and real two-image labels 5 to 10 s (median 3.3 s). | Built and measured live |
 | Simple enough for agents over 50: "clean, obvious, no hunting for buttons" (*Sarah Chen*) | One page in three numbered steps with one main button, 18 px text, a large drop zone for images, an example under every field, red asterisks on required ones, and a box to paste the application from COLAs Online or an email. Results open with a plain summary ("5 of 6 items match") and what to do next. Results are shown with an icon and words, never color alone, and each finding is outlined on the label image. axe-core, run in a real browser, finds no accessibility violations (Section 508). | Built |
-| Batch uploads of 200 to 300 labels at once (*Sarah Chen, for Janet*) | A batch upload takes a spreadsheet of application data, and failures are listed first. | Planned (M6) |
+| Batch uploads of 200 to 300 labels at once (*Sarah Chen, for Janet*) | A batch page takes a spreadsheet of up to 300 labels and their images, checks them two at a time and lists failures first, with a CSV export. It runs in the browser, so nothing is stored on the server. | Built; long batches slow down on the demo's small CPU |
 | The agency runs on Azure under FedRAMP (*Marcus Williams*) | Not used here, for cost: the prototype runs on a small Fly.io machine and reads labels with OpenAI's commercial API (see [Limitations](#assumptions-and-limitations)). The Docker image and the AI adapter move to Azure App Service and Azure OpenAI by configuration alone. | Documented path |
 | The firewall blocks many outbound ML endpoints (*Marcus Williams*) | A local OCR reader (Tesseract) keeps working when the AI service can't be reached, and the result is marked as read offline. | Built |
 | A standalone proof of concept, not integrated with COLA (*Marcus Williams*) | Standalone. The public COLA registry is used only offline, as a source of real test labels. | By design |
@@ -198,6 +199,7 @@ as the work goes on.
 | **Bold problems go to a person.** | Only the AI can judge bold, and it was wrong on 8 of 18 approved labels. A "not bold" call that fails the label would be wrong too often. |
 | **An answer within a deadline, or OCR alone.** | The AI's reply is streamed. No first token within 15 s, or no complete reply within 25 s, means OCR reads alone and the label goes to a person. A label normally takes 2 to 5 s, so these only catch a stuck provider. |
 | **The warning is read in its own call.** | The AI reads each image twice at once: once for the warning and once for everything else. Shorter replies finish sooner (on Kimi this cut real labels' median from 7.8 s to 6.1 s). |
+| **Batches run in the browser.** | The page reads the spreadsheet and images on the agent's computer and sends one label at a time to the same checker, so the server holds no label data between requests, needs no large uploads or job storage, and fits a small machine. The agent keeps the page open until the batch finishes; the page warns before closing. |
 | **A small Fly.io machine, with Azure as the path.** | Fly runs the same Docker image on a shared CPU that bursts to a full core for a check's OCR and suspends between visits, so it costs a few dollars a month at most. Render's free tier was tried first: its 0.1 CPU took 16 to 23 s per OCR pass, and turning OCR off to fit let 3 labels through as false Matches. The same image runs on Azure App Service. |
 | **Python, FastAPI, server-rendered pages.** | The page is plain HTML from the server and one small self-hosted script (zoom, rotation, quick upload checks), so there is no frontend build or framework, and it works without the script. pytest makes test-first work easy, and Python has strong libraries for images and fuzzy matching. |
 | **Show where each finding is.** | OCR returns a box for every word, so each field is outlined on the label image with an icon and its name, and so is a differing word in the warning. A result's button zooms to its spot and turns sideways text upright. A field OCR couldn't find says so instead of showing a box. |
@@ -294,6 +296,30 @@ the live page on 2026-10-28:
 `python -m scripts.smoke` checks the live site: the health check, the lock, the security
 headers, signing in through the link, and the OLD TOM sample matching within 10 seconds.
 
+## Checking many labels
+
+The batch page (`/batch`) checks up to 300 labels from a spreadsheet:
+
+1. **Choose the spreadsheet**: a CSV with one row per label, an `images` column naming the
+   label's image files (several separated by `;`), and the application in the other columns.
+   Headers can be written loosely ("Brand Name", "Class/Type", "ABV"), and a template is offered.
+   Excel's CSVs work, including Windows encodings and semicolon separators. Rows with problems are
+   listed by row number before anything is checked.
+2. **Choose the label images**, all at once. They're matched to the spreadsheet by file name.
+3. **Check them all.** Each label goes to the server on its own, two at a time, and a table fills
+   in with failures first: Does not match, Couldn't check, Needs review, then Matches. The results
+   download as a CSV.
+
+The browser holds the spreadsheet, the images and the results; the server checks one label at a
+time and keeps nothing. An example batch runs the 11 sample labels.
+
+**Measured on the live site** (22 labels, two at a time): no errors, 131 seconds in all, about 6 s
+per label. The first 15 or so labels run at normal speed. After that the machine's shared CPU
+runs out of burst credit and is throttled: text recognition slows from about 2 to 5 s per label
+to 15 to 26 s, and a few labels go to Needs review because the second check couldn't finish in
+time. A deployment for real batches would use a dedicated CPU. The first run also showed 512 MB
+of memory was too little for two large labels at once, so the machine now has 1 GB.
+
 ## Security
 
 - **Uploads:**
@@ -325,7 +351,10 @@ headers, signing in through the link, and the OLD TOM sample matching within 10 
   - uploads kept in memory (Starlette's own disk spool is raised to the 10 MB file cap) and file
     names never used
   - posts from other sites refused (`Sec-Fetch-Site`)
-  - label text escaped by the templates, and request logs that never include query strings
+  - label text escaped by the templates (and inserted as plain text by the batch page's script),
+    and request logs that never include query strings
+  - batch exports neutralise spreadsheet formulas: a cell starting with `=`, `+`, `-`, `@`, a
+    tab or a carriage return gets a leading apostrophe
   - generic error pages that carry only a request ID
   - API docs switched off
 - **Secrets.** `.env` is ignored by git, and `.env.example` documents the variables. gitleaks
@@ -395,6 +424,11 @@ deployment should do:
   agency runs. Its shared CPU bursts to a full core for a check but is throttled under sustained
   load, and it suspends when idle, waking on the next visit. One machine runs, so the rate limits
   and the two-checks-at-once cap are per site. The same Docker image runs on Azure App Service.
+
+- **Long batches slow down on the demo's CPU.** After about 15 labels in a row the shared CPU is
+  throttled, text recognition takes 15 to 26 s per label, and some labels go to review. The batch
+  page also needs to stay open while it runs, paces itself to the site's rate limit (30 checks a
+  minute), and reads CSV only (Excel workbooks must be saved as CSV).
 
 What the readers can't do yet:
 
@@ -518,12 +552,12 @@ tests/
 | M3 | Label readers: upload checks, AI reader, OCR reader, merging images, evaluation script | Done |
 | M4 | Single-label page, with each field outlined on the label image | Done |
 | M5 | Demo deployment: Fly.io deployed by CI, live latency, smoke test, fail-closed access code | Done |
-| M6 | Batch upload | Next |
-| M7 | Final README: evaluation results, tools, trade-offs | |
+| M6 | Batch upload: a spreadsheet of up to 300 labels, failures first, CSV export; misformatted data handled | Done |
+| M7 | Final README: evaluation results, tools, trade-offs | Next |
 
 ## Test cases
 
-1,091 test cases (490 test functions, many run over several inputs) cover the checking engine,
+1,159 test cases (531 test functions, many run over several inputs) cover the checking engine,
 the test data, the label readers, the page (in a real browser too) and the deploy. All of them run in CI on every push. Each group below was agreed
 in plain English before its code was written.
 
@@ -552,6 +586,7 @@ in plain English before its code was written.
 | The page | `tests/integration/test_page.py`, `tests/unit/test_samples.py` | The form, checking a label or a sample, errors, results, outlines, escaping, uploads kept off disk |
 | Guards | `tests/security/test_access.py` | The access code, rate limits, two checks at once, cross-site posts, logs without codes |
 | In a browser | `tests/e2e/test_browser.py` | axe-core finds no violations; zoom, sideways text, rotation, keyboard, quick checks, samples |
+| Batch and messy data | `tests/unit/test_batch.py`, `tests/unit/test_forms.py`, `tests/integration/test_batch_page.py` | Reading spreadsheets however they were saved, tidying form input, the batch endpoints, the export |
 | Deploy | `tests/unit/test_deploy_config.py`, `tests/unit/test_smoke.py` | Fly config and the CI deploy gate; the smoke test's checks and its handling of the code |
 
 <details>
@@ -923,5 +958,37 @@ in plain English before its code was written.
    set and never printing it; it's tested against a faked site.
 8. `render.yaml` is gone: on Render's free 0.1 CPU an OCR pass took 16 to 23 s, and running
    without OCR let 3 labels through as false Matches.
+
+</details>
+
+<details>
+<summary><b>M6: batch, and misformatted data</b></summary>
+
+**The batch page**
+
+1. A link from the main page; three numbered steps (spreadsheet, images, check); a template
+   spreadsheet; an example batch of the 11 samples; no accessibility violations.
+2. The spreadsheet's headers can be written loosely and in any order; unknown columns are listed;
+   rows missing or misformatting a field are listed by row number before anything is checked.
+3. Refused with a plain message: more than 300 rows, an empty file, an Excel workbook, a file
+   that isn't CSV, or one over 1 MB. Formula-looking cells are read as plain text.
+4. Image names are matched to the chosen files ignoring capitals and folders; a row whose image
+   wasn't chosen is marked "Couldn't check" without being sent.
+5. Each label goes to `/batch/check` (the same checks and guards as the page, a small JSON
+   answer, no images back), two at a time; a busy or rate-limited server is waited for; a label
+   that can't be checked doesn't stop the batch; leaving mid-batch asks first.
+6. A summary, then failures first, every item one click away, all label text inserted as plain
+   text; the CSV export lists failures first and neutralises spreadsheet formulas.
+
+**Misformatted data, in the batch and the single form**
+
+7. Stray spaces, tabs, line breaks, non-breaking spaces and invisible characters are tidied; a
+   pasted address becomes one line.
+8. Beverage types written loosely ("Distilled Spirits", "Malt beverage") and yes/no answers in any
+   form ("Y", "TRUE", "Imported", "domestic") are understood; anything else is explained.
+9. A bare number for alcohol is read as a percentage; alcohol that can't be read, and net
+   contents without a unit, get a message with an example.
+10. Excel quirks: a byte-order mark, Windows-1252, semicolons or tabs, quoted line breaks, blank
+    rows, extra or missing cells, and image lists split by `;`, `,` or `|`.
 
 </details>

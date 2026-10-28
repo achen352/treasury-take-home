@@ -4,7 +4,7 @@ This file carries the project context between machines. Claude Code reads it aut
 the README explains the project itself. To resume, open the repo in Claude Code and say "resume
 from CLAUDE.md".
 
-## Where things stand (end of M5, 2026-10-28)
+## Where things stand (end of M6, 2026-10-28)
 
 - M0 to M4 are done: the skeleton, the checking engine, the test data, the label readers and
   the single-label page. 1,039 tests pass, browser tests included. The README is current.
@@ -25,7 +25,20 @@ from CLAUDE.md".
     clicking through the samples). `python -m scripts.smoke` passes signed in.
   - The access code: the user keeps the code in `.env` as `SMOKE_ACCESS_CODE` (the code, not the
     hash) and in the submission link; Fly holds the hash.
-- **Next: M6, batch.** Start by proposing its test list.
+- **M6 done (2026-10-28): batch checking**, run by the browser (the user chose it over server
+  jobs). `/batch` reads the CSV through `POST /batch/read`, checks each label through
+  `POST /batch/check` (shared `run_check` with the page), two at a time, and exports through
+  `POST /batch/export` with formula injection neutralised; nothing is stored. Misformatted data
+  is handled in `forms.clean` and `read_application` (loose beverage types and yes/no, a bare
+  ABV as a percentage, net contents needing a unit) and in `batch.read_sheet` (Excel quirks).
+  - Live batch (22 labels): no errors after raising the machine to 1 GB (512 MB was OOM-killed
+    with two large labels at once); after about 15 labels the shared CPU throttles and OCR
+    takes 15 to 26 s. The user chose to document that rather than pay for more CPU.
+- **Earlier on 2026-10-28:** a friendlier page (numbered steps, drop zone, asterisks, examples,
+  paste the application as labeled lines or JSON), "Access denied" lock page, live limits of
+  30 a minute and 500 a day.
+- **Next: M7**, the final README pass (evaluation table, tools, trade-offs, data handling) and the
+  decision about whether CLAUDE.md stays public.
 - Checked live on 2026-10-28 through the page, with OpenAI and Tesseract: OLD TOM matched in 2.6 s
   with every field outlined in the right place; Belle Isle came out Needs review in 3.6 s.
 - Live URL: <https://cola-label-verifier.fly.dev> (locked; the code is in the submission link).
