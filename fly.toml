@@ -41,4 +41,5 @@ primary_region = "iad"  # Virginia, close to OpenAI's US servers
 [[vm]]
   # A shared CPU banks credit while idle and bursts to a full core for a check's OCR.
   size = "shared-cpu-1x"
-  memory = "512mb"
+  # Two checks at once, each running Tesseract, overflowed 512 MB in a live batch.
+  memory = "1gb"
