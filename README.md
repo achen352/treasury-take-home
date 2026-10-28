@@ -9,6 +9,29 @@ it was submitted with. It answers the take-home exercise in
 > [Progress](#progress)). Live URL: <https://cola-label-verifier.fly.dev> (the access code
 > is in the submission link).
 
+## Contents
+
+- [The brief, and how this project answers it](#the-brief-and-how-this-project-answers-it)
+- [What COLA is](#what-cola-is)
+- [How it works](#how-it-works)
+- [How a result is decided](#how-a-result-is-decided)
+  - [The government warning: word for word](#the-government-warning-word-for-word)
+  - [Names: brand, fanciful name and class/type](#names-brand-fanciful-name-and-classtype)
+  - [Bottler or importer, and country of origin](#bottler-or-importer-and-country-of-origin)
+  - [Numbers: alcohol content and net contents](#numbers-alcohol-content-and-net-contents)
+  - [Always to a person](#always-to-a-person)
+- [Design decisions](#design-decisions)
+- [What real labels taught us](#what-real-labels-taught-us)
+- [How well it reads](#how-well-it-reads)
+- [On the live site](#on-the-live-site)
+- [Security](#security)
+- [Dependencies](#dependencies)
+- [Assumptions and limitations](#assumptions-and-limitations)
+- [Run it](#run-it)
+- [Project layout](#project-layout)
+- [Progress](#progress)
+- [Test cases](#test-cases)
+
 ## The brief, and how this project answers it
 
 Each row is a requirement from the brief, with the stakeholder who raised it.
@@ -78,34 +101,82 @@ application data ----------------------------------------------------+         |
 
 ## How a result is decided
 
-**Fail** means clearly different. **Needs review** means close, uncertain, or a judgment call.
+Every item on the label gets one of three results, the same words the page uses:
 
-| Field | Pass | Needs review | Fail |
-|---|---|---|---|
-| Brand, fanciful name (when the application has one), class/type | Same after ignoring case, punctuation, spacing and common abbreviations | Similarity score of 90 or more out of 100 (`OLD TOM DISTILLERS` vs `DISTILLERY` scores 94) | Below 90 (`OLD TOM DISTILLERY RESERVE` scores 82) |
-| Bottler (name and address) | The same words in any order, ignoring "bottled by" wording | A more forgiving score of 85 or more ("KY" vs "Kentucky") | Below 85 |
-| Country of origin | Same after removing wording like "Product of" | Score of 90 or more | Below 90 ("New Mexico" vs "Mexico") |
-| Alcohol, proof, net contents | The same number; up to 0.5% apart only when converting between metric and US units | Unreadable, ambiguous (two ABVs) or impossible values; a range that doesn't match the application | A clearly different number; proof that isn't twice the ABV |
-| Government warning | The exact words, with "GOVERNMENT WARNING:" in capitals and bold | A punctuation-only difference; any bold problem, since only the AI judges bold | Any word changed, missing or added; header not in capitals |
+- **Matches**: the label says what the application says.
+- **Needs review**: close, unclear, or a judgment call. A person should look.
+- **Does not match**: the label clearly says something different.
 
-Some situations always go to review, whatever the score:
+The label's overall result is the worst of its items: **Does not match** if any item doesn't
+match, otherwise **Needs review** if any item needs review, otherwise **Matches**.
 
-- hidden characters
-- letters from another alphabet disguised as Latin ones
-- a name in a different script from the application
-- an application field with nothing to compare
-- the application's brand found on the label only away from its most prominent name
-- the application's fanciful name not found among the names on the label
-- the label's images disagreeing on a field (such as two different ABVs on the front and back)
-- the OCR reader failing to confirm what the AI read
-- text that seems to address an AI, whether the tripwire finds it or the AI reader reports it
+### The government warning: word for word
 
-The overall result is **Does not match** if any field fails, otherwise **Needs review** if any
-field needs review, otherwise **Matches**.
+The warning must match the text in 27 CFR 16.21 **word for word**, and the words "GOVERNMENT
+WARNING:" must be in capital letters.
 
-The thresholds (90, 85 and 0.5%) were set before any real labels were tested. In the M3
-evaluation most misses came from OCR and from judgment calls rather than from these thresholds,
-so they're unchanged for now.
+- **Doesn't count:** line breaks and extra spaces, words run together or split by tight
+  typesetting, hyphens where a word breaks across lines, capital letters in the rest of the
+  warning, and "(I)" or "(l)" printed where "(1)" is meant.
+- **Does not match:** any word changed, missing or added (even one letter, such as "pregnancey"),
+  the two sentences swapped, or the header in title case ("Government Warning:", Jenny's example).
+  The page shows the differences word by word.
+- **Needs review:** only the punctuation differs, such as a missing comma (3 of the 19 approved
+  real labels have one); or a bold problem. The header must be bold and the rest must not be, but
+  only the AI can judge bold type, and it isn't reliable at it, so a person decides.
+
+### Names: brand, fanciful name and class/type
+
+- **Matches:** the same words, ignoring capital letters, punctuation, spacing and common
+  abbreviations. "STONE'S THROW" matches "Stone's Throw" (Dave's example), and "Co." matches
+  "Company".
+- **Needs review:** almost the same, such as one or two letters off: "OLD TOM DISTILLERS" against
+  "OLD TOM DISTILLERY". ("Almost" means a letter-by-letter similarity score of 90 or more out of
+  100.)
+- **Does not match:** anything further apart, including an extra or missing word: "OLD TOM
+  DISTILLERY RESERVE" against "OLD TOM DISTILLERY".
+
+The brand is the label's most prominent name. If the application's brand appears only among the
+other names (Royal Stag's label leads with "SEAGRAM'S"), it goes to review. A fanciful name is
+checked only when the application gives one, and goes to review if it isn't found.
+
+### Bottler or importer, and country of origin
+
+- **Bottler:** the same name and address, in any word order, ignoring wording such as "Distilled
+  and bottled by". Small differences such as "KY" for "Kentucky" go to review (a more forgiving
+  score of 85 or more); anything else does not match.
+- **Country of origin** (imports only): the same country, ignoring wording such as "Product of"
+  and long forms such as "Republic of Armenia". "New Mexico" does not match "Mexico".
+
+### Numbers: alcohol content and net contents
+
+- **Matches:** the same number, however it's written ("45% Alc./Vol.", "ALC 45% BY VOL"). Volumes
+  may be in metric or US units: 750 mL matches 25.4 fl oz (within 0.5%).
+- **Does not match:** a different number ("40%" against "45%"), proof that isn't twice the ABV,
+  or no alcohol content on a spirits label.
+- **Needs review:** a number that can't be read, two different ABVs on one label, or an
+  impossible value.
+
+A percentage counts as the alcohol content only when the words around it say alcohol, so "100%
+Blue Agave" isn't an ABV.
+
+### Always to a person
+
+Whatever the scores say, these send an item, or the whole label, to review:
+
+- the second check (text recognition, or OCR) can't find what the AI read
+- the label was read by text recognition alone, because the AI couldn't be reached; such a label
+  never comes out Matches
+- the label's images disagree, such as two different ABVs on the front and the back
+- text on the label that seems to address an AI
+- hidden characters, or letters from another alphabet disguised as Latin ones
+- a name printed in a different script from the application, such as Korean against a
+  romanized application
+- an application field with nothing on the label to compare
+
+The thresholds (90 and 85 out of 100, and 0.5%) were set before any real labels were tested. In
+the evaluation, most misses came from text recognition and from judgment calls rather than from
+these thresholds, so they're unchanged.
 
 ## Design decisions
 
