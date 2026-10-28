@@ -1,5 +1,6 @@
 """Runtime configuration, read from environment variables and an optional .env file."""
 
+import re
 from enum import StrEnum
 from typing import Literal, Self
 
@@ -37,11 +38,27 @@ class Settings(BaseSettings):
     # Read the warning in its own call, alongside one for the other fields. Shorter replies
     # finish sooner: on real labels this cut the median from 7.8 s to 6.1 s.
     llm_split_warning: bool = True
+    # The SHA-256 of the demo's access code, given only in the submission link. Unset: open.
+    access_code_sha256: str | None = None
+    # Per client address, to protect the AI credit; and how many checks run at once, for memory.
+    rate_limit_per_minute: int = Field(default=10, gt=0)
+    rate_limit_per_day: int = Field(default=200, gt=0)
+    max_concurrent_checks: int = Field(default=2, gt=0)
+    check_wait_seconds: float = Field(default=10.0, ge=0)
     # The most a single request may carry: a label's images and its form, together.
     max_request_bytes: int = Field(default=30 * 1024 * 1024, gt=0)
     enable_docs: bool = False
     port: int = 8000
     forwarded_allow_ips: str = "127.0.0.1"
+
+    @field_validator("access_code_sha256", mode="before")
+    @classmethod
+    def _sha256_only(cls, value: object) -> object:
+        if value in (None, ""):
+            return None
+        if not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{64}", value):
+            raise ValueError("must be the SHA-256 of the access code: 64 lowercase hex digits")
+        return value
 
     @field_validator("llm_reasoning_effort", mode="before")
     @classmethod

@@ -1,5 +1,6 @@
 """Application factory. Run with: python -m app.server"""
 
+import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -14,7 +15,7 @@ from app.readers.ai import make_extractor
 from app.readers.dual import OcrReader
 from app.readers.extractor import Extractor
 from app.readers.uploads import MAX_FILE_BYTES
-from app.web.guards import BodyLimitMiddleware
+from app.web.guards import AccessCodeMiddleware, BodyLimitMiddleware, RateLimiter
 from app.web.middleware import DOCS_CSP, RequestContextMiddleware, SecurityHeadersMiddleware
 from app.web.pages import router as pages
 from app.web.routes import router
@@ -58,7 +59,12 @@ def create_app(
     app.state.settings = settings
     app.state.extractor = extractor
     app.state.ocr_reader = ocr_reader
+    app.state.limiter = RateLimiter(settings.rate_limit_per_minute, settings.rate_limit_per_day)
+    app.state.check_slots = asyncio.Semaphore(settings.max_concurrent_checks)
     app.add_middleware(BodyLimitMiddleware, max_bytes=settings.max_request_bytes)
+    app.add_middleware(
+        AccessCodeMiddleware, code_sha256=settings.access_code_sha256, limiter=app.state.limiter
+    )
     # Last added runs outermost: security headers must also wrap the 500s
     # produced by RequestContextMiddleware.
     app.add_middleware(RequestContextMiddleware)

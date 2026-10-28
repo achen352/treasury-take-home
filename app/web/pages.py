@@ -1,7 +1,9 @@
 """The single-label page: the form, and checking a label against its application."""
 
+import asyncio
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, Response
@@ -13,6 +15,7 @@ from app.readers import uploads
 from app.readers.dual import check_label
 from app.readers.uploads import UploadRejected, prepare_uploads
 from app.web.forms import FIELDS, LABELS, form_values, read_application
+from app.web.guards import client_address, too_many_response
 from app.web.samples import find_sample, load_samples
 from app.web.view import build_results
 
@@ -39,6 +42,12 @@ def page(request: Request, sample: str | None = None) -> Response:
 
 @router.post("/check", response_class=HTMLResponse)
 async def check(request: Request) -> Response:
+    origin = request.headers.get("origin")
+    cross_site = request.headers.get("sec-fetch-site") == "cross-site"
+    if cross_site or (origin and urlsplit(origin).netloc != request.headers.get("host")):
+        return _error(request, 403, "Labels can only be checked from this site's own page.")
+    if not request.app.state.limiter.allow(client_address(request.scope)):
+        return too_many_response()
     content_type = request.headers.get("content-type", "")
     if not content_type.startswith(("multipart/form-data", "application/x-www-form-urlencoded")):
         return _error(request, 415, "Send the label with the form on this page.")
@@ -75,9 +84,18 @@ async def check(request: Request) -> Response:
     extras: dict[str, Any] = {}
     if request.app.state.ocr_reader is not None:
         extras["ocr_reader"] = request.app.state.ocr_reader
-    report = await check_label(
-        images, application, settings, extractor=request.app.state.extractor, **extras
-    )
+    # Only a few checks run at once, so a small server's memory holds them all.
+    slots: asyncio.Semaphore = request.app.state.check_slots
+    try:
+        await asyncio.wait_for(slots.acquire(), timeout=settings.check_wait_seconds)
+    except TimeoutError:
+        return _error(request, 503, "The checker is busy right now. Please try again in a moment.")
+    try:
+        report = await check_label(
+            images, application, settings, extractor=request.app.state.extractor, **extras
+        )
+    finally:
+        slots.release()
     return _render(request, values=values, sample=sample_id, results=build_results(report, images))
 
 

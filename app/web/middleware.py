@@ -61,16 +61,22 @@ class RequestContextMiddleware:
         request_id = _request_id_from(scope)
         scope.setdefault("state", {})["request_id"] = request_id
         response_started = False
+        status = 500
 
         async def send_with_request_id(message: Message) -> None:
-            nonlocal response_started
+            nonlocal response_started, status
             if message["type"] == "http.response.start":
                 response_started = True
+                status = message["status"]
                 MutableHeaders(scope=message)[REQUEST_ID_HEADER] = request_id
             await send(message)
 
         try:
             await self.app(scope, receive, send_with_request_id)
+            # The access log: never the query string, which can carry the access code.
+            logger.info(
+                "%s %s %s (request_id=%s)", scope["method"], scope["path"], status, request_id
+            )
         except Exception:
             # Full detail goes to the server log only; the client gets an opaque reference.
             logger.exception("Unhandled error (request_id=%s)", request_id)

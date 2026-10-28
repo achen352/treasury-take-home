@@ -23,3 +23,7 @@ services:
       # The key is entered in the Render dashboard, never committed.
       - key: LLM_API_KEY
         sync: false
+      # The SHA-256 of the access code (python -m scripts.access_code). The code itself goes
+      # only in the submission link; neither is committed.
+      - key: ACCESS_CODE_SHA256
+        sync: false

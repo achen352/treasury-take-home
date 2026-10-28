@@ -123,9 +123,13 @@ def test_the_code_never_reaches_the_logs(caplog: pytest.LogCaptureFixture) -> No
         client.get(f"/?key={CODE}")
         client.get("/?key=wrong-guess")
 
-    assert CODE not in caplog.text
-    assert "wrong-guess" not in caplog.text
-    assert re.search(r"GET / 303", caplog.text)  # requests are logged, without their query
+    # The test client's own HTTP library logs the URLs it requests; only the server's logs count.
+    server_log = "\n".join(
+        record.getMessage() for record in caplog.records if not record.name.startswith("httpx")
+    )
+    assert CODE not in server_log
+    assert "wrong-guess" not in server_log
+    assert re.search(r"GET / 303", server_log)  # requests are logged, without their query
 
 
 def test_the_server_keeps_query_strings_out_of_its_access_log() -> None:

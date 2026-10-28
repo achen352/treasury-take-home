@@ -20,6 +20,9 @@ from pypdfium2.version import PDFIUM_INFO
 MAX_FILE_BYTES = 10 * 1024 * 1024
 MAX_PIXELS = 40_000_000
 MAX_IMAGES = 6
+# Larger images are scaled down after decoding, so six fit in a small server's memory; 4,000
+# pixels is plenty for reading a label.
+WORKING_SIDE = 4000
 # PDF pages are rendered to this many pixels on the long side, so a small label gets a higher
 # resolution than a large sheet.
 PDF_LONG_SIDE = 2500
@@ -172,6 +175,8 @@ def _rebuilt(image: Image.Image) -> Image.Image:
         white = Image.new("RGBA", image.size, (255, 255, 255, 255))
         image = Image.alpha_composite(white, image.convert("RGBA"))
     rgb = image.convert("RGB")
+    if max(rgb.size) > WORKING_SIDE:
+        rgb.thumbnail((WORKING_SIDE, WORKING_SIDE), Image.Resampling.LANCZOS)
     return Image.frombytes("RGB", rgb.size, rgb.tobytes())
 
 

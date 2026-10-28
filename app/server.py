@@ -16,6 +16,9 @@ def uvicorn_options(settings: Settings) -> dict[str, Any]:
         "host": "0.0.0.0",  # noqa: S104  # nosec B104
         "port": settings.port,
         "server_header": False,
+        # Uvicorn's access log includes query strings, which can carry the access code; the app
+        # logs each request itself, without them.
+        "access_log": False,
         "proxy_headers": True,
         "forwarded_allow_ips": settings.forwarded_allow_ips,
     }
