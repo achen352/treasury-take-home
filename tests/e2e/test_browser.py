@@ -34,6 +34,8 @@ def results_page(page: Page) -> Page:
         page.fill(selector, value)
     page.click("button[type=submit]")
     expect(page.locator(".verdict")).to_be_visible()
+    # The results page is large (its images are inline), so wait for the deferred script too.
+    page.wait_for_load_state("load")
     return page
 
 
