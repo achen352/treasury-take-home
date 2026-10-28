@@ -130,3 +130,9 @@ def test_a_reasoning_effort_can_be_set_for_models_that_always_think(
     monkeypatch.setenv("LLM_REASONING_EFFORT", "extreme")
     with pytest.raises(ValidationError):
         make_settings()
+
+
+def test_an_empty_reasoning_effort_means_none(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LLM_REASONING_EFFORT", "")
+
+    assert make_settings().llm_reasoning_effort is None

@@ -158,7 +158,7 @@ def test_a_failed_call_is_never_retried() -> None:
 def test_thinking_off_is_sent_only_when_configured() -> None:
     # Without a reasoning effort, as for kimi-k2.6 (thinking switch) or Azure OpenAI (neither).
     kimi, azure = FakeProvider(), FakeProvider()
-    read(kimi, llm_reasoning_effort=None)
+    read(kimi, llm_reasoning_effort=None, llm_disable_thinking=True)
     read(azure, llm_reasoning_effort=None, llm_disable_thinking=False)
 
     assert kimi.body["thinking"] == {"type": "disabled"}
