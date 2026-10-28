@@ -64,7 +64,8 @@ def test_without_the_code_every_page_is_locked(locked: TestClient) -> None:
     page = locked.get("/")
 
     assert page.status_code == 403
-    assert "needs the link from the submission" in page.text
+    assert "Access denied" in page.text
+    assert "needs an access key" in page.text
     assert check(locked) == 403
 
 

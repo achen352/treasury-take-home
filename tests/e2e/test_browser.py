@@ -143,3 +143,47 @@ def test_choosing_a_sample_fills_the_form(page: Page) -> None:
     page.select_option("#sample", "old-tom")
 
     expect(page.locator("#brand_name")).to_have_value("OLD TOM DISTILLERY")
+
+
+# ---- a friendlier page ----
+
+
+def test_chosen_images_are_listed_and_can_be_cleared(page: Page) -> None:
+    page.goto("/")
+    page.set_input_files("#images", OLD_TOM)
+
+    expect(page.locator(".file-list li")).to_have_count(1)
+    expect(page.locator(".file-list")).to_contain_text("label.png")
+    page.click("button.clear-files")
+    expect(page.locator(".file-list li")).to_have_count(0)
+
+
+def test_pasted_application_text_fills_the_fields(page: Page) -> None:
+    page.goto("/")
+    page.fill(
+        "#application_text",
+        "Brand Name: OLD TOM DISTILLERY\nImported: yes\nCountry of Origin: Mexico",
+    )
+
+    page.click("button.fill-fields")
+
+    expect(page.locator("#brand_name")).to_have_value("OLD TOM DISTILLERY")
+    expect(page.locator("#imported")).to_be_checked()
+    expect(page.locator("#country_of_origin")).to_have_value("Mexico")
+    expect(page.locator(".fill-status")).to_contain_text("Filled")
+
+
+def test_the_country_appears_only_for_imports(page: Page) -> None:
+    page.goto("/")
+
+    expect(page.locator(".country-field")).to_be_hidden()
+    page.check("#imported")
+    expect(page.locator(".country-field")).to_be_visible()
+
+
+def test_the_abv_asterisk_shows_only_for_spirits(page: Page) -> None:
+    page.goto("/")
+
+    expect(page.locator(".abv-required")).to_be_visible()
+    page.select_option("#beverage_type", "wine")
+    expect(page.locator(".abv-required")).to_be_hidden()

@@ -205,4 +205,4 @@ def test_the_recorded_reason_is_the_one_that_decided_the_status() -> None:
 
     scored = score(OLD_TOM, report, latency=1.0)
 
-    assert "second reader (OCR) found no text" in scored.findings["brand_name"]
+    assert "second check (text recognition) found no text" in scored.findings["brand_name"]

@@ -181,7 +181,7 @@ def test_application_errors_show_by_the_field_and_in_a_summary_keeping_what_was_
     assert response.status_code == 422
     assert 'role="alert"' in response.text
     assert re.search(r'id="brand_name-error"', response.text)
-    assert re.search(r'aria-describedby="brand_name-error"', response.text)
+    assert re.search(r'aria-describedby="[^"]*brand_name-error', response.text)
     assert 'value="Kentucky Straight Bourbon Whiskey"' in response.text
 
 
@@ -345,7 +345,7 @@ def test_both_readings_are_shown_when_ocr_read_something_else() -> None:
 
     assert "Needs review" in page
     assert "pregnancey" in page  # OCR's reading, shown beside the AI's
-    assert "Second reading" in page or "OCR read" in page
+    assert "What the second check read" in page
 
 
 def test_an_offline_check_shows_a_banner() -> None:
@@ -353,7 +353,7 @@ def test_an_offline_check_shows_a_banner() -> None:
         page = post(client)
 
     assert 'class="banner banner-offline"' in page
-    assert "OCR" in page
+    assert "text recognition" in page
 
 
 def test_a_possible_prompt_injection_is_called_out() -> None:
@@ -453,3 +453,127 @@ def test_a_check_reports_its_timing_but_no_content(
     assert "OLD TOM" not in "\n".join(
         r.getMessage() for r in caplog.records if r.name.startswith("app")
     )
+
+
+# ---- a friendlier page (M4 follow-up) ----
+
+
+def visible_text(page: str) -> str:
+    """The page's text as a reader sees it: no tags, scripts or styles."""
+    without_code = re.sub(r"<(script|style)[^>]*>.*?</(script|style)>", "", page, flags=re.S)
+    return re.sub(r"<[^>]+>", " ", without_code)
+
+
+def test_the_page_walks_through_three_numbered_steps(client: TestClient) -> None:
+    page = client.get("/").text
+
+    steps = re.findall(
+        r'<h2 class="step"><span class="step-number">(\d)</span>\s*([^<]+)</h2>', page
+    )
+    assert [number for number, _ in steps] == ["1", "2", "3"]
+    assert "The label and its application" not in page
+
+
+def test_images_go_in_a_large_drop_zone_with_a_list_and_a_clear_button(client: TestClient) -> None:
+    page = client.get("/").text
+
+    assert 'class="drop-zone"' in page
+    assert "Drag the label images here" in page
+    assert 'class="file-list"' in page
+    assert re.search(r'<button type="button" class="clear-files"', page)
+    assert "Or try an example label" in page
+
+
+@pytest.mark.parametrize("field", ["brand_name", "class_type", "net_contents", "bottler"])
+def test_required_fields_have_a_red_asterisk_read_as_required(
+    client: TestClient, field: str
+) -> None:
+    page = client.get("/").text
+    label = re.search(rf'<label for="{field}">(.*?)</label>', page, re.S)
+
+    assert label is not None
+    assert '<span class="required" aria-hidden="true">*</span>' in label.group(1)
+    assert "(required)" in label.group(1)
+    assert re.search(rf'id="{field}"[^>]*aria-required="true"', page)
+
+
+def test_the_page_explains_the_asterisk_and_when_abv_and_country_are_needed(
+    client: TestClient,
+) -> None:
+    page = client.get("/").text
+
+    assert "Fields marked * are required" in page
+    assert "required for distilled spirits" in page
+    assert 'class="form-field country-field"' in page
+    assert "required for imports" in page
+
+
+def test_each_field_has_an_example_tied_to_it(client: TestClient) -> None:
+    page = client.get("/").text
+
+    assert "For example: 45% Alc./Vol. (90 Proof)" in page
+    assert re.search(r'id="alcohol_content"[^>]*aria-describedby="alcohol_content-hint', page)
+
+
+def test_the_application_can_be_pasted_and_filled_in(client: TestClient) -> None:
+    page = client.get("/").text
+
+    assert re.search(r'<textarea[^>]+name="application_text"', page)
+    assert re.search(r'<button type="button" class="fill-fields"[^>]*>Fill in the fields<', page)
+
+
+def test_pasted_text_is_parsed_for_the_page() -> None:
+    with make_client() as client:
+        response = client.post(
+            "/application/parse",
+            data={"text": "Brand Name: OLD TOM DISTILLERY\nNet Contents: 750 mL"},
+        )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["values"] == {"brand_name": "OLD TOM DISTILLERY", "net_contents": "750 mL"}
+    assert "Brand name" in body["filled"]
+    assert "Class/type" in body["missing"]
+
+
+def test_without_the_script_pasted_text_fills_the_empty_fields_on_check(client: TestClient) -> None:
+    pasted = "\n".join(
+        f"{key}: {value}"
+        for key, value in [
+            ("Brand Name", "OLD TOM DISTILLERY"),
+            ("Class/Type", "Kentucky Straight Bourbon Whiskey"),
+            ("Alcohol Content", "45% Alc./Vol. (90 Proof)"),
+            ("Net Contents", "750 mL"),
+            ("Bottler", "Old Tom Distillery, Louisville, Kentucky"),
+        ]
+    )
+
+    page = post(client, form={"beverage_type": "spirits", "application_text": pasted})
+
+    assert "Matches" in page
+
+
+def test_the_results_open_with_a_plain_summary_and_what_to_do_next() -> None:
+    reading = ImageReading(OLD_TOM_READING.model_copy(update={"brand_name": "OLD TOM DISTILLERS"}))
+    with make_client(FakeExtractor(reading)) as client:
+        page = post(client)
+
+    assert re.search(r"5 of 6 items match\. 1 needs your review\.", visible_text(page))
+    assert "What to do next" in page
+    assert 'class="outcome-key"' in page
+
+
+def test_users_never_see_the_word_ocr() -> None:
+    lines = [line.replace("pregnancy", "pregnancey") for line in OLD_TOM_LINES]
+    with (
+        make_client(FakeExtractor(PERFECT), FakeOcr([lines])) as both,
+        make_client(FakeExtractor(ReaderUnavailable("http_500"))) as offline,
+    ):
+        pages = [post(both), post(offline)]
+
+    for page in pages:
+        assert "OCR" not in visible_text(page)
+
+
+def test_buttons_are_big_enough_to_hit_easily(client: TestClient) -> None:
+    assert re.search(r"min-height:\s*44px", client.get("/static/app.css").text)
