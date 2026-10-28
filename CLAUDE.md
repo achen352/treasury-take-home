@@ -16,6 +16,11 @@ from CLAUDE.md".
   calls, and `kimi-k3.1-pro-highspeed` returned 429 for hours. Kimi still works by configuration
   (`.env.example` shows how). In the user's `.env`, the OpenAI key was first added as
   `LLM_API_KEY_1`; the app reads `LLM_API_KEY`.
+- **Model check on 2026-10-28:** `gpt-5.6-luna` ($0.20/$1.20 per 1M, against mini's $0.75/$4.50)
+  was twice as slow (p50 4.1 s, p95 11.6 s) and slightly less accurate (39 of 58 correct against
+  41; it misread the `wine` class/type) than `gpt-5.4-mini`, so mini stays. There's no
+  `gpt-5.5-mini`; `gpt-5.5` costs about 6.7 times as much as mini. The user has $30 of OpenAI
+  credit with auto-reload off, which caps spending.
 - **Evaluation (gpt-5.4-mini with Tesseract, 58 labels):** no false Matches, 71% correct, every
   drawn label right, 4 of 19 real labels right (most real-label reviews are OCR failing to
   confirm), p50 2.2 s and p95 5.4 s. Rerun with `python -m scripts.eval`.
