@@ -63,16 +63,16 @@ def test_secure_defaults() -> None:
     assert settings.llm_api_key is None
 
 
-def test_ai_reader_defaults_suit_kimi() -> None:
+def test_ai_reader_defaults_suit_openai() -> None:
     settings = make_settings()
 
-    assert settings.llm_base_url == "https://api.moonshot.ai/v1"
-    assert settings.llm_model == "kimi-k3.1-pro-highspeed"
+    assert settings.llm_base_url == "https://api.openai.com/v1"
+    assert settings.llm_model == "gpt-5.4-mini"
     assert settings.llm_reasoning_effort == "low"
+    assert settings.llm_disable_thinking is False  # Kimi's switch; OpenAI rejects it
     assert settings.llm_first_token_timeout == 15
     assert settings.llm_total_timeout == 25
     assert settings.llm_image_max_side == 1100
-    assert settings.llm_disable_thinking is True
     assert settings.llm_split_warning is True
 
 
