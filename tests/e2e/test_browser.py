@@ -187,3 +187,56 @@ def test_the_abv_asterisk_shows_only_for_spirits(page: Page) -> None:
     expect(page.locator(".abv-required")).to_be_visible()
     page.select_option("#beverage_type", "wine")
     expect(page.locator(".abv-required")).to_be_hidden()
+
+
+# ---- batch ----
+
+
+def test_the_batch_page_has_no_accessibility_violations(page: Page) -> None:
+    page.goto("/batch")
+
+    no_violations(page)
+
+
+def test_the_example_batch_runs_and_lists_failures_first(page: Page) -> None:
+    page.goto("/batch")
+
+    page.click("button.run-example")
+
+    expect(page.locator(".batch-summary")).to_contain_text("11 labels", timeout=60_000)
+    rows = page.locator(".batch-results tbody tr")
+    expect(rows).to_have_count(11)
+    ranks = page.evaluate(
+        "Array.from(document.querySelectorAll('.batch-results tbody tr')).map(r => r.dataset.rank)"
+    )
+    assert ranks == sorted(ranks)
+    no_violations(page)
+
+
+def test_a_spreadsheet_and_images_are_checked_and_a_missing_image_is_reported(
+    page: Page, tmp_path: object
+) -> None:
+    from pathlib import Path
+
+    sheet = Path(str(tmp_path)) / "labels.csv"
+    sheet.write_text(
+        "images,beverage_type,brand_name,class_type,alcohol_content,net_contents,bottler\n"
+        "label.png,spirits,OLD TOM DISTILLERY,Kentucky Straight Bourbon Whiskey,"
+        '45% Alc./Vol. (90 Proof),750 mL,"Old Tom Distillery, Louisville, Kentucky"\n'
+        "missing.png,spirits,OLD TOM DISTILLERY,Bourbon,45%,750 mL,Old Tom\n",
+        encoding="utf-8",
+    )
+    page.goto("/batch")
+    page.set_input_files("#sheet", sheet)
+    expect(page.locator(".sheet-status")).to_contain_text("2 labels")
+    page.set_input_files("#images", OLD_TOM)
+    expect(page.locator(".image-status")).to_contain_text("missing.png")
+
+    page.click("button.run-batch")
+
+    expect(page.locator(".batch-summary")).to_contain_text("2 labels", timeout=60_000)
+    expect(page.locator(".batch-results")).to_contain_text("Couldn't check")
+    expect(page.locator(".batch-results")).to_contain_text("Matches")
+    with page.expect_download() as download:
+        page.click("button.export-results")
+    assert download.value.suggested_filename.endswith(".csv")
