@@ -1,6 +1,8 @@
 """The single-label page: the form, and checking a label against its application."""
 
 import asyncio
+import logging
+import time
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
@@ -19,6 +21,7 @@ from app.web.guards import client_address, too_many_response
 from app.web.samples import find_sample, load_samples
 from app.web.view import build_results
 
+logger = logging.getLogger(__name__)
 templates = Jinja2Templates(directory=Path(__file__).resolve().parent / "templates")
 router = APIRouter()
 
@@ -44,7 +47,10 @@ def page(request: Request, sample: str | None = None) -> Response:
 async def check(request: Request) -> Response:
     if _from_another_site(request):
         return _error(request, 403, "Labels can only be checked from this site's own page.")
-    if not request.app.state.limiter.allow(client_address(request.scope)):
+    settings: Settings = request.app.state.settings
+    if not request.app.state.limiter.allow(
+        client_address(request.scope, settings.client_ip_header)
+    ):
         return too_many_response()
     content_type = request.headers.get("content-type", "")
     if not content_type.startswith(("multipart/form-data", "application/x-www-form-urlencoded")):
@@ -78,7 +84,6 @@ async def check(request: Request) -> Response:
             request, values=values, sample=sample_id, errors={"images": str(rejected)}, status=422
         )
 
-    settings: Settings = request.app.state.settings
     extras: dict[str, Any] = {}
     if request.app.state.ocr_reader is not None:
         extras["ocr_reader"] = request.app.state.ocr_reader
@@ -88,13 +93,35 @@ async def check(request: Request) -> Response:
         await asyncio.wait_for(slots.acquire(), timeout=settings.check_wait_seconds)
     except TimeoutError:
         return _error(request, 503, "The checker is busy right now. Please try again in a moment.")
+    timings: dict[str, float] = {}
+    started = time.perf_counter()
     try:
         report = await check_label(
-            images, application, settings, extractor=request.app.state.extractor, **extras
+            images,
+            application,
+            settings,
+            extractor=request.app.state.extractor,
+            timings=timings,
+            **extras,
         )
     finally:
         slots.release()
-    return _render(request, values=values, sample=sample_id, results=build_results(report, images))
+    total = time.perf_counter() - started
+    logger.info(
+        "check took %.2f s (ai %.2f s, ocr %.2f s, %d images)",
+        total,
+        timings.get("ai", 0.0),
+        timings.get("ocr", 0.0),
+        len(images),
+    )
+    response = _render(
+        request, values=values, sample=sample_id, results=build_results(report, images)
+    )
+    # How long each part took, for the browser's developer tools and the smoke test; no content.
+    response.headers["Server-Timing"] = ", ".join(
+        f"{name};dur={seconds * 1000:.0f}" for name, seconds in {"total": total, **timings}.items()
+    )
+    return response
 
 
 def _from_another_site(request: Request) -> bool:

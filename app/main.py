@@ -63,7 +63,10 @@ def create_app(
     app.state.check_slots = asyncio.Semaphore(settings.max_concurrent_checks)
     app.add_middleware(BodyLimitMiddleware, max_bytes=settings.max_request_bytes)
     app.add_middleware(
-        AccessCodeMiddleware, code_sha256=settings.access_code_sha256, limiter=app.state.limiter
+        AccessCodeMiddleware,
+        code_sha256=settings.access_code_sha256,
+        limiter=app.state.limiter,
+        client_ip_header=settings.client_ip_header,
     )
     # Last added runs outermost: security headers must also wrap the 500s
     # produced by RequestContextMiddleware.

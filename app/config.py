@@ -40,6 +40,11 @@ class Settings(BaseSettings):
     llm_split_warning: bool = True
     # The SHA-256 of the demo's access code, given only in the submission link. Unset: open.
     access_code_sha256: str | None = None
+    # In production the site must not start without one (fail closed).
+    require_access_code: bool = False
+    # A header the hosting proxy sets to the client's address (Fly: fly-client-ip). Unset: the
+    # connection's address, after uvicorn's proxy handling.
+    client_ip_header: str | None = None
     # Per client address, to protect the AI credit; and how many checks run at once, for memory.
     rate_limit_per_minute: int = Field(default=10, gt=0)
     rate_limit_per_day: int = Field(default=200, gt=0)
@@ -71,6 +76,12 @@ class Settings(BaseSettings):
         if not url.startswith("https://"):
             raise ValueError("must start with https://, so the API key is never sent in clear")
         return url
+
+    @model_validator(mode="after")
+    def _access_code_when_required(self) -> Self:
+        if self.require_access_code and self.access_code_sha256 is None:
+            raise ValueError("REQUIRE_ACCESS_CODE is set, but ACCESS_CODE_SHA256 isn't")
+        return self
 
     @model_validator(mode="after")
     def _deadlines_in_order(self) -> Self:

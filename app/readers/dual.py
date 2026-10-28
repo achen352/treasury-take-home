@@ -9,7 +9,8 @@ label, for the outlines on the results page.
 
 import asyncio
 import logging
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Coroutine, Sequence
+from typing import Any
 
 from app.config import ExtractorMode, Settings
 from app.domain.candidates import choose_names
@@ -70,16 +71,22 @@ async def check_label(
     *,
     extractor: Extractor | None,
     ocr_reader: OcrReader = _tesseract,
+    timings: dict[str, float] | None = None,
 ) -> Report:
-    """Read a label's images with both readers and check the result against the application."""
+    """Read a label's images with both readers and check the result against the application.
+
+    `timings`, if given, receives how long each reader took, in seconds ("ai", "ocr")."""
     mode = settings.extractor_mode
+    loop = asyncio.get_running_loop()
     ai: asyncio.Task[list[ImageReading] | None] | None = None
     if mode is not ExtractorMode.OCR and extractor is not None:
-        ai = asyncio.create_task(_read_with_ai(extractor, images, settings))
+        ai = asyncio.create_task(_timed(_read_with_ai(extractor, images, settings), timings, "ai"))
     ocr = None if mode is ExtractorMode.LLM else _Ocr(images, ocr_reader)
     try:
         if ocr is not None:
+            started = loop.time()
             await ocr.read_upright()
+            _add(timings, "ocr", loop.time() - started)
         readings = await ai if ai is not None else None
     except BaseException:
         if ai is not None:
@@ -119,8 +126,12 @@ async def check_label(
             )
 
         report = run_checks()
-        if ocr is not None and _unconfirmed(report) and await ocr.read_sideways():
-            report = run_checks()
+        if ocr is not None and _unconfirmed(report):
+            started = loop.time()
+            sideways = await ocr.read_sideways()
+            _add(timings, "ocr", loop.time() - started)
+            if sideways:
+                report = run_checks()
     elif ocr is not None:
         report = verify(
             application,
@@ -136,6 +147,19 @@ async def check_label(
     if ocr is not None and ocr.pages:
         report = attach_locations(report, ocr.pages)
     return report.model_copy(update={"notes": (*notes, *report.notes)})
+
+
+def _add(timings: dict[str, float] | None, name: str, seconds: float) -> None:
+    if timings is not None:
+        timings[name] = timings.get(name, 0.0) + seconds
+
+
+async def _timed[T](work: Coroutine[Any, Any, T], timings: dict[str, float] | None, name: str) -> T:
+    started = asyncio.get_running_loop().time()
+    try:
+        return await work
+    finally:
+        _add(timings, name, asyncio.get_running_loop().time() - started)
 
 
 class _Ocr:

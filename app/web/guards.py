@@ -115,7 +115,14 @@ def too_many_response() -> HTMLResponse:
     return HTMLResponse(TOO_MANY_PAGE, status_code=429, headers={"Retry-After": "60"})
 
 
-def client_address(scope: Scope) -> str:
+def client_address(scope: Scope, header: str | None = None) -> str:
+    """The client's address: from the hosting proxy's own header if one is configured, which
+    clients can't forge, else from the connection."""
+    if header:
+        headers: dict[bytes, bytes] = dict(scope["headers"])
+        value = headers.get(header.lower().encode("latin-1"))
+        if value:
+            return value.decode("latin-1").strip()
     client = scope.get("client")
     return str(client[0]) if client else "unknown"
 
@@ -128,10 +135,17 @@ class AccessCodeMiddleware:
     Only the code's SHA-256 is configured, and codes are compared in constant time.
     """
 
-    def __init__(self, app: ASGIApp, code_sha256: str | None, limiter: RateLimiter) -> None:
+    def __init__(
+        self,
+        app: ASGIApp,
+        code_sha256: str | None,
+        limiter: RateLimiter,
+        client_ip_header: str | None = None,
+    ) -> None:
         self.app = app
         self.code_sha256 = code_sha256
         self.limiter = limiter
+        self.client_ip_header = client_ip_header
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if (
@@ -160,7 +174,7 @@ class AccessCodeMiddleware:
                 )
                 await redirect(scope, receive, send)
                 return
-            if not self.limiter.allow(client_address(scope)):
+            if not self.limiter.allow(client_address(scope, self.client_ip_header)):
                 await too_many_response()(scope, receive, send)
                 return
             await HTMLResponse(LOCKED_PAGE, status_code=403)(scope, receive, send)

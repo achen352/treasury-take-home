@@ -1,0 +1,40 @@
+# Fly.io: the demo deploy. CI deploys from main after the tests and container checks pass
+# (.github/workflows/ci.yml). Secrets are set with `fly secrets set`, never written here:
+# LLM_API_KEY (the OpenAI key) and ACCESS_CODE_SHA256 (python -m scripts.access_code).
+app = "cola-label-verifier"
+primary_region = "iad"  # Virginia, close to OpenAI's US servers
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  EXTRACTOR_MODE = "dual"
+  LLM_BASE_URL = "https://api.openai.com/v1"
+  LLM_MODEL = "gpt-5.4-mini"
+  LLM_REASONING_EFFORT = "low"
+  # Fly's proxy sets Fly-Client-IP itself; X-Forwarded-For can carry addresses clients made up.
+  CLIENT_IP_HEADER = "fly-client-ip"
+  # Fly's proxy is the only way in, so its X-Forwarded-Proto (HTTPS) is trusted.
+  FORWARDED_ALLOW_IPS = "*"
+  # Fail closed: without ACCESS_CODE_SHA256 the app won't start, so the site is never open.
+  REQUIRE_ACCESS_CODE = "true"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  # Suspended between visits (it wakes in well under a second), so it bills only while busy.
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    method = "GET"
+    path = "/healthz"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "20s"
+
+[[vm]]
+  # A shared CPU banks credit while idle and bursts to a full core for a check's OCR.
+  size = "shared-cpu-1x"
+  memory = "512mb"
