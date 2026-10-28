@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+
+{% block title %}{% if results %}{{ results.verdict.value }}: {% endif %}Check a label | COLA Label Verifier{% endblock %}
+
+{% block main %}
+<h1>Check a label against its application</h1>
+
+{% if results %}
+<section class="results" aria-labelledby="result-heading">
+  <h2 id="result-heading" class="visually-hidden">Result</h2>
+  <div class="verdict verdict-{{ results.verdict_css }}">
+    {{ icon(results.verdict_css) }}
+    <p class="verdict-words">{{ results.verdict.value }}</p>
+  </div>
+
+  {% if results.offline_note %}
+  <div class="banner banner-offline">
+    {{ icon("review") }}
+    <p><strong>Read by OCR alone.</strong> {{ results.offline_note }}</p>
+  </div>
+  {% endif %}
+  {% for note in results.injection_notes %}
+  <div class="banner banner-injection">
+    {{ icon("review") }}
+    <p><strong>Possible prompt injection.</strong> {{ note }}</p>
+  </div>
+  {% endfor %}
+  {% for note in results.other_notes %}
+  <p class="note">{{ note }}</p>
+  {% endfor %}
+
+  <div class="results-layout">
+    <ol class="fields">
+      {% for field in results.fields %}
+      <li class="field {{ field.status_css }}">
+        <h3 class="field-name">{{ icon(field.status.value) }} <span>{{ field.name }}</span>
+          <span class="field-status">{{ field.status_word }}</span></h3>
+        <dl class="values">
+          <dt>Application</dt>
+          <dd dir="auto">{{ field.expected if field.expected is not none else "Not stated" }}</dd>
+          <dt>Label</dt>
+          <dd dir="auto">{{ field.found if field.found is not none else "Not found" }}</dd>
+          {% if field.second_reading %}
+          <dt>Second reading (OCR)</dt>
+          <dd dir="auto">{{ field.second_reading }}</dd>
+          {% endif %}
+        </dl>
+        {% if field.diff and field.status.value != "pass" %}
+        <p class="diff" dir="auto">
+          {%- for segment in field.diff -%}
+          {%- if segment.word -%}
+          <mark class="{{ segment.css }}"><span class="diff-word">{{ segment.word }}:</span>
+            {% if segment.found %}{{ segment.found }}{% endif %}{% if segment.expected and segment.word != "Added" %} <span class="diff-expected">(should be "{{ segment.expected }}")</span>{% endif %}</mark>
+          {%- else %} {{ segment.found }} {% endif -%}
+          {%- endfor -%}
+        </p>
+        {% endif %}
+        {% for note in field.notes %}
+        <p class="field-note">{{ note }}</p>
+        {% endfor %}
+        <p class="cfr">{{ field.cfr }}</p>
+        {% if field.box %}
+        <button type="button" class="zoom" data-image="{{ field.image }}" data-box="{{ field.box }}" data-sideways="{{ 'true' if field.sideways else 'false' }}" data-name="{{ field.name }}">Show on the label</button>
+        {% elif field.found %}
+        <p class="not-found">Couldn't find this on the image.</p>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ol>
+
+    <div class="label-images">
+      {% for image in results.images %}
+      <figure class="label-image" data-index="{{ image.index }}">
+        <div class="image-frame">
+          <img src="{{ image.data_url }}" alt="Label image {{ image.index + 1 }}" width="{{ image.width }}" height="{{ image.height }}">
+          <svg class="overlay" viewBox="0 0 {{ image.width }} {{ image.height }}" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            {% for outline in image.outlines %}
+            <rect class="{{ outline.css }}" x="{{ outline.box[0] }}" y="{{ outline.box[1] }}" width="{{ outline.box[2] }}" height="{{ outline.box[3] }}"/>
+            <text class="outline-label" x="{{ outline.box[0] }}" y="{{ [outline.box[1] - 8, 24] | max }}">{{ outline.label }}</text>
+            {% endfor %}
+          </svg>
+        </div>
+        <figcaption>
+          Image {{ image.index + 1 }}
+          <button type="button" class="rotate" data-turn="-90" aria-label="Turn image {{ image.index + 1 }} left">&#8634;</button>
+          <button type="button" class="rotate" data-turn="90" aria-label="Turn image {{ image.index + 1 }} right">&#8635;</button>
+        </figcaption>
+      </figure>
+      {% endfor %}
+    </div>
+  </div>
+
+  <dialog class="zoom-view" aria-labelledby="zoom-heading">
+    <h2 id="zoom-heading">On the label</h2>
+    <canvas class="zoom-canvas" width="800" height="400"></canvas>
+    <form method="dialog"><button class="zoom-close">Close</button></form>
+  </dialog>
+</section>
+{% endif %}
+
+<section class="check" aria-labelledby="form-heading">
+  <h2 id="form-heading">{% if results %}Check another label{% else %}The label and its application{% endif %}</h2>
+  <p class="notice">Label images are sent to OpenAI to be read, so upload only public or test labels.
+    Nothing is stored: images are checked in memory and then discarded.</p>
+
+  {% if errors %}
+  <div class="error-summary" role="alert">
+    <h2>Please fix the following</h2>
+    <ul>
+      {% for name, message in errors.items() %}
+      <li><a href="#{{ name }}">{{ message }}</a></li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <form method="post" action="/check" enctype="multipart/form-data" class="check-form"
+        data-max-bytes="{{ max_bytes }}" data-max-files="{{ max_files }}"
+        data-too-large="{{ too_large }}" data-too-many="{{ too_many }}">
+    <fieldset>
+      <legend>Label images</legend>
+      <label for="images">Front, back and any other images of the label (PNG, JPEG, WebP or PDF; up to {{ max_files }})</label>
+      <input type="file" name="images" id="images" multiple accept="{{ accept }}"
+             {% if errors.images %}aria-describedby="images-error" aria-invalid="true"{% endif %}>
+      {% if errors.images %}<p id="images-error" class="field-error">{{ errors.images }}</p>{% endif %}
+      <p class="client-error" id="images-client-error" hidden></p>
+      <label for="sample">Or try a sample label</label>
+      <select name="sample" id="sample">
+        <option value="">Choose a sample</option>
+        {% for item in samples %}
+        <option value="{{ item.id }}"{% if item.id == sample %} selected{% endif %}>{{ item.title }}</option>
+        {% endfor %}
+      </select>
+    </fieldset>
+
+    <fieldset>
+      <legend>The application</legend>
+      {% macro text_field(name, required=false) -%}
+      <div class="form-field">
+        <label for="{{ name }}">{{ labels[name] }}{% if not required %} <span class="optional">(optional)</span>{% endif %}</label>
+        <input type="text" name="{{ name }}" id="{{ name }}" dir="auto" value="{{ values.get(name, '') }}"
+               {% if errors.get(name) %}aria-describedby="{{ name }}-error" aria-invalid="true"{% endif %}>
+        {% if errors.get(name) %}<p id="{{ name }}-error" class="field-error">{{ errors[name] }}</p>{% endif %}
+      </div>
+      {%- endmacro %}
+
+      <div class="form-field">
+        <label for="beverage_type">{{ labels.beverage_type }}</label>
+        <select name="beverage_type" id="beverage_type"
+                {% if errors.beverage_type %}aria-describedby="beverage_type-error" aria-invalid="true"{% endif %}>
+          {% for value, name in [("spirits", "Distilled spirits"), ("wine", "Wine"), ("beer", "Malt beverage (beer)")] %}
+          <option value="{{ value }}"{% if values.get("beverage_type", "spirits") == value %} selected{% endif %}>{{ name }}</option>
+          {% endfor %}
+        </select>
+        {% if errors.beverage_type %}<p id="beverage_type-error" class="field-error">{{ errors.beverage_type }}</p>{% endif %}
+      </div>
+      {{ text_field("brand_name", true) }}
+      {{ text_field("fanciful_name") }}
+      {{ text_field("class_type", true) }}
+      {{ text_field("alcohol_content") }}
+      {{ text_field("net_contents", true) }}
+      {{ text_field("bottler", true) }}
+      <div class="form-field form-check">
+        <input type="checkbox" name="imported" id="imported"{% if values.get("imported") == "on" %} checked{% endif %}>
+        <label for="imported">{{ labels.imported }}</label>
+      </div>
+      {{ text_field("country_of_origin") }}
+    </fieldset>
+
+    <p class="submit-row">
+      <button type="submit" class="primary">Check label</button>
+      <span class="checking" hidden>Checking the label. This usually takes a few seconds.</span>
+    </p>
+  </form>
+</section>
+{% endblock %}

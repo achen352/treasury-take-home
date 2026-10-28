@@ -1,0 +1,19 @@
+{
+  "id": "cola-26245001000184",
+  "title": "Real label: FLOS wine, with words missing from its warning",
+  "description": "FLOS (table white wine, Spain), approved 10/20/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. Deviation: the warning omits \"because\" and \"a\" (\"...during pregnancy of the risk...\", \"...to drive car...\"), so the right result is Does not match even though the label was approved.",
+  "application": {
+    "beverage_type": "wine",
+    "imported": true,
+    "brand_name": "FLOS",
+    "class_type": "White Wine",
+    "alcohol_content": "12%",
+    "net_contents": "750 mL",
+    "bottler": "Puerto Rico Supplies Group, Inc, Bayamon, Puerto Rico",
+    "country_of_origin": "Spain"
+  },
+  "images": [
+    "1-front.jpg",
+    "2-back.png"
+  ]
+}

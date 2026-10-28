@@ -1,0 +1,17 @@
+{
+  "id": "near-miss-brand",
+  "title": "A brand that is almost right",
+  "description": "OLD TOM DISTILLERS on the label: close, but not the same name.",
+  "application": {
+    "beverage_type": "spirits",
+    "imported": false,
+    "brand_name": "OLD TOM DISTILLERY",
+    "class_type": "Kentucky Straight Bourbon Whiskey",
+    "alcohol_content": "45% Alc./Vol. (90 Proof)",
+    "net_contents": "750 mL",
+    "bottler": "Old Tom Distillery, Louisville, Kentucky"
+  },
+  "images": [
+    "label.png"
+  ]
+}

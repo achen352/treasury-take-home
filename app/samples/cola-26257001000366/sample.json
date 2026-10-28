@@ -1,0 +1,19 @@
+{
+  "id": "cola-26257001000366",
+  "title": "Real label: Belle Isle bourbon",
+  "description": "BELLE ISLE (straight bourbon whisky, Virginia), approved 09/16/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. Prints \"53.5 ALC/VOL\" with no percent sign, and in this typeface the \"(1)\" of the warning looks like \"(I)\".",
+  "application": {
+    "beverage_type": "spirits",
+    "imported": false,
+    "brand_name": "BELLE ISLE",
+    "fanciful_name": "BOURBON",
+    "class_type": "Straight Bourbon Whiskey",
+    "alcohol_content": "53.5% Alc./Vol. (107 Proof)",
+    "net_contents": "750 mL",
+    "bottler": "Belle Isle Craft Spirits, Richmond, VA 23224"
+  },
+  "images": [
+    "1-front.png",
+    "2-back.png"
+  ]
+}

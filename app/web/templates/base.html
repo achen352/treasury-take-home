@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}COLA Label Verifier{% endblock %}</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <p class="site-name"><a href="/">COLA Label Verifier</a></p>
+    <p class="site-tagline">A prototype that checks label artwork against its application. It never approves a label.</p>
+  </header>
+  <main id="main">
+    {% block main %}{% endblock %}
+  </main>
+</body>
+</html>

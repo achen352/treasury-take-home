@@ -1,0 +1,18 @@
+{
+  "id": "cola-26246001000514",
+  "title": "Real label: Forever Alone ale, warning printed sideways",
+  "description": "FOREVER ALONE (ale, North Carolina), approved 10/07/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. Deviation: a stray closing quotation mark after \"problems.”\" in the warning (punctuation only), so the right result is Needs review. Hand-lettered brand and alcohol statement.",
+  "application": {
+    "beverage_type": "beer",
+    "imported": false,
+    "brand_name": "FOREVER ALONE",
+    "fanciful_name": "AMARILLO",
+    "class_type": "India Pale Ale",
+    "alcohol_content": "7.5%",
+    "net_contents": "16 fl oz",
+    "bottler": "Resident Culture Brewing Company, 2101 Central Ave, Charlotte, NC 28205"
+  },
+  "images": [
+    "1-front.png"
+  ]
+}

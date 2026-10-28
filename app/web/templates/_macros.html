@@ -1,0 +1,11 @@
+{% macro icon(kind) -%}
+<svg class="icon icon-{{ kind }}" viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" focusable="false">
+  {%- if kind in ("pass", "matches") -%}
+  <circle cx="12" cy="12" r="11"/><path d="M6.5 12.5l3.5 3.5 7.5-8"/>
+  {%- elif kind == "review" -%}
+  <path d="M12 2L1.5 21h21z"/><path d="M12 9v5"/><circle cx="12" cy="17.5" r="0.6"/>
+  {%- else -%}
+  <circle cx="12" cy="12" r="11"/><path d="M8 8l8 8M16 8l-8 8"/>
+  {%- endif -%}
+</svg>
+{%- endmacro %}

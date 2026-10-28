@@ -1,0 +1,18 @@
+{
+  "id": "old-tom-front-back",
+  "title": "OLD TOM on a front and a back label",
+  "description": "The same label split the way real labels are: brand panel on the front, bottler and warning on the back.",
+  "application": {
+    "beverage_type": "spirits",
+    "imported": false,
+    "brand_name": "OLD TOM DISTILLERY",
+    "class_type": "Kentucky Straight Bourbon Whiskey",
+    "alcohol_content": "45% Alc./Vol. (90 Proof)",
+    "net_contents": "750 mL",
+    "bottler": "Old Tom Distillery, Louisville, Kentucky"
+  },
+  "images": [
+    "front.png",
+    "back.png"
+  ]
+}

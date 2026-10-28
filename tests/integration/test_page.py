@@ -3,6 +3,7 @@
 The app runs with scripted readers (tests/fakes.py), so no test reaches OpenAI or Tesseract.
 """
 
+import html
 import io
 import os
 import re
@@ -152,7 +153,8 @@ def test_the_page_has_no_inline_script_style_or_event_handler(client: TestClient
 
 def test_the_sample_picker_offers_about_ten_labels(client: TestClient) -> None:
     page = client.get("/").text
-    options = re.findall(r'<option value="([a-z0-9-]+)"[^>]*>', page.split('name="sample"')[1])
+    picker = page.split('name="sample"')[1].split("</select>")[0]
+    options = re.findall(r'<option value="([a-z0-9-]+)"[^>]*>', picker)
 
     assert 8 <= len(options) <= 12
     assert "old-tom" in options
@@ -208,7 +210,7 @@ def test_rejected_uploads_come_back_as_a_message_on_the_form(
     response = client.post("/check", data=OLD_TOM_FORM, files=[("images", ("x.png", data))])
 
     assert response.status_code == 422
-    assert message in response.text
+    assert message in html.unescape(response.text)
     assert 'name="brand_name"' in response.text  # the form is shown again
 
 

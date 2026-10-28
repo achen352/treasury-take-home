@@ -1,0 +1,20 @@
+{
+  "id": "cola-26119001000813",
+  "title": "Real label: REA 25 soju, in Korean and English",
+  "description": "REA 25 (other specialties & proprietaries, South Korea), approved 06/08/2026. Brand, product type, source and origin come from the registry; the rest was transcribed from the approved label. The brand is printed in Hangul (\"려\") next to \"REA 25\"; the back label is almost all Korean text.",
+  "application": {
+    "beverage_type": "spirits",
+    "imported": true,
+    "brand_name": "REA 25",
+    "fanciful_name": "SINGLE DISTILLED SOJU",
+    "class_type": "Single Distilled Soju",
+    "alcohol_content": "25%",
+    "net_contents": "375 mL",
+    "bottler": "Bekseju USA, Inc., Montebello, CA",
+    "country_of_origin": "South Korea"
+  },
+  "images": [
+    "1-front.jpg",
+    "2-back.jpg"
+  ]
+}

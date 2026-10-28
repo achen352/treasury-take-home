@@ -1,0 +1,17 @@
+{
+  "id": "warning-rotated",
+  "title": "A warning printed sideways",
+  "description": "The warning is printed sideways on a side panel.",
+  "application": {
+    "beverage_type": "spirits",
+    "imported": false,
+    "brand_name": "OLD TOM DISTILLERY",
+    "class_type": "Kentucky Straight Bourbon Whiskey",
+    "alcohol_content": "45% Alc./Vol. (90 Proof)",
+    "net_contents": "750 mL",
+    "bottler": "Old Tom Distillery, Louisville, Kentucky"
+  },
+  "images": [
+    "label.png"
+  ]
+}

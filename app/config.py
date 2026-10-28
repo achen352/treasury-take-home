@@ -37,6 +37,8 @@ class Settings(BaseSettings):
     # Read the warning in its own call, alongside one for the other fields. Shorter replies
     # finish sooner: on real labels this cut the median from 7.8 s to 6.1 s.
     llm_split_warning: bool = True
+    # The most a single request may carry: a label's images and its form, together.
+    max_request_bytes: int = Field(default=30 * 1024 * 1024, gt=0)
     enable_docs: bool = False
     port: int = 8000
     forwarded_allow_ips: str = "127.0.0.1"

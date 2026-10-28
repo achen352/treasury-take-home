@@ -1,0 +1,17 @@
+{
+  "id": "old-tom",
+  "title": "OLD TOM: the example from the brief",
+  "description": "The sample label from the brief, exactly as the application states it.",
+  "application": {
+    "beverage_type": "spirits",
+    "imported": false,
+    "brand_name": "OLD TOM DISTILLERY",
+    "class_type": "Kentucky Straight Bourbon Whiskey",
+    "alcohol_content": "45% Alc./Vol. (90 Proof)",
+    "net_contents": "750 mL",
+    "bottler": "Old Tom Distillery, Louisville, Kentucky"
+  },
+  "images": [
+    "label.png"
+  ]
+}

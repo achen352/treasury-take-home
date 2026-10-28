@@ -12,6 +12,8 @@ dependencies = [
     "pillow",
     "pypdfium2",
     "httpx2",
+    "jinja2",
+    "python-multipart",
 ]
 
 [project.optional-dependencies]
@@ -22,6 +24,8 @@ dev = [
     "ruff",
     "mypy",
     "pre-commit",
+    "playwright",
+    "axe-playwright-python",
 ]
 security = [
     "pip-audit",

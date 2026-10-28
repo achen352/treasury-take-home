@@ -1,0 +1,109 @@
+/* COLA Label Verifier: large text, strong contrast, and status shown with icons and words. */
+
+:root {
+  --ink: #1b1b1b;
+  --muted: #4a4a4a;
+  --paper: #ffffff;
+  --line: #8a8a8a;
+  --accent: #1a4480;
+  --pass: #00703c;
+  --review: #8a5300;
+  --fail: #b50909;
+  --focus: #ffbe2e;
+}
+
+html { font-size: 112.5%; } /* 18px */
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+}
+main { max-width: 72rem; margin: 0 auto; padding: 1rem 1.25rem 3rem; }
+a { color: var(--accent); }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; box-shadow: 0 0 0 5px var(--ink); }
+
+.site-header { background: var(--accent); color: #fff; padding: 0.75rem 1.25rem; }
+.site-header a { color: #fff; text-decoration: none; font-weight: 700; }
+.site-header p { margin: 0.2rem 0; }
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+/* The form */
+fieldset { border: 1px solid var(--line); margin: 0 0 1.25rem; padding: 0.75rem 1rem 1rem; }
+legend { font-weight: 700; padding: 0 0.25rem; }
+label { display: block; font-weight: 600; margin: 0.75rem 0 0.25rem; }
+.optional { font-weight: 400; color: var(--muted); }
+input[type="text"], select { font: inherit; width: 100%; max-width: 40rem; padding: 0.4rem; border: 2px solid var(--muted); box-sizing: border-box; }
+input[type="file"] { font: inherit; }
+.form-check { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.75rem; }
+.form-check input { width: 1.4rem; height: 1.4rem; }
+.form-check label { margin: 0; }
+button { font: inherit; cursor: pointer; }
+button.primary {
+  background: var(--accent); color: #fff; border: 0; padding: 0.7rem 1.6rem;
+  font-size: 1.15rem; font-weight: 700; border-radius: 4px;
+}
+button.primary[disabled] { opacity: 0.7; cursor: progress; }
+.notice { border-left: 6px solid var(--accent); background: #eef3fa; padding: 0.6rem 0.9rem; }
+.field-error, .client-error { color: var(--fail); font-weight: 600; margin: 0.25rem 0; }
+.field-error::before, .client-error::before { content: "\26A0  "; }
+[aria-invalid="true"] { border-color: var(--fail); border-width: 3px; }
+.error-summary { border: 4px solid var(--fail); padding: 0.5rem 1rem; margin-bottom: 1rem; }
+.error-summary h2 { margin-top: 0.25rem; font-size: 1.15rem; }
+
+/* Results */
+.verdict { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border: 4px solid; margin: 1rem 0; }
+.verdict-words { font-size: 1.6rem; font-weight: 800; margin: 0; }
+.verdict-matches { border-color: var(--pass); color: var(--pass); }
+.verdict-review { border-color: var(--review); color: var(--review); border-style: dashed; }
+.verdict-fail { border-color: var(--fail); color: var(--fail); border-style: double; border-width: 6px; }
+.icon { flex: none; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.banner { display: flex; gap: 0.75rem; align-items: flex-start; border: 2px solid var(--review); background: #fff6e5; padding: 0.6rem 0.9rem; margin: 0.75rem 0; }
+.banner p { margin: 0; }
+
+.results-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+@media (max-width: 60rem) { .results-layout { grid-template-columns: 1fr; } }
+.fields { list-style: none; padding: 0; margin: 0; }
+.field { border: 2px solid var(--line); border-left-width: 8px; padding: 0.5rem 0.9rem; margin-bottom: 0.9rem; }
+.field.status-pass { border-left-color: var(--pass); }
+.field.status-review { border-left-color: var(--review); border-left-style: dashed; }
+.field.status-fail { border-left-color: var(--fail); border-left-style: double; }
+.field-name { display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem; margin: 0.25rem 0; }
+.status-pass .field-name { color: var(--pass); }
+.status-review .field-name { color: var(--review); }
+.status-fail .field-name { color: var(--fail); }
+.field-status { margin-left: auto; font-weight: 700; }
+.values { display: grid; grid-template-columns: max-content 1fr; gap: 0.15rem 0.75rem; margin: 0.25rem 0; }
+.values dt { color: var(--muted); }
+.values dd { margin: 0; overflow-wrap: anywhere; }
+.diff mark { background: #fff1b8; color: var(--ink); padding: 0 0.15rem; text-decoration: underline wavy var(--fail); }
+.diff-word { font-weight: 700; }
+.cfr { color: var(--muted); font-size: 0.9rem; margin: 0.25rem 0; }
+.not-found { font-style: italic; color: var(--muted); }
+button.zoom, button.rotate { border: 2px solid var(--accent); background: #fff; color: var(--accent); padding: 0.25rem 0.75rem; border-radius: 4px; }
+
+.label-images { position: sticky; top: 0.5rem; }
+.label-image { margin: 0 0 1rem; }
+.image-frame { position: relative; transition: transform 0.2s; }
+.image-frame img { display: block; width: 100%; height: auto; border: 1px solid var(--line); }
+.image-frame .overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.image-frame.turn-90 { transform: rotate(90deg); }
+.image-frame.turn-180 { transform: rotate(180deg); }
+.image-frame.turn-270 { transform: rotate(270deg); }
+.outline { fill: none; stroke-width: 6; }
+.outline-pass { stroke: var(--pass); }
+.outline-review { stroke: var(--review); stroke-dasharray: 18 10; }
+.outline-fail { stroke: var(--fail); stroke-dasharray: 4 6; stroke-width: 8; }
+.outline-diff { stroke: var(--fail); stroke-width: 10; }
+.outline-label { font: 700 32px system-ui, sans-serif; fill: var(--ink); paint-order: stroke; stroke: #fff; stroke-width: 8; }
+.outline-focus { stroke: var(--focus); stroke-width: 14; }
+figcaption { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.4rem; }
+
+.zoom-view { border: 3px solid var(--ink); max-width: min(90vw, 70rem); }
+.zoom-view::backdrop { background: rgb(0 0 0 / 0.6); }
+.zoom-canvas { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); }
+.submit-row { display: flex; align-items: center; gap: 1rem; }
