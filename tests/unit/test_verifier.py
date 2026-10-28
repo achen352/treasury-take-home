@@ -340,6 +340,16 @@ def test_images_that_disagree_on_a_field_send_it_to_review_with_both_readings() 
     assert any("40% Alc./Vol. (80 Proof)" in note for note in alcohol.notes)
 
 
+def test_a_doubt_about_a_field_sends_it_to_review_with_the_reason() -> None:
+    report = verify(
+        OLD_TOM_APPLICATION, OLD_TOM_READING, doubts={LabelField.BRAND: "Not the main name."}
+    )
+    brand = next(r for r in report.results if r.field is LabelField.BRAND)
+
+    assert brand.status is Status.REVIEW
+    assert brand.notes[-1] == "Not the main name."
+
+
 def test_a_disagreement_between_images_can_never_improve_a_result() -> None:
     report = verify(
         OLD_TOM_APPLICATION,

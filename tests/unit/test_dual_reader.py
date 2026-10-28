@@ -133,10 +133,7 @@ def test_images_that_disagree_send_the_field_to_review() -> None:
 
 
 def test_the_brand_and_bottler_are_chosen_from_every_image_s_candidates() -> None:
-    front = ImageReading(
-        FRONT.label.model_copy(update={"brand_name": None}),
-        names=("KENTUCKY RESERVE", "OLD TOM DISTILLERY"),
-    )
+    front = ImageReading(FRONT.label, names=("KENTUCKY RESERVE",))
     back = ImageReading(
         BACK.label.model_copy(update={"bottler": None}),
         names=("SMALL BATCH",),
@@ -153,6 +150,28 @@ def test_the_brand_and_bottler_are_chosen_from_every_image_s_candidates() -> Non
     assert report.verdict is Verdict.MATCHES
     brand = next(r for r in report.results if r.field is LabelField.BRAND)
     assert brand.found == "OLD TOM DISTILLERY"
+
+
+def test_a_brand_found_only_away_from_the_main_name_goes_to_review() -> None:
+    sticker = ImageReading(
+        OLD_TOM_READING.model_copy(update={"brand_name": "BLUE RIDGE SPIRITS"}),
+        names=("Old Tom Distillery",),
+    )
+
+    report = check(FakeExtractor(sticker), FakeOcr([OLD_TOM_LINES]))
+
+    assert report.verdict is Verdict.NEEDS_REVIEW
+    assert result(report, LabelField.BRAND) is Status.REVIEW
+
+
+def test_class_types_that_differ_between_images_use_the_one_the_application_names() -> None:
+    back = ImageReading(BACK.label.model_copy(update={"class_type": "Straight Bourbon"}))
+
+    report = check(
+        FakeExtractor(FRONT, back), FakeOcr([FRONT_LINES, BACK_LINES]), images=(BLANK, BLANK)
+    )
+
+    assert result(report, LabelField.CLASS_TYPE) is Status.PASS
 
 
 def test_instructions_the_ai_saw_on_any_image_flag_the_label() -> None:

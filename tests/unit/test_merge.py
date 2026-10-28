@@ -57,6 +57,27 @@ def test_different_values_on_two_images_are_a_conflict_listing_both() -> None:
     }
 
 
+@pytest.mark.parametrize(
+    ("field", "front", "back"),
+    [
+        ("alcohol_content", "Alc. 50% By Vol.", "50%vol"),
+        ("net_contents", "750 mL", "75 cL"),
+    ],
+)
+def test_the_same_number_written_two_ways_is_not_a_conflict(
+    field: str, front: str, back: str
+) -> None:
+    merged = merge_readings(
+        [
+            ExtractedLabel.model_validate({field: front}),
+            ExtractedLabel.model_validate({field: back}),
+        ]
+    )
+
+    assert merged.conflicts == {}
+    assert merged.reading.value(LabelField(field)) == front
+
+
 def test_bold_comes_from_the_image_whose_warning_is_used() -> None:
     front = FRONT.model_copy(update={"warning_header_bold": False})  # no warning on the front
 
